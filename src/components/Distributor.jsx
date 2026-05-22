@@ -190,7 +190,9 @@ export default function Distributor({ onNavigate }) {
     setErrors(prev => ({ ...prev, _general: "" }));
     
     try {
+      const newId = `DST-${Date.now()}`;
       const { error } = await supabase.from('distributors').insert([{
+        id: newId,
         business: formData.businessName,
         owner: formData.ownerName,
         city: formData.city,
