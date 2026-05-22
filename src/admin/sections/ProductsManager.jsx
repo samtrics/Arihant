@@ -90,7 +90,11 @@ export default function ProductsManager({ products, setProducts }) {
     };
 
     if (modal === "add") {
-      const newId = `PRD${String(products.length + 1).padStart(3, "0")}`;
+      const maxIdNum = products.reduce((max, p) => {
+        const num = parseInt(p.id.replace('PRD', ''), 10) || 0;
+        return num > max ? num : max;
+      }, 0);
+      const newId = `PRD${String(maxIdNum + 1).padStart(3, "0")}`;
       const { error } = await supabase.from('products').insert([{ id: newId, ...payload }]);
       if (error) { alert("Error saving product: " + error.message); return; }
     } else {
