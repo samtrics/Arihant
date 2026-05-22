@@ -121,16 +121,8 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
       setSuccessMessage(
         mode === "signin" 
           ? `Welcome back! Taking you to your dashboard...`
-          : `Account successfully created! Welcome to Arihant.`
+          : `Account created! Welcome to Arihant. Please verify your email if required.`
       );
-      
-      setTimeout(() => {
-        if (mode === "signin") {
-          onNavigate("customer-dashboard", null);
-        } else {
-          onNavigate("home", null);
-        }
-      }, 1500);
 
     } catch (err) {
       setErrors(prev => ({ ...prev, _general: err.message }));

@@ -34,9 +34,15 @@ export default function App() {
       setCustomerUser(session?.user || null);
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth changes — auto-navigate to dashboard on sign in
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setCustomerUser(session?.user || null);
+      if (event === 'SIGNED_IN') {
+        setCurrentPage('customer-dashboard');
+      }
+      if (event === 'SIGNED_OUT') {
+        setCurrentPage('home');
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -101,7 +107,7 @@ export default function App() {
     };
   }, [currentPage]);
 
-  const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard" || currentPage === "customer-dashboard";
+  const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard";
 
   return (
     <>
@@ -121,7 +127,8 @@ export default function App() {
         {currentPage === "contact" && <Contact onNavigate={handleNavigate} />}
         {currentPage === "distributors" && <Distributor onNavigate={handleNavigate} />}
         {(currentPage === "login" || currentPage === "register") && <Auth onNavigate={handleNavigate} initialMode={currentPage === "login" ? "signin" : "signup"} />}
-        {currentPage === "customer-dashboard" && <CustomerDashboard user={customerUser} onNavigate={handleNavigate} onLogout={() => handleNavigate("home")} />}
+        {currentPage === "customer-dashboard" && customerUser && <CustomerDashboard user={customerUser} onNavigate={handleNavigate} onLogout={() => handleNavigate("home")} />}
+        {currentPage === "customer-dashboard" && !customerUser && <Auth onNavigate={handleNavigate} initialMode="signin" />}
         {currentPage === "distributor-login" && <DistributorLogin onNavigate={handleNavigate} />}
         {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
         {currentPage === "admin" && (
