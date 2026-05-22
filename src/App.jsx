@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import ProductShowcase from "./components/ProductShowcase";
@@ -28,20 +28,39 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState(initialProducts);
 
+  // Track current page in a ref so auth listener always has the latest value
+  const currentPageRef = useRef("home");
+  const setPage = (page) => {
+    currentPageRef.current = page;
+    setCurrentPage(page);
+  };
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setCustomerUser(session?.user || null);
     });
 
-    // Listen for auth changes — auto-navigate to dashboard on sign in
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setCustomerUser(session?.user || null);
+
       if (event === 'SIGNED_IN') {
-        setCurrentPage('customer-dashboard');
+        const page = currentPageRef.current;
+        // Only redirect to customer dashboard when signing in from customer flow
+        // Skip redirect if the admin is logging in (admin or admin-dashboard pages)
+        const isAdminFlow = page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
+        if (!isAdminFlow) {
+          setPage('customer-dashboard');
+        }
       }
+
       if (event === 'SIGNED_OUT') {
-        setCurrentPage('home');
+        // Only redirect to home if not in admin dashboard (admin handles its own logout)
+        const page = currentPageRef.current;
+        if (page !== 'admin-dashboard' && page !== 'admin') {
+          setPage('home');
+        }
       }
     });
 
@@ -68,7 +87,7 @@ export default function App() {
 
 
   const handleNavigate = (page, sectionId) => {
-    setCurrentPage(page);
+    setPage(page);
     if (sectionId) {
       setTimeout(() => {
         const element = document.getElementById(sectionId);
@@ -133,14 +152,14 @@ export default function App() {
         {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
         {currentPage === "admin" && (
           <AdminLogin
-            onLogin={(user) => { setAdminUser(user); setCurrentPage("admin-dashboard"); }}
-            onBack={() => setCurrentPage("home")}
+            onLogin={(user) => { setAdminUser(user); setPage("admin-dashboard"); }}
+            onBack={() => setPage("home")}
           />
         )}
         {currentPage === "admin-dashboard" && adminUser && (
           <AdminDashboard
             adminUser={adminUser}
-            onLogout={() => { setAdminUser(null); setCurrentPage("home"); }}
+            onLogout={() => { setAdminUser(null); setPage("home"); }}
             products={products}
             setProducts={handleSetProducts}
           />
