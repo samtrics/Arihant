@@ -69,14 +69,29 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
   const [distributors, setDistributors] = useState(initialDistributors);
 
   useEffect(() => {
-    const handleSync = (state) => {
-      if (state.orders) setOrders(state.orders);
-      if (state.b2bOrders) setB2bOrders(state.b2bOrders);
-      if (state.customers) setCustomers(state.customers);
-      if (state.distributors) setDistributors(state.distributors);
-    };
-    socket.on('SYNC_STATE', handleSync);
-    return () => socket.off('SYNC_STATE', handleSync);
+    // Initial fetch for dashboard stats
+    supabase.from('orders').select('*').then(({ data }) => {
+      if (data) setOrders(data);
+    });
+    supabase.from('distributors').select('*').then(({ data }) => {
+      if (data) setDistributors(data);
+    });
+
+    // Realtime subscriptions
+    const channel = supabase.channel('admin-dashboard-stats')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        supabase.from('orders').select('*').then(({ data }) => {
+          if (data) setOrders(data);
+        });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'distributors' }, () => {
+        supabase.from('distributors').select('*').then(({ data }) => {
+          if (data) setDistributors(data);
+        });
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, []);
 
   const wrapSet = (key, setFunc) => {
