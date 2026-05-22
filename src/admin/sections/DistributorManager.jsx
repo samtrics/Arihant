@@ -21,10 +21,23 @@ export default function DistributorManager({ distributors: propDistributors = []
 
   useEffect(() => {
     setLoading(true);
+    // Initial fetch
     supabase.from('distributors').select('*').order('applied', { ascending: false }).then(({ data, error }) => {
       if (!error && data) setDistributors(data);
       setLoading(false);
     });
+
+    // Listen for realtime updates from Supabase
+    const channel = supabase
+      .channel('distributors-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'distributors' }, () => {
+        supabase.from('distributors').select('*').order('applied', { ascending: false }).then(({ data }) => {
+          if (data) setDistributors(data);
+        });
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, []);
 
   const filtered = distributors.filter((d) => {
