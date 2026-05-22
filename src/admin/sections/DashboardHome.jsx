@@ -57,7 +57,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   const recentOrders = allOrders.slice(0, 6);
 
   // Dynamic calculations
-  const totalRevenue = allOrders.filter(o => o.status !== "cancelled").reduce((acc, curr) => acc + curr.amount, 0);
+  const totalRevenue = allOrders.filter(o => o.status !== "cancelled").reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   const totalOrders = allOrders.length;
   const activeCustomers = customers.filter(c => c.status === "active").length;
   const totalDistributors = distributors.filter(d => d.status === "approved").length;
@@ -66,9 +66,9 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
   const monthlySales = allOrders.filter(o => {
-    const d = new Date(o.date);
+    const d = new Date(o.date || Date.now());
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear && o.status !== "cancelled";
-  }).reduce((acc, curr) => acc + curr.amount, 0);
+  }).reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
   // Generate dynamic 12-month Revenue Data
   const dynamicRevenueData = [];
@@ -83,10 +83,10 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
 
   allOrders.forEach(o => {
     if(o.status === "cancelled") return;
-    const od = new Date(o.date);
+    const od = new Date(o.date || Date.now());
     const match = dynamicRevenueData.find(m => m.monthNum === od.getMonth() && m.yearNum === od.getFullYear());
     if(match) {
-      match.revenue += o.amount;
+      match.revenue += (Number(o.amount) || 0);
       match.orders += 1;
     }
   });
