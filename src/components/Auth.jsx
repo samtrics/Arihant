@@ -115,6 +115,18 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
         });
         
         if (error) throw error;
+
+        // Verify they are NOT an admin
+        const { data: adminData } = await supabase
+          .from('admin_users')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (adminData) {
+          await supabase.auth.signOut();
+          throw new Error("Admin accounts cannot log in here. Please use the Admin Portal.");
+        }
       }
 
       setIsSubmitted(true);

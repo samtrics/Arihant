@@ -29,20 +29,32 @@ export default function AdminLogin({ onLogin, onBack }) {
     setIsLoading(true);
 
     try {
-      const { data, err } = await supabase.auth.signInWithPassword({
+      const { data, error: err } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password: password,
       });
 
       if (err) throw err;
 
+      // Verify admin status
+      const { data: adminData, error: adminErr } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (adminErr || !adminData) {
+        await supabase.auth.signOut();
+        throw new Error("Access Denied: You do not have admin privileges.");
+      }
+
       setSuccess(true);
-      setTimeout(() => onLogin({ name: data.user.user_metadata?.full_name || "Admin", email: data.user.email, role: "super_admin", avatar: data.user.email.charAt(0).toUpperCase() }), 900);
+      setTimeout(() => onLogin({ name: data.user.user_metadata?.full_name || adminData.name || "Admin", email: data.user.email, role: adminData.role || "super_admin", avatar: data.user.email.charAt(0).toUpperCase() }), 900);
     } catch (err) {
       const na = attempts + 1;
       setAttempts(na);
       if (na >= 5) setError("🔒 Account locked after 5 failed attempts.");
-      else setError(`Invalid credentials. ${5 - na} attempt${5 - na === 1 ? "" : "s"} remaining. (${err.message})`);
+      else setError(`Login failed. ${5 - na} attempt${5 - na === 1 ? "" : "s"} remaining. (${err.message})`);
     } finally {
       setIsLoading(false);
     }
