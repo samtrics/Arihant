@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function Header({ currentPage, onNavigate }) {
+export default function Header({ currentPage, onNavigate, customerUser }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -79,12 +79,18 @@ export default function Header({ currentPage, onNavigate }) {
               </span>
             </button>
             <button 
-              onClick={(e) => handleLinkClick(e, "login", null)}
-              className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95"
+              onClick={(e) => handleLinkClick(e, customerUser ? "customer-dashboard" : "login", null)}
+              className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95 flex items-center justify-center gap-1"
+              title={customerUser ? "My Dashboard" : "Login"}
             >
               <span className="material-symbols-outlined text-primary" data-icon="account_circle">
                 account_circle
               </span>
+              {customerUser && (
+                <span className="text-sm font-semibold text-primary hidden lg:inline">
+                  {customerUser.user_metadata?.full_name?.split(' ')[0] || "Profile"}
+                </span>
+              )}
             </button>
             {/* Mobile Hamburger Toggle Button */}
             <button

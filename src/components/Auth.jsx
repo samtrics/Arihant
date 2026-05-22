@@ -120,12 +120,16 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
       setIsSubmitted(true);
       setSuccessMessage(
         mode === "signin" 
-          ? `Welcome back, ${formData.email.split("@")[0]}! Accessing pure heritage...`
+          ? `Welcome back! Taking you to your dashboard...`
           : `Account successfully created! Welcome to Arihant.`
       );
       
       setTimeout(() => {
-        onNavigate("home", null);
+        if (mode === "signin") {
+          onNavigate("customer-dashboard", null);
+        } else {
+          onNavigate("home", null);
+        }
       }, 1500);
 
     } catch (err) {

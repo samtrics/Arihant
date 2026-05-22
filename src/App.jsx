@@ -17,13 +17,30 @@ import { initialProducts } from "./admin/mockData";
 import ProductDetailsModal from "./components/ProductDetailsModal";
 import DistributorLogin from "./components/DistributorLogin";
 import DistributorDashboard from "./components/DistributorDashboard";
+import CustomerDashboard from "./components/CustomerDashboard";
 import { socket } from "./socket";
+import { supabase } from "./supabaseClient";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("home");
   const [adminUser, setAdminUser] = useState(null);
+  const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState(initialProducts);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCustomerUser(session?.user || null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCustomerUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const handleSync = (state) => {
@@ -84,11 +101,11 @@ export default function App() {
     };
   }, [currentPage]);
 
-  const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard";
+  const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard" || currentPage === "customer-dashboard";
 
   return (
     <>
-      {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} />}
+      {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} customerUser={customerUser} />}
       <main>
         {currentPage === "home" && (
           <div className="page-transition">
@@ -104,6 +121,7 @@ export default function App() {
         {currentPage === "contact" && <Contact onNavigate={handleNavigate} />}
         {currentPage === "distributors" && <Distributor onNavigate={handleNavigate} />}
         {(currentPage === "login" || currentPage === "register") && <Auth onNavigate={handleNavigate} initialMode={currentPage === "login" ? "signin" : "signup"} />}
+        {currentPage === "customer-dashboard" && <CustomerDashboard user={customerUser} onNavigate={handleNavigate} onLogout={() => handleNavigate("home")} />}
         {currentPage === "distributor-login" && <DistributorLogin onNavigate={handleNavigate} />}
         {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
         {currentPage === "admin" && (
