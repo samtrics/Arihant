@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "../../supabaseClient";
 
 
 const GREEN = "#1F5132";
@@ -68,19 +68,42 @@ export default function ProductsManager({ products, setProducts }) {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const newWeight = form.weightValue ? `${form.weightValue}${form.weightUnit}` : "";
+    const payload = {
+      name: form.name,
+      sku: form.sku,
+      category: form.category,
+      price: +form.price,
+      offer_price: form.offerPrice ? +form.offerPrice : null,
+      stock: +form.stock,
+      weight: newWeight,
+      status: form.status,
+      tags: form.tags ? form.tags.split(",").map(t => t.trim()) : [],
+      emoji: form.emoji || "🌾",
+      description: form.desc || form.description || "",
+      tag: form.tag || "NEW",
+      img_src: form.imgSrc || form.img_src || "",
+      bestseller: form.bestseller || false,
+      featured: form.featured || false,
+      organic: form.organic || false,
+    };
+
     if (modal === "add") {
-      const np = { ...form, id: `PRD${String(products.length + 1).padStart(3, "0")}`, price: +form.price, offerPrice: form.offerPrice ? +form.offerPrice : null, stock: +form.stock, tags: form.tags.split(",").map((t) => t.trim()), emoji: "🌾", imgSrc: form.imgSrc || "https://lh3.googleusercontent.com/aida-public/AB6AXuDYlrFsgmD9lQFPpq2FUTquel45pepN70m1HPPr43zJzRObELoBCjVT21oVVSUaLOyr2-YVz_zI4qOkqJsHXoNwt8PGsLbyd6q4L3v7vGGDMrqC4O306dfSwKe5M_TjX9wSeFdhDvc6VaA2bMghFtnPkLvW1siGN29uRBZlM90jtiqOQJhSVjLdX2qfJWZRKsbjd5pf0V84srH5CKlmcV3FttTzF_HPIsno0HzSXwNZZ6ITfc6q7mmwdQfD3pjFoEWGWBUo__DLXOk", imgAlt: form.name, tag: "NEW PRODUCT", heritage: true, bestseller: false, featured: true, weight: newWeight };
-      setProducts([np, ...products]);
+      const newId = `PRD${String(products.length + 1).padStart(3, "0")}`;
+      const { error } = await supabase.from('products').insert([{ id: newId, ...payload }]);
+      if (error) { alert("Error saving product: " + error.message); return; }
     } else {
-      setProducts(products.map((p) => p.id === editId ? { ...p, ...form, price: +form.price, offerPrice: form.offerPrice ? +form.offerPrice : null, stock: +form.stock, tags: form.tags.split(",").map((t) => t.trim()), weight: newWeight } : p));
+      const { error } = await supabase.from('products').update(payload).eq('id', editId);
+      if (error) { alert("Error updating product: " + error.message); return; }
     }
+    // Realtime subscription in App.jsx will update products state automatically
     setModal(null);
   };
 
-  const handleDelete = () => {
-    setProducts(products.filter((p) => p.id !== deleteId));
+  const handleDelete = async () => {
+    const { error } = await supabase.from('products').delete().eq('id', deleteId);
+    if (error) { alert("Error deleting product: " + error.message); return; }
     setModal(null);
   };
 

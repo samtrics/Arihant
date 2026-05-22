@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { initialDistributors } from "../mockData";
+import { supabase } from "../../supabaseClient";
 
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
@@ -9,25 +9,37 @@ const tabs = ["All", "pending", "approved", "rejected"];
 const statusColors = { approved: "#10b981", pending: "#f59e0b", rejected: "#ef4444" };
 const statusBg = { approved: "#ecfdf5", pending: "#fffbeb", rejected: "#fef2f2" };
 
-export default function DistributorManager({ distributors = [], setDistributors }) {
+export default function DistributorManager({ distributors: propDistributors = [], setDistributors: setPropDistributors }) {
+  const [distributors, setDistributors] = useState(propDistributors);
+  const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("All");
   const [search, setSearch] = useState("");
   const [detail, setDetail] = useState(null);
-  const [detailTab, setDetailTab] = useState("overview"); // overview, orders, financials
+  const [detailTab, setDetailTab] = useState("overview");
   const [orderSearch, setOrderSearch] = useState("");
-
   const [modalOrders, setModalOrders] = useState([]);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase.from('distributors').select('*').order('applied', { ascending: false }).then(({ data, error }) => {
+      if (!error && data) setDistributors(data);
+      setLoading(false);
+    });
+  }, []);
 
   const filtered = distributors.filter((d) => {
     const q = search.toLowerCase();
-    const mQ = d.business.toLowerCase().includes(q) || d.owner.toLowerCase().includes(q) || d.city.toLowerCase().includes(q);
+    const mQ = (d.business || '').toLowerCase().includes(q) || (d.owner || '').toLowerCase().includes(q) || (d.city || '').toLowerCase().includes(q);
     const mT = tab === "All" || d.status === tab;
     return mQ && mT;
   });
 
-  const updateStatus = (id, status) => {
-    setDistributors((ds) => ds.map((d) => d.id === id ? { ...d, status } : d));
-    if (detail?.id === id) setDetail((d) => d ? { ...d, status } : d);
+  const updateStatus = async (id, status) => {
+    const { error } = await supabase.from('distributors').update({ status }).eq('id', id);
+    if (!error) {
+      setDistributors(ds => ds.map(d => d.id === id ? { ...d, status } : d));
+      if (detail?.id === id) setDetail(d => d ? { ...d, status } : d);
+    }
   };
 
   const countByStatus = (s) => distributors.filter((d) => d.status === s).length;

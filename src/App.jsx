@@ -13,7 +13,7 @@ import Distributor from "./components/Distributor";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import Footer from "./components/Footer";
-import { initialProducts } from "./admin/mockData";
+import { initialProducts } from "./admin/mockData"; // fallback only
 import ProductDetailsModal from "./components/ProductDetailsModal";
 import DistributorLogin from "./components/DistributorLogin";
 import DistributorDashboard from "./components/DistributorDashboard";
@@ -26,7 +26,7 @@ export default function App() {
   const [adminUser, setAdminUser] = useState(null);
   const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState(initialProducts); // start with fallback
 
   // Track current page in a ref so auth listener always has the latest value
   const currentPageRef = useRef("home");
@@ -67,22 +67,46 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Load products from Supabase and subscribe to realtime changes
   useEffect(() => {
-    const handleSync = (state) => {
-      if (state.products) {
-        setProducts(state.products);
+    // Initial fetch
+    supabase.from('products').select('*').order('id').then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        setProducts(data.map(p => ({
+          ...p,
+          offerPrice: p.offer_price,
+          imgSrc: p.img_src,
+          desc: p.description,
+          tags: p.tags || [],
+        })));
       }
-    };
-    socket.on('SYNC_STATE', handleSync);
-    return () => socket.off('SYNC_STATE', handleSync);
+    });
+
+    // Realtime subscription
+    const channel = supabase
+      .channel('products-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        supabase.from('products').select('*').order('id').then(({ data }) => {
+          if (data && data.length > 0) {
+            setProducts(data.map(p => ({
+              ...p,
+              offerPrice: p.offer_price,
+              imgSrc: p.img_src,
+              desc: p.description,
+              tags: p.tags || [],
+            })));
+          }
+        });
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
   }, []);
 
-  const handleSetProducts = (newValOrUpdater) => {
-    setProducts(prev => {
-      const updated = typeof newValOrUpdater === 'function' ? newValOrUpdater(prev) : newValOrUpdater;
-      socket.emit('UPDATE_STATE', { key: 'products', data: updated });
-      return updated;
-    });
+  const handleSetProducts = async (newValOrUpdater) => {
+    const updated = typeof newValOrUpdater === 'function' ? newValOrUpdater(products) : newValOrUpdater;
+    setProducts(updated);
+    // Supabase realtime will sync automatically via subscription above
   };
 
 

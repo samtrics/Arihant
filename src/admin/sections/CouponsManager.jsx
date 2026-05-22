@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { initialCoupons } from "../mockData";
+import { supabase } from "../../supabaseClient";
 
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
@@ -9,19 +9,38 @@ const emptyForm = { code: "", type: "percentage", value: "", minOrder: "", maxDi
 const inp = { width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1.5px solid #e5e7eb", fontSize: "13px", outline: "none", background: "white", boxSizing: "border-box", color: "#1C1C1C" };
 
 export default function CouponsManager() {
-  const [coupons, setCoupons] = useState(initialCoupons);
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState(null);
 
-  const handleCreate = () => {
-    const nc = { ...form, id: `CPN${String(coupons.length + 1).padStart(3, "0")}`, value: +form.value, minOrder: +form.minOrder, maxDiscount: +form.maxDiscount, maxUsage: +form.maxUsage, usage: 0, status: "active" };
-    setCoupons([nc, ...coupons]);
-    setModal(false);
-    setForm(emptyForm);
+  useEffect(() => {
+    supabase.from('coupons').select('*').order('id').then(({ data, error }) => {
+      if (!error && data) setCoupons(data.map(c => ({ ...c, usage: c.usage_count, maxUsage: c.max_usage, minOrder: c.min_order, maxDiscount: c.max_discount })));
+      setLoading(false);
+    });
+  }, []);
+
+  const handleCreate = async () => {
+    const payload = { code: form.code, type: form.type, value: +form.value, min_order: +form.minOrder, max_discount: +form.maxDiscount, max_usage: +form.maxUsage, expiry: form.expiry, usage_count: 0, status: 'active' };
+    const newId = `CPN${String(coupons.length + 1).padStart(3, "0")}`;
+    const { data, error } = await supabase.from('coupons').insert([{ id: newId, ...payload }]).select();
+    if (!error && data) {
+      setCoupons([{ ...data[0], usage: 0, maxUsage: data[0].max_usage, minOrder: data[0].min_order, maxDiscount: data[0].max_discount }, ...coupons]);
+      setModal(false);
+      setForm(emptyForm);
+    } else {
+      alert('Error creating coupon: ' + error.message);
+    }
   };
 
-  const toggleStatus = (id) => setCoupons(cs => cs.map(c => c.id === id ? { ...c, status: c.status === "active" ? "inactive" : "active" } : c));
+  const toggleStatus = async (id) => {
+    const coupon = coupons.find(c => c.id === id);
+    const newStatus = coupon.status === 'active' ? 'inactive' : 'active';
+    const { error } = await supabase.from('coupons').update({ status: newStatus }).eq('id', id);
+    if (!error) setCoupons(cs => cs.map(c => c.id === id ? { ...c, status: newStatus } : c));
+  };
 
   const isExpired = (expiry) => new Date(expiry) < new Date();
 
@@ -166,7 +185,11 @@ export default function CouponsManager() {
               <p style={{ color: "#6b7280", fontSize: "13.5px", marginBottom: "20px" }}>This coupon will be permanently removed and can no longer be used.</p>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button onClick={() => setDeleteId(null)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1.5px solid #e5e7eb", background: "white", fontWeight: "600", fontSize: "13px", cursor: "pointer" }}>Cancel</button>
-                <motion.button onClick={() => { setCoupons(cs => cs.filter(c => c.id !== deleteId)); setDeleteId(null); }}
+                <motion.button onClick={async () => { 
+                    const { error } = await supabase.from('coupons').delete().eq('id', deleteId);
+                    if (!error) setCoupons(cs => cs.filter(c => c.id !== deleteId));
+                    setDeleteId(null); 
+                  }}
                   style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#ef4444", color: "white", border: "none", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
                   whileHover={{ opacity: 0.88 }}>Delete</motion.button>
               </div>
