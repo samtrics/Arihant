@@ -303,6 +303,16 @@ export default function ProductsManager({ products, setProducts }) {
                       <option value="inactive">Inactive</option>
                     </select>
                   </div>
+                  <div style={{ gridColumn: "1/-1", display: "flex", gap: "16px", marginTop: "8px" }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer" }}>
+                      <input type="checkbox" checked={form.bestseller || false} onChange={e => setForm({ ...form, bestseller: e.target.checked })} style={{ width: "16px", height: "16px", accentColor: GREEN }} />
+                      Mark as Bestseller
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "600", color: "#374151", cursor: "pointer" }}>
+                      <input type="checkbox" checked={form.featured || false} onChange={e => setForm({ ...form, featured: e.target.checked })} style={{ width: "16px", height: "16px", accentColor: GREEN }} />
+                      Show on Home Page (Featured)
+                    </label>
+                  </div>
                 </div>
               </div>
               <div style={{ padding: "16px 24px", borderTop: "1px solid #f0ede8", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
