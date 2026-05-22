@@ -156,8 +156,8 @@ export default function DistributorManager({ distributors: propDistributors = []
             {/* Info */}
             <div style={{ flex: 1, minWidth: "200px" }}>
               <div style={{ fontWeight: "700", fontSize: "14.5px", color: "#1C1C1C", marginBottom: "3px" }}>{d.business}</div>
-              <div style={{ fontSize: "12.5px", color: "#6b7280" }}>{d.owner} · {d.city}, {d.state} · {d.bizType}</div>
-              <div style={{ fontSize: "11.5px", color: "#9ca3af", marginTop: "2px" }}>Applied: {d.applied} · GST: {d.gst} · {d.years} experience</div>
+              <div style={{ fontSize: "12.5px", color: "#6b7280" }}>{d.owner} · {d.city}, {d.state || ''} · {d.biz_type || d.bizType || ''}</div>
+              <div style={{ fontSize: "11.5px", color: "#9ca3af", marginTop: "2px" }}>Applied: {d.applied} · GST: {d.gst || ''} · {d.years_experience || d.years || '0'} experience</div>
             </div>
             {/* Status + actions */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
@@ -232,7 +232,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                 {detailTab === "overview" && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "24px" }}>
-                      {[["person", "Owner", detail.owner], ["phone", "Phone", detail.phone], ["mail", "Email", detail.email], ["location_on", "Location", `${detail.city}, ${detail.state}`], ["home_pin", "Shop Address", detail.address || "N/A"], ["receipt", "GST Number", detail.gst || "Not Provided"], ["storefront", "Business Type", detail.bizType], ["schedule", "Experience", detail.years]].map(([icon, label, val]) => (
+                      {[["person", "Owner", detail.owner], ["phone", "Phone", detail.phone], ["mail", "Email", detail.email], ["location_on", "Location", `${detail.city}, ${detail.state || ''}`], ["home_pin", "Shop Address", detail.address || "N/A"], ["receipt", "GST Number", detail.gst || "Not Provided"], ["storefront", "Business Type", detail.biz_type || detail.bizType], ["schedule", "Experience", detail.years_experience || detail.years]].map(([icon, label, val]) => (
                         <div key={label} style={{ display: "flex", gap: "10px", alignItems: "center", padding: "12px", borderRadius: "10px", border: "1px solid #f0ede8" }}>
                           <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#f5f1ea", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>
                             <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{icon}</span>
