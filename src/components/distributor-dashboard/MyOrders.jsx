@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { mockOrders } from "./mockData";
+const mockOrders = [];
 
 export default function MyOrders() {
   return (

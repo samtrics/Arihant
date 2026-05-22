@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { partnerProfile, mockNotifications } from "./distributor-dashboard/mockData";
-
 // Import Sub-Components
 import DashboardHome from "./distributor-dashboard/DashboardHome";
 import MyOrders from "./distributor-dashboard/MyOrders";
 import BulkOrderPortal from "./distributor-dashboard/BulkOrderPortal";
 import InventoryAvailability from "./distributor-dashboard/InventoryAvailability";
 import GenericPlaceholder from "./distributor-dashboard/GenericPlaceholder";
+
+const partnerProfile = { avatar: "A", businessName: "Distributor Profile", tier: "Partner" };
+const mockNotifications = [];
 
 export default function DistributorDashboard({ products = [], onLogout }) {
   const [activeTab, setActiveTab] = useState("home");

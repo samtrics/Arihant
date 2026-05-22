@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { initialAdminUsers } from "../mockData";
+
 
 const GREEN = "#1F5132";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
@@ -14,7 +14,7 @@ const ROLE_PERMS = { super_admin: "Full system access — all modules", product_
 const emptyForm = { name: "", email: "", role: "product_manager" };
 
 export default function AdminUsersPanel() {
-  const [admins, setAdmins] = useState(initialAdminUsers);
+  const [admins, setAdmins] = useState([]);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState(null);

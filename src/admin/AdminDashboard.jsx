@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { notificationsData } from "./mockData";
+
 import DashboardHome from "./sections/DashboardHome";
 import ProductsManager from "./sections/ProductsManager";
 import OrdersManager from "./sections/OrdersManager";
@@ -12,10 +12,7 @@ import CouponsManager from "./sections/CouponsManager";
 import NotificationsPanel from "./sections/NotificationsPanel";
 import SettingsPanel from "./sections/SettingsPanel";
 import AdminUsersPanel from "./sections/AdminUsersPanel";
-import { socket } from "../socket";
 import { supabase } from "../supabaseClient";
-
-import { initialOrders, initialB2BOrders, initialCustomers, initialDistributors } from "./mockData";
 
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
@@ -59,15 +56,15 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
   const [activeSection, setActiveSection] = useState("dashboard");
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState(notificationsData);
+  const [notifications, setNotifications] = useState([]);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
   // Global State for Admin Panel Data
-  const [orders, setOrders] = useState(initialOrders);
-  const [b2bOrders, setB2bOrders] = useState(initialB2BOrders);
-  const [customers, setCustomers] = useState(initialCustomers);
-  const [distributors, setDistributors] = useState(initialDistributors);
+  const [orders, setOrders] = useState([]);
+  const [b2bOrders, setB2bOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [distributors, setDistributors] = useState([]);
 
   useEffect(() => {
     // Initial fetch for dashboard stats

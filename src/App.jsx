@@ -13,7 +13,7 @@ import Distributor from "./components/Distributor";
 import AdminLogin from "./admin/AdminLogin";
 import AdminDashboard from "./admin/AdminDashboard";
 import Footer from "./components/Footer";
-import { initialProducts } from "./admin/mockData"; // fallback only
+
 import ProductDetailsModal from "./components/ProductDetailsModal";
 import DistributorLogin from "./components/DistributorLogin";
 import DistributorDashboard from "./components/DistributorDashboard";

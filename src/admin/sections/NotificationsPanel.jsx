@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { notificationsData } from "../mockData";
 
 const GREEN = "#1F5132";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
@@ -9,7 +8,7 @@ const typeBg = { order: "#eff6ff", inventory: "#fffbeb", distributor: "rgba(31,8
 const typeIcons = { order: "shopping_bag", inventory: "warehouse", distributor: "local_shipping", review: "star", default: "notifications" };
 
 export default function NotificationsPanel() {
-  const [notifications, setNotifications] = useState(notificationsData);
+  const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState("All");
 
   const filtered = notifications.filter(n => filter === "All" || (filter === "Unread" ? !n.read : filter === n.type));

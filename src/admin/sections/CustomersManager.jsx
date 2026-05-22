@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { initialCustomers, initialDistributors } from "../mockData";
+
 
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";

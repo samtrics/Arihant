@@ -1,7 +1,9 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-import { dashboardStats, monthlyRevenueData, partnerProfile } from "./mockData";
+const dashboardStats = { totalOrders: 0, monthlyPurchases: 0, pendingDeliveries: 0, totalEarnings: 0, activeProducts: 0, currentDiscount: 0 };
+const monthlyRevenueData = [];
+const partnerProfile = { ownerName: "Distributor", tier: "Partner" };
 
 export default function DashboardHome() {
   const stats = [

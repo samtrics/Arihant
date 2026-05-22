@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { inventoryData } from "./mockData";
+const inventoryData = [];
 
 export default function InventoryAvailability() {
   return (

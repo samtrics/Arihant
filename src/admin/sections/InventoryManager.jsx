@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { inventoryData } from "../mockData";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
 const GREEN = "#1F5132";
@@ -8,7 +7,7 @@ const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 
 export default function InventoryManager() {
-  const [inventory, setInventory] = useState(inventoryData);
+  const [inventory, setInventory] = useState([]);
   const [updateModal, setUpdateModal] = useState(null);
   const [updateQty, setUpdateQty] = useState("");
   const [search, setSearch] = useState("");
