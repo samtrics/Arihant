@@ -13,6 +13,7 @@ import NotificationsPanel from "./sections/NotificationsPanel";
 import SettingsPanel from "./sections/SettingsPanel";
 import AdminUsersPanel from "./sections/AdminUsersPanel";
 import { socket } from "../socket";
+import { supabase } from "../supabaseClient";
 
 import { initialOrders, initialB2BOrders, initialCustomers, initialDistributors } from "./mockData";
 
