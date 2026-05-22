@@ -1,0 +1,160 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Premium Global Animations & Transitions */
+.page-transition {
+    animation: pageFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes pageFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide up details or buttons on hover */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-slide-in {
+    animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Beautiful Fade In for Overlays */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Wheat and Grain textures */
+.wheat-texture {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCm_dYIO5IsFXZaktNfY-tFO7D4TRh5jK_l7y99Y4SAWglfucYBFNoVA8fBm_SiQ0_K4GSZhsmmKh9cJC8eeafHftlMV9nDjqmMZLouSdYpiHoGdf82l40t1tYta4FinZaQqh2IA1clWC626cJMbgcQs4z2JeRTBsbRqj8cLvmNv57A226xHmMOLpxPpU__xN0oW7C2SBn6pYpjP5KxG7XGd8k-D-x4aNHpZihc3Twa3NG_sJzK74JxesUiNuHJWZLHMOvJ4pN2QZg);
+    opacity: 0.04;
+    pointer-events: none;
+}
+
+.grain-overlay {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#d4d0c5 0.5px, transparent 0.5px);
+    background-size: 8px 8px;
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.texture-overlay {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBXE1Ypx7fe0QnFK4ZbynKz-9MxW_V9x29qTieuMP75j08kI-03HxfWFt0659e60vrhb81vW1uKb4l2GS3GY2jQcB-OsYz3WzGLSK3SudA3Z55674FPOt9nxOx9XvrHXpK-ABvug1LkhXDi4kFqr5xcG2XQhGT4CMEwUhzjwiMqIdx5stYDqptcJCgnlNatjqsd9tDdtpc6VgqwV0iABjb6v9TelIfWRt586XqKs6lE6Vz0lz2DOHPVhtL9EOHgdQXgHCoTF90JAx0);
+    opacity: 0.04;
+    pointer-events: none;
+}
+
+/* Navigation highlights */
+.active-nav-link {
+    position: relative;
+}
+
+.active-nav-link::after {
+    content: "";
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: currentColor;
+}
+
+/* Multi-column editorial text block */
+.editorial-text {
+    column-count: 1;
+    max-width: 800px;
+}
+
+@media (min-width: 1024px) {
+    .editorial-text {
+        column-count: 2;
+        column-gap: 48px;
+    }
+}
+
+/* Scroll reveal interactions */
+.scroll-reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+}
+
+.scroll-reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Enhanced Product Card interactions */
+.product-card-hover {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.product-card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px -10px rgba(2, 58, 29, 0.08);
+}
+
+.product-card-hover:hover .add-to-cart-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Custom premium selection ring */
+.premium-focus-ring:focus {
+    outline: none;
+    border-color: #023a1d;
+    box-shadow: 0 0 0 4px rgba(2, 58, 29, 0.1);
+}
+
+/* Elegant scrollbar style */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #fbf9f8;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c9bf;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #717971;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}

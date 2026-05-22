@@ -1,0 +1,142 @@
+import React, { useEffect } from "react";
+
+export default function ProductDetailsModal({ product, onClose }) {
+  // Close on escape key
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleEsc);
+    // Prevent scrolling on body when modal is open
+    document.body.style.overflow = 'hidden';
+    
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose]);
+
+  if (!product) return null;
+
+  const currentPrice = product.offerPrice ? product.offerPrice : product.price;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+      <div 
+        className="relative w-full max-w-4xl bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row max-h-[90vh] animate-slide-in"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Close Button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high/60 hover:bg-surface-container-highest text-on-surface backdrop-blur-md transition-colors"
+        >
+          <span className="material-symbols-outlined">close</span>
+        </button>
+
+        {/* Image Section */}
+        <div className="w-full md:w-1/2 bg-surface-container-low relative flex-shrink-0">
+          <div className="texture-overlay absolute inset-0 opacity-20"></div>
+          {product.brandTag && (
+            <div className="absolute top-6 left-6 z-10">
+              <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-label-sm font-bold shadow-sm">
+                {product.brandTag}
+              </span>
+            </div>
+          )}
+          <img 
+            src={product.imgSrc} 
+            alt={product.imgAlt || product.name} 
+            className="w-full h-full object-cover min-h-[300px] md:min-h-full"
+          />
+        </div>
+
+        {/* Details Section */}
+        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto">
+          <div className="mb-6">
+            <span className="text-label-sm text-secondary font-bold tracking-widest uppercase mb-2 block">
+              {product.tag || product.category}
+            </span>
+            <h2 className="font-display-sm text-display-sm text-primary mb-2">
+              {product.name}
+            </h2>
+            <div className="flex items-center gap-3 text-label-md text-on-surface-variant">
+              <span>SKU: <span className="font-mono text-outline">{product.sku}</span></span>
+              <span>•</span>
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs font-bold">
+                {product.weight}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <div className="flex items-end gap-3 mb-2">
+              <span className="font-display-sm text-[32px] text-primary font-bold leading-none">
+                ₹{Number(currentPrice).toFixed(2)}
+              </span>
+              {product.offerPrice && (
+                <span className="text-outline line-through text-lg mb-1">
+                  ₹{Number(product.price).toFixed(2)}
+                </span>
+              )}
+            </div>
+            <p className="text-label-sm text-on-surface-variant">Inclusive of all taxes</p>
+          </div>
+
+          <div className="mb-8 flex-1">
+            <h3 className="font-headline-sm text-headline-sm text-on-surface mb-3">About this product</h3>
+            <p className="text-body-lg text-on-surface-variant leading-relaxed">
+              {product.desc}
+            </p>
+            
+            <div className="mt-6 flex flex-wrap gap-2">
+              {product.tags && product.tags.map(t => (
+                <span key={t} className="bg-surface-container-high text-on-surface-variant px-3 py-1 rounded-full text-xs uppercase tracking-wide font-bold">
+                  {t}
+                </span>
+              ))}
+              {product.organic && (
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs uppercase tracking-wide font-bold flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[14px]">eco</span> Organic
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action Bar */}
+          <div className="pt-6 border-t border-outline-variant mt-auto">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center border border-outline-variant rounded-lg overflow-hidden h-[48px]">
+                <button className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg">-</button>
+                <span className="px-4 font-bold text-on-surface">1</span>
+                <button className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg">+</button>
+              </div>
+              <button 
+                className={`flex-1 h-[48px] rounded-lg font-bold flex items-center justify-center gap-2 transition-transform ${
+                  product.stock > 0 
+                    ? "bg-primary text-white hover:bg-primary-container active:scale-[0.98]" 
+                    : "bg-surface-container-high text-outline cursor-not-allowed"
+                }`}
+                disabled={product.stock <= 0}
+              >
+                <span className="material-symbols-outlined">shopping_cart</span>
+                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+              </button>
+            </div>
+            
+            {product.stock <= 0 && (
+              <p className="text-red-500 text-sm font-bold mt-3 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">error</span> Currently Out of Stock
+              </p>
+            )}
+            {product.stock > 0 && product.stock < 50 && (
+              <p className="text-amber-600 text-sm font-bold mt-3 flex items-center gap-1">
+                <span className="material-symbols-outlined text-[16px]">warning</span> Only {product.stock} left in stock!
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
