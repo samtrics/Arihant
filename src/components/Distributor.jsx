@@ -190,13 +190,13 @@ export default function Distributor({ onNavigate }) {
     setErrors(prev => ({ ...prev, _general: "" }));
     
     try {
-      const { error } = await supabase.from('distributor_applications').insert([{
-        business_name: formData.businessName,
-        owner_name: formData.ownerName,
+      const { error } = await supabase.from('distributors').insert([{
+        business: formData.businessName,
+        owner: formData.ownerName,
+        city: formData.city,
         phone: formData.phone,
         email: formData.email,
         address: formData.address,
-        city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
         biz_type: formData.bizType,
