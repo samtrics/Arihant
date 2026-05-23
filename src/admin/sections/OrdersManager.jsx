@@ -30,6 +30,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [detail, setDetail] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(null);
   const [page, setPage] = useState(1);
   const PER = 8;
 
@@ -56,6 +57,21 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
         setRetailOrders(retailOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
       }
       if (detail?.id === id) setDetail({ ...detail, status: newStatus });
+    }
+  };
+
+  const deleteOrder = async () => {
+    if (!deleteModal) return;
+    const { error } = await supabase.from('orders').delete().eq('order_number', deleteModal);
+    if (!error) {
+      if (activeTab === "b2b") {
+        setB2bOrders(b2bOrders.filter(o => o.id !== deleteModal));
+      } else {
+        setRetailOrders(retailOrders.filter(o => o.id !== deleteModal));
+      }
+      setDeleteModal(null);
+    } else {
+      alert("Error deleting order: " + error.message);
     }
   };
 
@@ -221,11 +237,18 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     </select>
                   </td>
                   <td style={{ padding: "13px" }}>
-                    <motion.button onClick={e => { e.stopPropagation(); setDetail(o); }}
-                      style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
-                      whileHover={{ background: "#eff6ff", color: "#3b82f6", borderColor: "#3b82f6" }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>open_in_new</span>
-                    </motion.button>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      <motion.button onClick={e => { e.stopPropagation(); setDetail(o); }}
+                        style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
+                        whileHover={{ background: "#eff6ff", color: "#3b82f6", borderColor: "#3b82f6" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>open_in_new</span>
+                      </motion.button>
+                      <motion.button onClick={e => { e.stopPropagation(); setDeleteModal(o.id); }}
+                        style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
+                        whileHover={{ background: "#fef2f2", color: "#ef4444", borderColor: "#ef4444" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
+                      </motion.button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -525,6 +548,27 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
         )}
       </AnimatePresence>
 
+      {/* ── Delete Confirm Modal ── */}
+      <AnimatePresence>
+        {deleteModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
+              style={{ background: "white", borderRadius: "20px", padding: "28px", maxWidth: "360px", width: "100%", textAlign: "center" }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "28px", color: "#ef4444" }}>delete_forever</span>
+              </div>
+              <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "18px", marginBottom: "8px" }}>Delete Order?</h3>
+              <p style={{ color: "#6b7280", fontSize: "13.5px", marginBottom: "22px", lineHeight: "1.5" }}>This action cannot be undone. Order {deleteModal} will be permanently removed.</p>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button onClick={() => setDeleteModal(null)} style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1.5px solid #e5e7eb", background: "white", fontWeight: "600", fontSize: "13px", cursor: "pointer" }}>Cancel</button>
+                <motion.button onClick={deleteOrder} style={{ flex: 1, padding: "10px", borderRadius: "10px", background: "#ef4444", color: "white", border: "none", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
+                  whileHover={{ opacity: 0.88 }} whileTap={{ scale: 0.97 }}>Delete</motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
