@@ -329,12 +329,12 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                           </tr>
                         </thead>
                         <tbody>
-                          {detail.products?.map((p, i) => (
+                          {(Array.isArray(detail.products) ? detail.products : (typeof detail.products === 'string' ? JSON.parse(detail.products || '[]') : [])).map((p, i) => (
                             <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
                               <td style={{ padding: "8px 12px", fontWeight: "600", color: "#374151" }}>{p.name}</td>
-                              <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: "#1C1C1C" }}>{p.qty}</td>
+                              <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: "#1C1C1C" }}>{p.qty || 1}</td>
                               <td style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280" }}>₹{(p.price || 0).toLocaleString("en-IN")}</td>
-                              <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{(p.total || 0).toLocaleString("en-IN")}</td>
+                              <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{((p.price || 0) * (p.qty || 1)).toLocaleString("en-IN")}</td>
                             </tr>
                           ))}
                         </tbody>

@@ -95,12 +95,25 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   const productMap = {};
   allOrders.forEach(o => {
     if(o.status === "cancelled") return;
-    o.products?.forEach(p => {
-      const name = typeof p === "string" ? p : p.name;
-      // Weight by qty or count 1 for B2C if qty missing
-      const qty = typeof p === "string" ? 1 : (p.qty || 1);
-      productMap[name] = (productMap[name] || 0) + qty;
-    });
+    if (Array.isArray(o.products)) {
+      o.products.forEach(p => {
+        const name = typeof p === "string" ? p : p.name;
+        // Weight by qty or count 1 for B2C if qty missing
+        const qty = p.qty || 1;
+        productMap[name] = (productMap[name] || 0) + qty;
+      });
+    } else if (typeof o.products === 'string') {
+      try {
+        const parsed = JSON.parse(o.products);
+        if (Array.isArray(parsed)) {
+          parsed.forEach(p => {
+            const name = typeof p === "string" ? p : p.name;
+            const qty = p.qty || 1;
+            productMap[name] = (productMap[name] || 0) + qty;
+          });
+        }
+      } catch (e) {}
+    }
   });
   const topColors = ["#1F5132", "#D4A64A", "#2d6b45", "#c49030", "#417a58"];
   const sortedProducts = Object.entries(productMap).sort((a,b)=>b[1]-a[1]).slice(0, 5);

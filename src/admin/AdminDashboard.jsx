@@ -76,8 +76,8 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           customer: o.customer_name,
           payment: o.payment_status
         }));
-        setOrders(mapped.filter(o => !(o.order_number && o.order_number.startsWith('B2B'))));
-        setB2bOrders(mapped.filter(o => o.order_number && o.order_number.startsWith('B2B')));
+        setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
+        setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));
       }
     });
     supabase.from('distributors').select('*').then(({ data }) => {
@@ -95,8 +95,8 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
               customer: o.customer_name,
               payment: o.payment_status
             }));
-            setOrders(mapped.filter(o => !(o.order_number && o.order_number.startsWith('B2B'))));
-            setB2bOrders(mapped.filter(o => o.order_number && o.order_number.startsWith('B2B')));
+            setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
+            setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));
           }
         });
       })
