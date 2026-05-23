@@ -27,8 +27,6 @@ const MOCK_DISTRIBUTORS = [
 
 export default function OrdersManager({ products = [], retailOrders = [], setRetailOrders, b2bOrders = [], setB2bOrders, distributors = [] }) {
   const [activeTab, setActiveTab] = useState("retail");
-  const [orders, setOrders] = useState(retailOrders);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [detail, setDetail] = useState(null);
@@ -38,15 +36,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const [isCreatingB2B, setIsCreatingB2B] = useState(false);
   const [newB2BOrder, setNewB2BOrder] = useState({ distributorId: "", cart: {} });
 
-  useEffect(() => {
-    setLoading(true);
-    supabase.from('orders').select('*').order('date', { ascending: false }).then(({ data, error }) => {
-      if (!error && data) setOrders(data);
-      setLoading(false);
-    });
-  }, [activeTab]);
-
-  const currentOrders = orders;
+  const currentOrders = activeTab === "b2b" ? b2bOrders : retailOrders;
 
   const filtered = currentOrders.filter((o) => {
     const q = search.toLowerCase();
@@ -58,9 +48,13 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const paged = filtered.slice((page - 1) * PER, page * PER);
 
   const updateStatus = async (id, newStatus) => {
-    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
+    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('order_number', id);
     if (!error) {
-      setOrders(orders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+      if (activeTab === "b2b") {
+        setB2bOrders(b2bOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+      } else {
+        setRetailOrders(retailOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+      }
       if (detail?.id === id) setDetail({ ...detail, status: newStatus });
     }
   };
