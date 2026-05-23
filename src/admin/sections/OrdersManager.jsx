@@ -360,7 +360,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                         <tfoot style={{ background: "#faf8f5" }}>
                           <tr>
                             <td colSpan={3} style={{ padding: "10px 12px", textAlign: "right", fontWeight: "700", fontSize: "12px", color: "#6b7280", textTransform: "uppercase" }}>Total Bill Generate:</td>
-                            <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: "800", fontSize: "15px", color: GOLD }}>₹{detail.amount.toLocaleString("en-IN")}</td>
+                            <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: "800", fontSize: "15px", color: GOLD }}>₹{Number(detail.amount || 0).toLocaleString("en-IN")}</td>
                           </tr>
                           <tr>
                             <td colSpan={3} style={{ padding: "6px 12px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Amount Paid:</td>

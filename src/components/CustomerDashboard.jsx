@@ -1,8 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+
+const statusColors = { delivered: "#10b981", shipped: "#3b82f6", processing: "#f59e0b", pending: "#8b5cf6", cancelled: "#ef4444" };
+const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbeb", pending: "#f5f3ff", cancelled: "#fef2f2" };
 
 export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const [activeTab, setActiveTab] = useState("profile");
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -13,6 +18,20 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
     if (!email) return "U";
     return email.charAt(0).toUpperCase();
   };
+
+  useEffect(() => {
+    if (activeTab !== "orders" || !user) return;
+    setOrdersLoading(true);
+    supabase.from('orders')
+      .select('*')
+      .eq('customer_email', user.email)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setOrders(data);
+        else setOrders([]);
+        setOrdersLoading(false);
+      });
+  }, [activeTab, user]);
 
   return (
     <div className="bg-[#FAF7F0] min-h-screen pt-24 pb-16 px-4 md:px-8 font-['Inter',sans-serif]">
@@ -110,23 +129,56 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                     onClick={() => onNavigate("products", null)}
                     className="text-[#D4A64A] font-semibold text-sm hover:underline"
                   >
-                    Start Shopping
+                    Continue Shopping
                   </button>
                 </div>
                 
-                <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-gray-400">
-                    <span className="material-symbols-outlined text-[32px]">shopping_bag</span>
+                {ordersLoading ? (
+                  <div className="flex items-center justify-center py-16 text-gray-400">
+                    <span className="material-symbols-outlined text-[40px] animate-spin mr-3">autorenew</span>
+                    Loading orders...
                   </div>
-                  <h4 className="text-lg font-bold text-gray-700">No orders yet</h4>
-                  <p className="text-gray-500 mt-2 max-w-sm">When you buy products from our store, they will appear here with real-time tracking.</p>
-                  <button 
-                    onClick={() => onNavigate("products", null)}
-                    className="mt-6 px-8 py-3 bg-[#1F5132] text-white rounded-full font-bold shadow-md hover:shadow-lg transition-all active:scale-95"
-                  >
-                    Browse Store
-                  </button>
-                </div>
+                ) : orders.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-gray-200 rounded-xl bg-gray-50">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-4 text-gray-400">
+                      <span className="material-symbols-outlined text-[32px]">shopping_bag</span>
+                    </div>
+                    <h4 className="text-lg font-bold text-gray-700">No orders yet</h4>
+                    <p className="text-gray-500 mt-2 max-w-sm">When you buy products from our store, they will appear here with real-time tracking.</p>
+                    <button 
+                      onClick={() => onNavigate("products", null)}
+                      className="mt-6 px-8 py-3 bg-[#1F5132] text-white rounded-full font-bold shadow-md hover:shadow-lg transition-all active:scale-95"
+                    >
+                      Browse Store
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map(order => (
+                      <div key={order.id} className="border border-gray-100 rounded-xl p-5 hover:shadow-md transition-all">
+                        <div className="flex items-center justify-between flex-wrap gap-3">
+                          <div>
+                            <div className="font-bold text-[#1F5132] text-sm">{order.order_number || order.id}</div>
+                            <div className="text-xs text-gray-500 mt-1">{order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : 'N/A'}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-gray-800 text-lg">₹{Number(order.amount || 0).toLocaleString('en-IN')}</div>
+                            <span style={{ background: statusBg[order.status] || "#f3f4f6", color: statusColors[order.status] || "#6b7280" }} className="text-xs font-bold px-3 py-1 rounded-full capitalize">{order.status || "processing"}</span>
+                          </div>
+                        </div>
+                        {order.products && (
+                          <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
+                            {(Array.isArray(order.products) ? order.products : JSON.parse(order.products || '[]')).map((p, i) => (
+                              <span key={i} className="text-xs px-3 py-1 bg-[#1F5132]/08 text-[#1F5132] rounded-full font-medium" style={{background:'rgba(31,81,50,0.08)'}}>
+                                {typeof p === 'string' ? p : p.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

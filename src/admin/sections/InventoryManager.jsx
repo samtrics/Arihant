@@ -2,15 +2,46 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+import { supabase } from "../../supabaseClient";
+
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 
-export default function InventoryManager() {
-  const [inventory, setInventory] = useState([]);
+export default function InventoryManager({ products = [] }) {
+  const [inventory, setInventory] = useState(() =>
+    products.map(p => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku || p.id,
+      category: p.category || "General",
+      warehouse: "Main Warehouse",
+      stock: p.stock ?? 100,
+      minStock: p.min_stock ?? 20,
+      value: Number(p.offerPrice || p.offer_price || p.price || 0) * (p.stock ?? 100),
+      unit: "units",
+      lastUpdated: new Date().toISOString().split('T')[0],
+    }))
+  );
   const [updateModal, setUpdateModal] = useState(null);
   const [updateQty, setUpdateQty] = useState("");
   const [search, setSearch] = useState("");
+
+  // Sync when products prop changes
+  React.useEffect(() => {
+    setInventory(products.map(p => ({
+      id: p.id,
+      name: p.name,
+      sku: p.sku || p.id,
+      category: p.category || "General",
+      warehouse: "Main Warehouse",
+      stock: p.stock ?? 100,
+      minStock: p.min_stock ?? 20,
+      value: Number(p.offerPrice || p.offer_price || p.price || 0) * (p.stock ?? 100),
+      unit: "units",
+      lastUpdated: p.updated_at ? new Date(p.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    })));
+  }, [products]);
 
   const filtered = inventory.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()) || i.sku.toLowerCase().includes(search.toLowerCase()));
 
@@ -20,10 +51,15 @@ export default function InventoryManager() {
     return { label: "In Stock", color: "#10b981", bg: "#ecfdf5" };
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     const qty = parseInt(updateQty);
     if (isNaN(qty) || qty < 0) return;
-    setInventory((inv) => inv.map((i) => i.id === updateModal.id ? { ...i, stock: qty, lastUpdated: new Date().toISOString().split("T")[0] } : i));
+    const { error } = await supabase.from('products').update({ stock: qty }).eq('id', updateModal.id);
+    if (!error) {
+      setInventory((inv) => inv.map((i) => i.id === updateModal.id ? { ...i, stock: qty, lastUpdated: new Date().toISOString().split("T")[0] } : i));
+    } else {
+      alert("Error updating stock: " + error.message);
+    }
     setUpdateModal(null);
     setUpdateQty("");
   };
