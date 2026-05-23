@@ -7,23 +7,36 @@ const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 const AVATARS = ["#1F5132", "#D4A64A", "#3b82f6", "#8b5cf6", "#10b981", "#ef4444", "#f59e0b", "#06b6d4", "#ec4899", "#6366f1"];
 
-export default function CustomersManager({ customers = [], setCustomers, distributors = [], setDistributors }) {
-  const mappedDistributors = distributors.map(d => ({
-    id: d.id,
-    name: d.business,
-    owner: d.owner,
-    email: d.email,
-    phone: d.phone,
-    city: d.city,
-    state: d.state,
-    orders: d.orders,
-    spent: d.revenue,
-    joined: d.applied,
-    status: d.status === "approved" ? "active" : "blocked",
-    type: "B2B"
-  }));
+export default function CustomersManager({ customers = [], setCustomers, distributors = [], setDistributors, orders = [], b2bOrders = [] }) {
+  const mappedDistributors = distributors.map(d => {
+    const dOrders = b2bOrders.filter(o => o.distributorId === d.id || o.customer === d.business);
+    const dSpent = dOrders.reduce((acc, o) => acc + Number(o.amount || 0), 0);
+    return {
+      id: d.id,
+      name: d.business,
+      owner: d.owner,
+      email: d.email,
+      phone: d.phone,
+      city: d.city,
+      state: d.state,
+      orders: dOrders.length,
+      spent: dSpent,
+      joined: d.applied || d.created_at,
+      status: d.status === "approved" ? "active" : "blocked",
+      type: "B2B"
+    };
+  });
   
-  const mappedCustomers = customers.map(c => ({ ...c, type: "B2C" }));
+  const mappedCustomers = customers.map(c => {
+    const cOrders = orders.filter(o => o.customer === c.name || o.email === c.email);
+    const cSpent = cOrders.reduce((acc, o) => acc + Number(o.amount || 0), 0);
+    return {
+      ...c,
+      orders: cOrders.length,
+      spent: cSpent,
+      type: "B2C"
+    };
+  });
   const combinedUsers = [...mappedCustomers, ...mappedDistributors];
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
@@ -58,45 +71,31 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
   const initials = (name) => name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
   const avatarColor = (id) => AVATARS[parseInt(id.replace(/[^0-9]/g, "") || "0") % AVATARS.length];
 
-  // Generate mock orders exactly once when a customer is opened
+  // Load real orders when a customer is opened
   useEffect(() => {
     if (!detail) {
       setModalOrders([]);
       return;
     }
-    const numOrders = detail.orders > 0 ? detail.orders : 0;
-    let remainingSpent = detail.spent;
-    const ordersList = [];
-    const statuses = ["delivered", "shipped", "processing", "pending"];
-    const today = new Date();
-    
-    for(let i=0; i<numOrders; i++) {
-      const isLast = i === numOrders - 1;
-      const amt = isLast ? remainingSpent : Math.floor(Math.random() * (remainingSpent * 0.4)) + 100;
-      remainingSpent -= amt;
-      
-      const orderDate = new Date(today);
-      orderDate.setDate(orderDate.getDate() - (i * 14) - Math.floor(Math.random()*5));
-      
-      const status = i === 0 ? statuses[Math.floor(Math.random() * statuses.length)] : "delivered";
-      let paymentStatus = "paid";
-      let amountPaid = amt;
-      if (status === "pending" || status === "processing") {
-        paymentStatus = Math.random() > 0.5 ? "pending" : "partial";
-        amountPaid = paymentStatus === "pending" ? 0 : Math.floor(amt * 0.5);
-      }
-      
-      ordersList.push({
-        id: `ORD-${detail.type === "B2B" ? "B" : "R"}${Math.floor(1000 + Math.random()*9000)}`,
-        date: orderDate.toISOString().split('T')[0],
-        amount: amt,
-        status: status,
-        paymentStatus: paymentStatus,
-        amountPaid: amountPaid
-      });
+    let custOrders = [];
+    if (detail.type === "B2B") {
+      custOrders = b2bOrders.filter(o => o.distributorId === detail.id || o.customer === detail.name);
+    } else {
+      custOrders = orders.filter(o => o.customer === detail.name || o.email === detail.email);
     }
-    setModalOrders(ordersList);
-  }, [detail]);
+    
+    // Sort by most recent
+    custOrders.sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
+    
+    const formattedOrders = custOrders.map(o => ({
+      ...o,
+      id: o.order_number || o.id,
+      paymentStatus: o.payment || "paid",
+      amountPaid: o.payment === "paid" ? o.amount : (o.payment === "partial" ? o.amount / 2 : 0)
+    }));
+    
+    setModalOrders(formattedOrders);
+  }, [detail, orders, b2bOrders]);
 
   // Dynamically calculate financials based on modalOrders
   const financials = useMemo(() => {
