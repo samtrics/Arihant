@@ -240,15 +240,19 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
               </tr>
             </thead>
             <tbody>
-              {paged.map((o) => (
+              {paged.map((o) => {
+                const dist = activeTab === "b2b" ? distributors.find(d => d.business === o.customer || d.name === o.customer) : null;
+                const dCode = o.distributorId || dist?.id || "N/A";
+                const dCity = o.city || dist?.city || "N/A";
+                return (
                 <tr key={o.id} style={{ borderBottom: "1px solid #faf8f5", transition: "background 0.15s", cursor: "pointer" }}
                   onMouseEnter={e => e.currentTarget.style.background = "#faf8f5"}
                   onMouseLeave={e => e.currentTarget.style.background = ""}
-                  onClick={() => setDetail(o)}>
+                  onClick={() => setDetail({ ...o, distributorId: dCode, city: dCity })}>
                   <td style={{ padding: "13px", fontWeight: "700", color: activeTab === "b2b" ? GOLD : GREEN }}>{o.id}</td>
                   <td style={{ padding: "13px" }}>
                     <div style={{ fontWeight: "600", color: "#1C1C1C" }}>{o.customer}</div>
-                    <div style={{ fontSize: "11px", color: "#9ca3af" }}>{activeTab === "b2b" ? `Code: ${o.distributorId} | ${o.city}` : o.city}</div>
+                    <div style={{ fontSize: "11px", color: "#9ca3af" }}>{activeTab === "b2b" ? `Code: ${dCode} | ${dCity}` : dCity}</div>
                   </td>
                   <td style={{ padding: "13px", color: "#6b7280", fontSize: "12px" }}>{o.date || "N/A"}</td>
                   <td style={{ padding: "13px", fontWeight: "600" }}>{o.items || (Array.isArray(o.products) ? o.products.length : 0)} {activeTab === "b2b" ? "SKUs" : "Items"}</td>
@@ -275,7 +279,8 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {paged.length === 0 && (
                 <tr><td colSpan={7} style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>No orders found</td></tr>
               )}
