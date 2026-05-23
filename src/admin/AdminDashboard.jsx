@@ -112,11 +112,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
   const wrapSet = (key, setFunc) => {
     return (newValOrUpdater) => {
-      setFunc(prev => {
-        const updated = typeof newValOrUpdater === 'function' ? newValOrUpdater(prev) : newValOrUpdater;
-        socket.emit('UPDATE_STATE', { key, data: updated });
-        return updated;
-      });
+      setFunc(newValOrUpdater);
     };
   };
 
