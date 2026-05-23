@@ -19,6 +19,7 @@ export default function ProductsManager({ products, setProducts }) {
   const [deleteId, setDeleteId] = useState(null);
   const [page, setPage] = useState(1);
   const [uploading, setUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const PER = 6;
 
   const filtered = products.filter((p) => {
@@ -69,37 +70,57 @@ export default function ProductsManager({ products, setProducts }) {
   };
 
   const handleSave = async () => {
-    const newWeight = form.weightValue ? `${form.weightValue}${form.weightUnit}` : "";
-    const payload = {
-      name: form.name,
-      sku: form.sku,
-      category: form.category,
-      price: +form.price,
-      offer_price: form.offerPrice ? +form.offerPrice : null,
-      stock: +form.stock,
-      weight: newWeight,
-      status: form.status,
-      tags: form.tags ? form.tags.split(",").map(t => t.trim()) : [],
-      emoji: form.emoji || "🌾",
-      description: form.desc || form.description || "",
-      tag: form.tag || "NEW",
-      img_src: form.imgSrc || form.img_src || "",
-      bestseller: form.bestseller || false,
-      featured: form.featured || false,
-      organic: form.organic || false,
-    };
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const newWeight = form.weightValue ? `${form.weightValue}${form.weightUnit}` : "";
+      const payload = {
+        name: form.name,
+        sku: form.sku,
+        category: form.category,
+        price: +form.price,
+        offer_price: form.offerPrice ? +form.offerPrice : null,
+        stock: +form.stock,
+        weight: newWeight,
+        status: form.status,
+        tags: form.tags ? form.tags.split(",").map(t => t.trim()) : [],
+        emoji: form.emoji || "🌾",
+        description: form.desc || form.description || "",
+        tag: form.tag || "NEW",
+        img_src: form.imgSrc || form.img_src || "",
+        bestseller: form.bestseller || false,
+        featured: form.featured || false,
+        organic: form.organic || false,
+      };
 
-    if (modal === "add") {
-      // Use a timestamp to guarantee a 100% unique ID every time
-      const newId = `PRD-${Date.now()}`;
-      const { error } = await supabase.from('products').insert([{ id: newId, ...payload }]);
-      if (error) { alert("Error saving product: " + error.message); return; }
-    } else {
-      const { error } = await supabase.from('products').update(payload).eq('id', editId);
-      if (error) { alert("Error updating product: " + error.message); return; }
+      if (modal === "add") {
+        // Use a timestamp to guarantee a 100% unique ID every time
+        const newId = `PRD-${Date.now()}`;
+        const { error } = await supabase.from('products').insert([{ id: newId, ...payload }]);
+        if (error) {
+          if (error.message.includes('products_sku_key')) {
+            alert("This SKU already exists! Please enter a unique SKU.");
+          } else {
+            alert("Error saving product: " + error.message);
+          }
+          return;
+        }
+      } else {
+        const { error } = await supabase.from('products').update(payload).eq('id', editId);
+        if (error) {
+          if (error.message.includes('products_sku_key')) {
+            alert("This SKU already exists! Please enter a unique SKU.");
+          } else {
+            alert("Error updating product: " + error.message);
+          }
+          return;
+        }
+      }
+      // Realtime subscription in App.jsx will update products state automatically
+      setModal(null);
+    } finally {
+      setIsSaving(false);
     }
-    // Realtime subscription in App.jsx will update products state automatically
-    setModal(null);
   };
 
   const handleDelete = async () => {
@@ -317,10 +338,10 @@ export default function ProductsManager({ products, setProducts }) {
                 </div>
               </div>
               <div style={{ padding: "16px 24px", borderTop: "1px solid #f0ede8", display: "flex", gap: "10px", justifyContent: "flex-end" }}>
-                <button onClick={() => setModal(null)} style={{ padding: "9px 20px", borderRadius: "10px", border: "1.5px solid #e5e7eb", background: "white", fontWeight: "600", fontSize: "13px", cursor: "pointer", color: "#374151" }}>Cancel</button>
-                <motion.button onClick={handleSave} style={{ padding: "9px 24px", borderRadius: "10px", background: GREEN, color: "white", border: "none", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
-                  whileHover={{ opacity: 0.9 }} whileTap={{ scale: 0.97 }}>
-                  {modal === "add" ? "Add Product" : "Save Changes"}
+                <button onClick={() => setModal(null)} style={{ padding: "9px 20px", borderRadius: "10px", border: "1.5px solid #e5e7eb", background: "white", fontWeight: "600", fontSize: "13px", cursor: "pointer", color: "#374151" }} disabled={isSaving}>Cancel</button>
+                <motion.button onClick={handleSave} style={{ padding: "9px 24px", borderRadius: "10px", background: GREEN, color: "white", border: "none", fontWeight: "700", fontSize: "13px", cursor: isSaving ? "not-allowed" : "pointer", opacity: isSaving ? 0.7 : 1 }}
+                  whileHover={!isSaving ? { opacity: 0.9 } : {}} whileTap={!isSaving ? { scale: 0.97 } : {}} disabled={isSaving}>
+                  {isSaving ? "Saving..." : (modal === "add" ? "Add Product" : "Save Changes")}
                 </motion.button>
               </div>
             </motion.div>
