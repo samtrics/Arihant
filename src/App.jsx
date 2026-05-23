@@ -26,7 +26,7 @@ export default function App() {
   const [adminUser, setAdminUser] = useState(null);
   const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState(initialProducts); // start with fallback
+  const [products, setProducts] = useState([]); // start with fallback
 
   // Track current page in a ref so auth listener always has the latest value
   const currentPageRef = useRef("home");
