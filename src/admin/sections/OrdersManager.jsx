@@ -70,7 +70,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
     return STATUS_OPTIONS.indexOf(status);
   };
 
-  const handleCreateB2BOrder = () => {
+  const handleCreateB2BOrder = async () => {
     if (!newB2BOrder.distributorId || Object.keys(newB2BOrder.cart).length === 0) return;
     
     // We use the passed distributors prop, filtered for approved.
@@ -93,22 +93,40 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
     });
 
     const newOrder = {
-      id: `B2B-${Math.floor(1000 + Math.random() * 9000)}`,
-      distributorId: dist.id,
-      customer: dist.name,
-      city: dist.city,
-      date: new Date().toISOString().split('T')[0],
-      items: finalProducts.length,
+      order_number: `B2B-${Math.floor(1000 + Math.random() * 9000)}`,
+      customer_name: dist.name || dist.business,
       amount: totalAmt,
       status: "pending",
-      payment: "pending",
-      amountPaid: 0,
+      payment_status: "pending",
       products: finalProducts
     };
 
-    setB2bOrders([newOrder, ...b2bOrders]);
-    setIsCreatingB2B(false);
-    setNewB2BOrder({ distributorId: "", cart: {} });
+    const { data, error } = await supabase.from('orders').insert([newOrder]).select();
+
+    if (!error && data) {
+      // Add the local UI fields that are not in DB schema but used in rendering
+      const insertedOrder = {
+        ...data[0],
+        id: data[0].id,
+        order_number: data[0].order_number,
+        customer: data[0].customer_name,
+        city: dist.city, // Extracted locally since it's not in DB
+        distributorId: dist.id,
+        date: new Date().toISOString().split('T')[0],
+        items: finalProducts.length,
+        amount: data[0].amount,
+        status: data[0].status,
+        payment: data[0].payment_status,
+        amountPaid: 0,
+        products: finalProducts
+      };
+
+      setB2bOrders([insertedOrder, ...b2bOrders]);
+      setIsCreatingB2B(false);
+      setNewB2BOrder({ distributorId: "", cart: {} });
+    } else {
+      console.error("Failed to create B2B order", error);
+    }
   };
 
   const updateNewOrderQty = (pid, qty) => {
@@ -450,8 +468,11 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     onChange={e => setNewB2BOrder({ ...newB2BOrder, distributorId: e.target.value })}
                     style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1.5px solid #e5e7eb", fontSize: "13px", outline: "none", background: "white" }}>
                     <option value="">-- Choose a Distributor --</option>
-                    {distributors.filter(d => d.status === "approved").map(d => (
-                      <option key={d.id} value={d.id}>{d.business} ({d.id}) - {d.city}</option>
+                    {(distributors.filter(d => d.status === "approved").length > 0 
+                      ? distributors.filter(d => d.status === "approved") 
+                      : MOCK_DISTRIBUTORS
+                    ).map(d => (
+                      <option key={d.id} value={d.id}>{d.business || d.name} ({d.id}) - {d.city}</option>
                     ))}
                   </select>
                 </div>

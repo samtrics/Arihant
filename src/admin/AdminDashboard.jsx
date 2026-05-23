@@ -69,7 +69,16 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
   useEffect(() => {
     // Initial fetch for dashboard stats
     supabase.from('orders').select('*').then(({ data }) => {
-      if (data) setOrders(data);
+      if (data) {
+        const mapped = data.map(o => ({
+          ...o,
+          id: o.order_number, // Use order_number as id in UI
+          customer: o.customer_name,
+          payment: o.payment_status
+        }));
+        setOrders(mapped.filter(o => !(o.order_number && o.order_number.startsWith('B2B'))));
+        setB2bOrders(mapped.filter(o => o.order_number && o.order_number.startsWith('B2B')));
+      }
     });
     supabase.from('distributors').select('*').then(({ data }) => {
       if (data) setDistributors(data);
@@ -79,7 +88,16 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
     const channel = supabase.channel('admin-dashboard-stats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
         supabase.from('orders').select('*').then(({ data }) => {
-          if (data) setOrders(data);
+          if (data) {
+            const mapped = data.map(o => ({
+              ...o,
+              id: o.order_number,
+              customer: o.customer_name,
+              payment: o.payment_status
+            }));
+            setOrders(mapped.filter(o => !(o.order_number && o.order_number.startsWith('B2B'))));
+            setB2bOrders(mapped.filter(o => o.order_number && o.order_number.startsWith('B2B')));
+          }
         });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'distributors' }, () => {
