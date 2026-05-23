@@ -105,6 +105,13 @@ export default function ProductsManager({ products, setProducts }) {
           }
           return;
         }
+        setProducts(prev => [{
+          ...payload,
+          id: newId,
+          offerPrice: payload.offer_price,
+          imgSrc: payload.img_src,
+          desc: payload.description,
+        }, ...prev]);
       } else {
         const { error } = await supabase.from('products').update(payload).eq('id', editId);
         if (error) {
@@ -115,8 +122,14 @@ export default function ProductsManager({ products, setProducts }) {
           }
           return;
         }
+        setProducts(prev => prev.map(p => p.id === editId ? {
+          ...p,
+          ...payload,
+          offerPrice: payload.offer_price,
+          imgSrc: payload.img_src,
+          desc: payload.description,
+        } : p));
       }
-      // Realtime subscription in App.jsx will update products state automatically
       setModal(null);
     } finally {
       setIsSaving(false);
@@ -126,6 +139,7 @@ export default function ProductsManager({ products, setProducts }) {
   const handleDelete = async () => {
     const { error } = await supabase.from('products').delete().eq('id', deleteId);
     if (error) { alert("Error deleting product: " + error.message); return; }
+    setProducts(prev => prev.filter(p => p.id !== deleteId));
     setModal(null);
   };
 

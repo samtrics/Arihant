@@ -117,7 +117,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
       // Add the local UI fields that are not in DB schema but used in rendering
       const insertedOrder = {
         ...data[0],
-        id: data[0].id,
+        id: data[0].order_number,
         order_number: data[0].order_number,
         customer: data[0].customer_name,
         city: dist.city, // Extracted locally since it's not in DB
