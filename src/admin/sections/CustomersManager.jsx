@@ -360,7 +360,7 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
                               <th style={{ padding: "10px 14px", textAlign: "center", color: "#6b7280", fontWeight: "600", fontSize: "11px", textTransform: "uppercase" }}>Payment Status</th>
                               <th style={{ padding: "10px 14px", textAlign: "right", color: "#6b7280", fontWeight: "600", fontSize: "11px", textTransform: "uppercase" }}>Amount Paid</th>
                               <th style={{ padding: "10px 14px", textAlign: "right", color: "#6b7280", fontWeight: "600", fontSize: "11px", textTransform: "uppercase" }}>Balance</th>
-                              {detailTab === "orders" && <th style={{ padding: "10px 14px", textAlign: "center", color: "#6b7280", fontWeight: "600", fontSize: "11px", textTransform: "uppercase" }}>Invoice</th>}
+                              <th style={{ padding: "10px 14px", textAlign: "center", color: "#6b7280", fontWeight: "600", fontSize: "11px", textTransform: "uppercase" }}>Invoice</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -372,52 +372,25 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
                                   {detailTab === "orders" && <td style={{ padding: "12px 14px", color: "#6b7280" }}>{o.date}</td>}
                                   <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{o.amount.toLocaleString("en-IN")}</td>
                                   
-                                  {/* Editable Payment Status */}
+                                  {/* Read-only Payment Status */}
                                   <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                    <select value={o.paymentStatus} onChange={e => {
-                                        const newPay = e.target.value;
-                                        let newAmt = o.amountPaid;
-                                        if (newPay === "paid") newAmt = o.amount;
-                                        if (newPay === "pending") newAmt = 0;
-                                        updateModalPayment(o.id, newPay, newAmt);
-                                      }}
-                                      style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "11px", fontWeight: "600", cursor: "pointer", outline: "none", color: "#374151", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2" }}>
-                                      <option value="pending">Pending</option>
-                                      <option value="partial">Partial</option>
-                                      <option value="paid">Full Paid</option>
-                                    </select>
+                                    <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2", color: o.paymentStatus==="paid"?"#10b981":o.paymentStatus==="partial"?"#f59e0b":"#ef4444" }}>
+                                      {o.paymentStatus || "pending"}
+                                    </span>
                                   </td>
                                   
-                                  {/* Editable Amount Paid */}
-                                  <td style={{ padding: "12px 14px", textAlign: "right" }}>
-                                    <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                      <span style={{ fontSize: "12px", color: "#9ca3af" }}>₹</span>
-                                      <input 
-                                        type="number" min="0" max={o.amount}
-                                        value={o.amountPaid === 0 ? "" : o.amountPaid}
-                                        placeholder="0"
-                                        onChange={e => {
-                                          const val = parseInt(e.target.value, 10) || 0;
-                                          let newPay = "partial";
-                                          if (val <= 0) newPay = "pending";
-                                          if (val >= o.amount) newPay = "paid";
-                                          updateModalPayment(o.id, newPay, val);
-                                        }}
-                                        style={{ width: "70px", padding: "4px 6px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", outline: "none", color: "#1C1C1C", fontWeight: "600", textAlign: "right" }}
-                                        onFocus={e => e.target.style.borderColor = GREEN} onBlur={e => e.target.style.borderColor = "#d1d5db"}
-                                      />
-                                    </div>
+                                  {/* Read-only Amount Paid */}
+                                  <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>
+                                    ₹{(o.amountPaid || 0).toLocaleString("en-IN")}
                                   </td>
 
                                   <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "700", color: bal > 0 ? "#ef4444" : "#10b981" }}>₹{bal.toLocaleString("en-IN")}</td>
                                   
-                                  {detailTab === "orders" && (
-                                    <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                      <button style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GREEN} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
-                                      </button>
-                                    </td>
-                                  )}
+                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                                    <button onClick={() => alert(`Downloading invoice for Order ID: ${o.id}`)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GREEN} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"} title="Download Invoice">
+                                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
+                                    </button>
+                                  </td>
                                 </tr>
                               );
                             })}

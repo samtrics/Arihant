@@ -22,17 +22,32 @@ import { socket } from "./socket";
 import { supabase } from "./supabaseClient";
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState("home");
-  const [adminUser, setAdminUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(() => {
+    // Restore admin page on refresh
+    return sessionStorage.getItem('adminSession') ? 'admin-dashboard' : 'home';
+  });
+  const [adminUser, setAdminUser] = useState(() => {
+    const saved = sessionStorage.getItem('adminSession');
+    return saved ? JSON.parse(saved) : null;
+  });
   const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState([]); // start with fallback
+  const [products, setProducts] = useState([]);
 
   // Track current page in a ref so auth listener always has the latest value
-  const currentPageRef = useRef("home");
+  const currentPageRef = useRef(sessionStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
   const setPage = (page) => {
     currentPageRef.current = page;
     setCurrentPage(page);
+  };
+
+  const setAdminUserAndPersist = (user) => {
+    if (user) {
+      sessionStorage.setItem('adminSession', JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem('adminSession');
+    }
+    setAdminUser(user);
   };
 
   useEffect(() => {
@@ -47,9 +62,8 @@ export default function App() {
 
       if (event === 'SIGNED_IN') {
         const page = currentPageRef.current;
-        // Only redirect to customer dashboard when signing in from customer flow
-        // Skip redirect if the admin is logging in (admin or admin-dashboard pages)
-        const isAdminFlow = page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
+        // Skip redirect if admin is active OR if on any admin/distributor page
+        const isAdminFlow = !!sessionStorage.getItem('adminSession') || page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
         if (!isAdminFlow) {
           setPage('customer-dashboard');
         }
@@ -176,14 +190,14 @@ export default function App() {
         {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
         {currentPage === "admin" && (
           <AdminLogin
-            onLogin={(user) => { setAdminUser(user); setPage("admin-dashboard"); }}
+            onLogin={(user) => { setAdminUserAndPersist(user); setPage("admin-dashboard"); }}
             onBack={() => setPage("home")}
           />
         )}
         {currentPage === "admin-dashboard" && adminUser && (
           <AdminDashboard
             adminUser={adminUser}
-            onLogout={() => { setAdminUser(null); setPage("home"); }}
+            onLogout={() => { setAdminUserAndPersist(null); setPage("home"); }}
             products={products}
             setProducts={handleSetProducts}
           />
