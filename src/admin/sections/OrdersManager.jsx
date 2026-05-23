@@ -210,9 +210,9 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     <div style={{ fontWeight: "600", color: "#1C1C1C" }}>{o.customer}</div>
                     <div style={{ fontSize: "11px", color: "#9ca3af" }}>{activeTab === "b2b" ? `Code: ${o.distributorId} | ${o.city}` : o.city}</div>
                   </td>
-                  <td style={{ padding: "13px", color: "#6b7280", fontSize: "12px" }}>{o.date}</td>
-                  <td style={{ padding: "13px", fontWeight: "600" }}>{o.items} {activeTab === "b2b" ? "SKUs" : ""}</td>
-                  <td style={{ padding: "13px", fontWeight: "700", color: "#1C1C1C" }}>₹{o.amount.toLocaleString("en-IN")}</td>
+                  <td style={{ padding: "13px", color: "#6b7280", fontSize: "12px" }}>{o.date || "N/A"}</td>
+                  <td style={{ padding: "13px", fontWeight: "600" }}>{o.items || (Array.isArray(o.products) ? o.products.length : 0)} {activeTab === "b2b" ? "SKUs" : "Items"}</td>
+                  <td style={{ padding: "13px", fontWeight: "700", color: "#1C1C1C" }}>₹{Number(o.amount || 0).toLocaleString("en-IN")}</td>
                   <td style={{ padding: "13px" }}>
                     <select value={o.status} onChange={e => { e.stopPropagation(); updateStatus(o.id, e.target.value); }}
                       style={{ padding: "4px 8px", borderRadius: "8px", border: "1.5px solid", fontSize: "11px", fontWeight: "600", cursor: "pointer", background: statusBg[o.status], color: statusColors[o.status], borderColor: statusColors[o.status] + "44", textTransform: "capitalize" }}
@@ -282,21 +282,21 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#9ca3af", marginTop: "1px" }}>calendar_today</span>
                     <div>
                       <div style={{ fontSize: "11px", color: "#9ca3af" }}>Order Date</div>
-                      <div style={{ fontSize: "13.5px", fontWeight: "600", color: "#1C1C1C" }}>{detail.date}</div>
+                      <div style={{ fontSize: "13.5px", fontWeight: "600", color: "#1C1C1C" }}>{detail.date || "N/A"}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                     <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#9ca3af", marginTop: "1px" }}>location_on</span>
                     <div>
                       <div style={{ fontSize: "11px", color: "#9ca3af" }}>Delivery Location</div>
-                      <div style={{ fontSize: "13.5px", fontWeight: "600", color: "#1C1C1C" }}>{detail.city}</div>
+                      <div style={{ fontSize: "13.5px", fontWeight: "600", color: "#1C1C1C" }}>{detail.city || "N/A"}</div>
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                     <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#9ca3af", marginTop: "1px" }}>receipt_long</span>
                     <div>
                       <div style={{ fontSize: "11px", color: "#9ca3af" }}>Order Total</div>
-                      <div style={{ fontSize: "16px", fontWeight: "700", color: "#1C1C1C" }}>₹{detail.amount.toLocaleString("en-IN")}</div>
+                      <div style={{ fontSize: "16px", fontWeight: "700", color: "#1C1C1C" }}>₹{Number(detail.amount || 0).toLocaleString("en-IN")}</div>
                     </div>
                   </div>
                 </div>
@@ -307,8 +307,10 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                   
                   {activeTab === "retail" ? (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {detail.products?.map((p, i) => (
-                        <span key={i} style={{ padding: "4px 12px", borderRadius: "100px", fontSize: "12px", fontWeight: "600", background: "rgba(31,81,50,0.08)", color: GREEN }}>{p}</span>
+                      {(Array.isArray(detail.products) ? detail.products : (typeof detail.products === 'string' ? JSON.parse(detail.products || '[]') : [])).map((p, i) => (
+                        <span key={i} style={{ padding: "4px 12px", borderRadius: "100px", fontSize: "12px", fontWeight: "600", background: "rgba(31,81,50,0.08)", color: GREEN }}>
+                          {typeof p === 'object' ? p.name || JSON.stringify(p) : String(p)}
+                        </span>
                       ))}
                     </div>
                   ) : (
