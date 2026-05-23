@@ -149,7 +149,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       case "distributors": return <DistributorManager distributors={distributors} setDistributors={handleSetDistributors} />;
       case "inventory": return <InventoryManager />;
       case "analytics":
-      case "revenue": return <AnalyticsView />;
+      case "revenue": return <AnalyticsView orders={orders} b2bOrders={b2bOrders} />;
       case "coupons": return <CouponsManager />;
       case "notifications": return <NotificationsPanel />;
       case "settings": return <SettingsPanel />;

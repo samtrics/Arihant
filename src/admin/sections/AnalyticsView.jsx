@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -9,15 +9,80 @@ const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 
-const kpis = [
-  { label: "Total Revenue (YTD)", val: "₹47.7L", change: "+18.4%", up: true, icon: "payments" },
-  { label: "Avg Order Value", val: "₹2,107", change: "+6.2%", up: true, icon: "receipt" },
-  { label: "Customer Lifetime Value", val: "₹6,840", change: "+11.5%", up: true, icon: "loyalty" },
-  { label: "Return Rate", val: "2.3%", change: "-0.8%", up: true, icon: "assignment_return" },
-];
-
-export default function AnalyticsView() {
+export default function AnalyticsView({ orders = [], b2bOrders = [] }) {
   const [dateRange, setDateRange] = useState("12");
+
+  const allOrders = useMemo(() => [...orders, ...b2bOrders].filter(o => o.status !== "cancelled"), [orders, b2bOrders]);
+
+  const revenueData = useMemo(() => {
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const data = [];
+    for(let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      data.push({ month: months[d.getMonth()], revenue: 0, orders: 0, customers: 0 });
+    }
+    
+    allOrders.forEach(o => {
+      const date = new Date(o.created_at || o.date || Date.now());
+      if (isNaN(date.getTime())) return;
+      
+      const m = months[date.getMonth()];
+      const idx = data.findIndex(d => d.month === m);
+      if(idx !== -1) {
+        data[idx].revenue += Number(o.amount || 0);
+        data[idx].orders += 1;
+        data[idx].customers += 1; 
+      }
+    });
+    return data;
+  }, [allOrders]);
+
+  const productSalesData = useMemo(() => {
+    const pMap = {};
+    allOrders.forEach(o => {
+      const prods = Array.isArray(o.products) ? o.products : (typeof o.products === 'string' ? JSON.parse(o.products || '[]') : []);
+      prods.forEach(p => {
+        const name = typeof p === "string" ? p : p.name;
+        const qty = p.qty || 1;
+        pMap[name] = (pMap[name] || 0) + qty;
+      });
+    });
+    const total = Object.values(pMap).reduce((a,b)=>a+b, 0);
+    const sorted = Object.entries(pMap).sort((a,b)=>b[1]-a[1]).slice(0, 5);
+    const colors = ["#1F5132", "#D4A64A", "#8b5cf6", "#3b82f6", "#10b981"];
+    return sorted.map((s, i) => ({
+      name: s[0],
+      value: total > 0 ? Math.round((s[1] / total) * 100) : 0,
+      color: colors[i] || "#9ca3af"
+    }));
+  }, [allOrders]);
+
+  const orderStatusData = useMemo(() => {
+    const sMap = { "delivered": 0, "processing": 0, "shipped": 0, "cancelled": 0 };
+    const allIncludingCancelled = [...orders, ...b2bOrders];
+    allIncludingCancelled.forEach(o => {
+      const s = o.status || "processing";
+      sMap[s] = (sMap[s] || 0) + 1;
+    });
+    const total = allIncludingCancelled.length || 1;
+    const colors = { "delivered": "#10b981", "processing": "#f59e0b", "shipped": "#3b82f6", "cancelled": "#ef4444" };
+    return Object.entries(sMap).map(([k, v]) => ({
+      name: k.charAt(0).toUpperCase() + k.slice(1),
+      value: Math.round((v / total) * 100),
+      color: colors[k] || "#9ca3af"
+    })).filter(x => x.value > 0);
+  }, [orders, b2bOrders]);
+
+  const totalRev = allOrders.reduce((a,b)=>a+Number(b.amount||0), 0);
+  const avgOrder = allOrders.length ? Math.round(totalRev / allOrders.length) : 0;
+  
+  const kpis = [
+    { label: "Total Revenue", val: `₹${totalRev.toLocaleString("en-IN")}`, change: "+0.0%", up: true, icon: "payments" },
+    { label: "Avg Order Value", val: `₹${avgOrder.toLocaleString("en-IN")}`, change: "+0.0%", up: true, icon: "receipt" },
+    { label: "Total Orders", val: allOrders.length.toString(), change: "+0.0%", up: true, icon: "shopping_bag" },
+    { label: "Total Customers", val: new Set(allOrders.map(o => o.customer)).size.toString(), change: "+0.0%", up: true, icon: "groups" },
+  ];
 
   const slicedData = revenueData.slice(-(parseInt(dateRange)));
 
