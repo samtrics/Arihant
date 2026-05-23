@@ -49,6 +49,7 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
 
   // Local state for modal orders so they can be edited
   const [modalOrders, setModalOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   const filtered = combinedUsers.filter((c) => {
     const q = search.toLowerCase();
@@ -366,32 +367,54 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
                           <tbody>
                             {modalOrders.filter(o => o.id.toLowerCase().includes(orderSearch.toLowerCase()) || o.date.includes(orderSearch)).map((o, i, arr) => {
                               const bal = o.amount - (o.amountPaid || 0);
+                              const isExpanded = selectedOrder === o.id;
                               return (
-                                <tr key={o.id} style={{ borderBottom: i === arr.length - 1 ? "none" : "1px solid #e5e7eb", background: "white" }}>
-                                  <td style={{ padding: "12px 14px", fontWeight: "700", color: detail.type === "B2B" ? GOLD : GREEN }}>{o.id}</td>
-                                  {detailTab === "orders" && <td style={{ padding: "12px 14px", color: "#6b7280" }}>{o.date}</td>}
-                                  <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{o.amount.toLocaleString("en-IN")}</td>
-                                  
-                                  {/* Read-only Payment Status */}
-                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                    <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2", color: o.paymentStatus==="paid"?"#10b981":o.paymentStatus==="partial"?"#f59e0b":"#ef4444" }}>
-                                      {o.paymentStatus || "pending"}
-                                    </span>
-                                  </td>
-                                  
-                                  {/* Read-only Amount Paid */}
-                                  <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>
-                                    ₹{(o.amountPaid || 0).toLocaleString("en-IN")}
-                                  </td>
+                                <React.Fragment key={o.id}>
+                                  <tr onClick={() => setSelectedOrder(isExpanded ? null : o.id)} style={{ borderBottom: isExpanded ? "none" : (i === arr.length - 1 ? "none" : "1px solid #e5e7eb"), background: isExpanded ? "#f9fafb" : "white", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e=>!isExpanded && (e.currentTarget.style.background="#faf8f5")} onMouseLeave={e=>!isExpanded && (e.currentTarget.style.background="white")}>
+                                    <td style={{ padding: "12px 14px", fontWeight: "700", color: detail.type === "B2B" ? GOLD : GREEN }}>{o.id}</td>
+                                    {detailTab === "orders" && <td style={{ padding: "12px 14px", color: "#6b7280" }}>{o.date}</td>}
+                                    <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{o.amount.toLocaleString("en-IN")}</td>
+                                    
+                                    {/* Read-only Payment Status */}
+                                    <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                                      <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2", color: o.paymentStatus==="paid"?"#10b981":o.paymentStatus==="partial"?"#f59e0b":"#ef4444" }}>
+                                        {o.paymentStatus || "pending"}
+                                      </span>
+                                    </td>
+                                    
+                                    {/* Read-only Amount Paid */}
+                                    <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>
+                                      ₹{(o.amountPaid || 0).toLocaleString("en-IN")}
+                                    </td>
 
-                                  <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "700", color: bal > 0 ? "#ef4444" : "#10b981" }}>₹{bal.toLocaleString("en-IN")}</td>
-                                  
-                                  <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                    <button onClick={() => alert(`Downloading invoice for Order ID: ${o.id}`)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GREEN} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"} title="Download Invoice">
-                                      <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
-                                    </button>
-                                  </td>
-                                </tr>
+                                    <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "700", color: bal > 0 ? "#ef4444" : "#10b981" }}>₹{bal.toLocaleString("en-IN")}</td>
+                                    
+                                    <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                                      <button onClick={(e) => { e.stopPropagation(); alert(`Downloading invoice for Order ID: ${o.id}`); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GREEN} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"} title="Download Invoice">
+                                        <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
+                                      </button>
+                                    </td>
+                                  </tr>
+                                  {isExpanded && (
+                                    <tr style={{ background: "#f9fafb", borderBottom: i === arr.length - 1 ? "none" : "1px solid #e5e7eb" }}>
+                                      <td colSpan={detailTab === "orders" ? 7 : 6} style={{ padding: "8px 24px 20px 24px" }}>
+                                        <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>Order Details & Products</div>
+                                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                                          {(Array.isArray(o.products) ? o.products : (typeof o.products === 'string' ? JSON.parse(o.products || '[]') : [])).map((p, pIdx) => (
+                                            <span key={pIdx} style={{ padding: "6px 12px", borderRadius: "8px", background: "white", border: "1px solid #e5e7eb", fontSize: "12px", color: "#374151", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                                              {p.qty && <span style={{ color: "#9ca3af", fontWeight: "700" }}>{p.qty}x</span>}
+                                              {typeof p === 'object' ? (p.name || JSON.stringify(p)) : String(p)}
+                                              {p.price && <span style={{ color: GREEN, marginLeft: "4px" }}>₹{(p.price * (p.qty || 1)).toLocaleString("en-IN")}</span>}
+                                            </span>
+                                          ))}
+                                          {(!o.products || (Array.isArray(o.products) && o.products.length === 0) || (typeof o.products === 'string' && o.products.length < 5)) && (
+                                            <span style={{ fontSize: "12px", color: "#9ca3af" }}>No product details found for this order.</span>
+                                          )}
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
                               );
                             })}
                           </tbody>
