@@ -74,7 +74,9 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           ...o,
           id: o.order_number, // Use order_number as id in UI
           customer: o.customer_name,
-          payment: o.payment_status
+          payment: o.payment_status,
+          amountPaid: o.amount_paid || 0,
+          date: o.date || (o.created_at ? o.created_at.split('T')[0] : null),
         }));
         setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
         setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));
@@ -93,7 +95,9 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
               ...o,
               id: o.order_number,
               customer: o.customer_name,
-              payment: o.payment_status
+              payment: o.payment_status,
+              amountPaid: o.amount_paid || 0,
+              date: o.date || (o.created_at ? o.created_at.split('T')[0] : null),
             }));
             setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
             setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));

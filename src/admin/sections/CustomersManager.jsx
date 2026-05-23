@@ -90,8 +90,8 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
     const formattedOrders = custOrders.map(o => ({
       ...o,
       id: o.order_number || o.id,
-      paymentStatus: o.payment || "paid",
-      amountPaid: o.payment === "paid" ? o.amount : (o.payment === "partial" ? o.amount / 2 : 0)
+      paymentStatus: o.payment || o.payment_status || "paid",
+      amountPaid: o.amountPaid ?? o.amount_paid ?? (o.payment === "paid" || o.payment_status === "paid" ? o.amount : 0),
     }));
     
     setModalOrders(formattedOrders);

@@ -415,11 +415,13 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
                       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                         <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Status</span>
-                        <select value={detail.payment || "pending"} onChange={e => {
+                        <select value={detail.payment || "pending"} onChange={async e => {
                           const newPay = e.target.value;
                           let newAmt = detail.amountPaid || 0;
                           if (newPay === "paid") newAmt = detail.amount;
                           if (newPay === "pending") newAmt = 0;
+                          // Persist to Supabase
+                          await supabase.from('orders').update({ payment_status: newPay, amount_paid: newAmt }).eq('order_number', detail.id);
                           setB2bOrders(b2bOrders.map(o => o.id === detail.id ? { ...o, payment: newPay, amountPaid: newAmt } : o));
                           setDetail({ ...detail, payment: newPay, amountPaid: newAmt });
                         }}
@@ -435,11 +437,13 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                         <input 
                           type="number" min="0" max={detail.amount}
                           value={detail.amountPaid || ""}
-                          onChange={e => {
+                          onChange={async e => {
                             const val = parseInt(e.target.value, 10) || 0;
                             let newPay = "partial";
                             if (val <= 0) newPay = "pending";
                             if (val >= detail.amount) newPay = "paid";
+                            // Persist to Supabase
+                            await supabase.from('orders').update({ payment_status: newPay, amount_paid: val }).eq('order_number', detail.id);
                             setB2bOrders(b2bOrders.map(o => o.id === detail.id ? { ...o, payment: newPay, amountPaid: val } : o));
                             setDetail({ ...detail, payment: newPay, amountPaid: val });
                           }}
