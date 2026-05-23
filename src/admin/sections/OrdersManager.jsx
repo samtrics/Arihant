@@ -31,6 +31,8 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const [statusFilter, setStatusFilter] = useState("All");
   const [detail, setDetail] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [page, setPage] = useState(1);
   const PER = 8;
 
@@ -48,16 +50,38 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const totalPages = Math.ceil(filtered.length / PER);
   const paged = filtered.slice((page - 1) * PER, page * PER);
 
-  const updateStatus = async (id, newStatus) => {
-    const { error } = await supabase.from('orders').update({ status: newStatus }).eq('order_number', id);
-    if (!error) {
-      if (activeTab === "b2b") {
-        setB2bOrders(b2bOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-      } else {
-        setRetailOrders(retailOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
-      }
-      if (detail?.id === id) setDetail({ ...detail, status: newStatus });
+  const updateStatus = (id, newStatus) => {
+    // Only update local detail state — saved on Save button click
+    if (detail?.id === id) setDetail(d => ({ ...d, status: newStatus }));
+    if (activeTab === "b2b") {
+      setB2bOrders(b2bOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
+    } else {
+      setRetailOrders(retailOrders.map(o => o.id === id ? { ...o, status: newStatus } : o));
     }
+  };
+
+  const saveOrder = async () => {
+    if (!detail) return;
+    setIsSavingOrder(true);
+    const payload = {
+      status: detail.status,
+      payment_status: detail.payment || detail.payment_status || "pending",
+      amount_paid: detail.amountPaid || 0,
+    };
+    const { error } = await supabase.from('orders').update(payload).eq('order_number', detail.id);
+    if (!error) {
+      // Sync to global state
+      if (activeTab === "b2b") {
+        setB2bOrders(b2bOrders.map(o => o.id === detail.id ? { ...o, ...detail, payment: payload.payment_status, amountPaid: payload.amount_paid } : o));
+      } else {
+        setRetailOrders(retailOrders.map(o => o.id === detail.id ? { ...o, ...detail } : o));
+      }
+      setSaveSuccess(true);
+      setTimeout(() => { setSaveSuccess(false); setDetail(null); }, 1200);
+    } else {
+      alert("Error saving order: " + error.message);
+    }
+    setIsSavingOrder(false);
   };
 
   const deleteOrder = async () => {
@@ -415,14 +439,11 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
                       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                         <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Status</span>
-                        <select value={detail.payment || "pending"} onChange={async e => {
+                        <select value={detail.payment || "pending"} onChange={e => {
                           const newPay = e.target.value;
                           let newAmt = detail.amountPaid || 0;
                           if (newPay === "paid") newAmt = detail.amount;
                           if (newPay === "pending") newAmt = 0;
-                          // Persist to Supabase
-                          await supabase.from('orders').update({ payment_status: newPay, amount_paid: newAmt }).eq('order_number', detail.id);
-                          setB2bOrders(b2bOrders.map(o => o.id === detail.id ? { ...o, payment: newPay, amountPaid: newAmt } : o));
                           setDetail({ ...detail, payment: newPay, amountPaid: newAmt });
                         }}
                           style={{ padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "12px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "600" }}>
@@ -437,14 +458,11 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                         <input 
                           type="number" min="0" max={detail.amount}
                           value={detail.amountPaid || ""}
-                          onChange={async e => {
+                          onChange={e => {
                             const val = parseInt(e.target.value, 10) || 0;
                             let newPay = "partial";
                             if (val <= 0) newPay = "pending";
                             if (val >= detail.amount) newPay = "paid";
-                            // Persist to Supabase
-                            await supabase.from('orders').update({ payment_status: newPay, amount_paid: val }).eq('order_number', detail.id);
-                            setB2bOrders(b2bOrders.map(o => o.id === detail.id ? { ...o, payment: newPay, amountPaid: val } : o));
                             setDetail({ ...detail, payment: newPay, amountPaid: val });
                           }}
                           style={{ width: "90px", padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "13px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "700", textAlign: "right" }}
@@ -456,9 +474,25 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                   )}
                 </div>
               </div>
-              <div style={{ padding: "14px 22px", borderTop: "1px solid #f0ede8", display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                <motion.button onClick={() => setDetail(null)} style={{ padding: "8px 20px", borderRadius: "10px", background: activeTab === "b2b" ? GOLD : GREEN, color: "white", border: "none", fontWeight: "700", fontSize: "12.5px", cursor: "pointer" }}
-                  whileHover={{ opacity: 0.9 }}>Close</motion.button>
+              <div style={{ padding: "14px 22px", borderTop: "1px solid #f0ede8", display: "flex", gap: "8px", justifyContent: "flex-end", alignItems: "center" }}>
+                {saveSuccess && (
+                  <span style={{ fontSize: "12.5px", fontWeight: "600", color: "#10b981", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: "17px" }}>check_circle</span>
+                    Saved!
+                  </span>
+                )}
+                <motion.button onClick={() => setDetail(null)}
+                  style={{ padding: "8px 20px", borderRadius: "10px", border: "1.5px solid #e5e7eb", background: "white", fontWeight: "700", fontSize: "12.5px", cursor: "pointer", color: "#6b7280" }}
+                  whileHover={{ borderColor: "#9ca3af" }}>Cancel</motion.button>
+                <motion.button onClick={saveOrder} disabled={isSavingOrder}
+                  style={{ padding: "8px 22px", borderRadius: "10px", background: activeTab === "b2b" ? GOLD : GREEN, color: "white", border: "none", fontWeight: "700", fontSize: "12.5px", cursor: isSavingOrder ? "not-allowed" : "pointer", opacity: isSavingOrder ? 0.7 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+                  whileHover={{ opacity: isSavingOrder ? 0.7 : 0.9 }} whileTap={{ scale: 0.97 }}>
+                  {isSavingOrder ? (
+                    <><span className="material-symbols-outlined" style={{ fontSize: "16px", animation: "spin 1s linear infinite" }}>autorenew</span> Saving…</>
+                  ) : (
+                    <><span className="material-symbols-outlined" style={{ fontSize: "16px" }}>save</span> Save Changes</>
+                  )}
+                </motion.button>
               </div>
             </motion.div>
           </motion.div>
