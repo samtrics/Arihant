@@ -35,6 +35,7 @@ import pptxgen from "pptxgenjs";
 
 export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [] }) {
   const [dateRange, setDateRange] = useState("this_month");
+  const [revDateRange, setRevDateRange] = useState("12");
   
   const allOrders = [...orders, ...b2bOrders].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
   const recentOrders = allOrders.slice(0, 6);
@@ -270,15 +271,16 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
             <div>
               <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", margin: 0 }}>Revenue Overview</h3>
-              <p style={{ fontSize: "12px", color: "#9ca3af", margin: "2px 0 0" }}>Last 12 months performance</p>
+              <p style={{ fontSize: "12px", color: "#9ca3af", margin: "2px 0 0" }}>Last {revDateRange} months performance</p>
             </div>
-            <select style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #f0ede8", fontSize: "12px", color: "#374151", background: "white" }}>
-              <option>Last 12 Months</option>
-              <option>Last 6 Months</option>
+            <select value={revDateRange} onChange={e => setRevDateRange(e.target.value)} style={{ padding: "6px 10px", borderRadius: "8px", border: "1px solid #f0ede8", fontSize: "12px", color: "#374151", background: "white" }}>
+              <option value="12">Last 12 Months</option>
+              <option value="6">Last 6 Months</option>
+              <option value="3">Last 3 Months</option>
             </select>
           </div>
           <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={dynamicRevenueData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+            <AreaChart data={dynamicRevenueData.slice(-(parseInt(revDateRange)))} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={GREEN} stopOpacity={0.18} />
