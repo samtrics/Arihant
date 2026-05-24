@@ -41,10 +41,19 @@ export default function AnalyticsView({ orders = [], b2bOrders = [] }) {
   const productSalesData = useMemo(() => {
     const pMap = {};
     allOrders.forEach(o => {
-      const prods = Array.isArray(o.products) ? o.products : (typeof o.products === 'string' ? JSON.parse(o.products || '[]') : []);
+      let prods = [];
+      if (Array.isArray(o.products)) {
+        prods = o.products;
+      } else if (typeof o.products === 'string') {
+        try {
+          prods = JSON.parse(o.products || '[]');
+        } catch(e) {
+          prods = [];
+        }
+      }
       prods.forEach(p => {
-        const name = typeof p === "string" ? p : p.name;
-        const qty = p.qty || 1;
+        const name = typeof p === "string" ? p : p?.name || "Unknown Product";
+        const qty = p?.qty || 1;
         pMap[name] = (pMap[name] || 0) + qty;
       });
     });
