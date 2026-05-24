@@ -8,7 +8,7 @@ const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 
-export default function InventoryManager({ products = [] }) {
+export default function InventoryManager({ products = [], setProducts }) {
   const [inventory, setInventory] = useState(() =>
     products.map(p => ({
       id: p.id,
@@ -57,6 +57,9 @@ export default function InventoryManager({ products = [] }) {
     const { error } = await supabase.from('products').update({ stock: qty }).eq('id', updateModal.id);
     if (!error) {
       setInventory((inv) => inv.map((i) => i.id === updateModal.id ? { ...i, stock: qty, lastUpdated: new Date().toISOString().split("T")[0] } : i));
+      if (setProducts) {
+        setProducts((prev) => prev.map((p) => p.id === updateModal.id ? { ...p, stock: qty, updated_at: new Date().toISOString() } : p));
+      }
     } else {
       alert("Error updating stock: " + error.message);
     }
