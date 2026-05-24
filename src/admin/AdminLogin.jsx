@@ -28,6 +28,13 @@ export default function AdminLogin({ onLogin, onBack }) {
 
     setIsLoading(true);
 
+    let ip = "Unknown IP";
+    try {
+      const res = await fetch("https://api.ipify.org?format=json");
+      const json = await res.json();
+      ip = json.ip;
+    } catch(e) {}
+
     try {
       const { data, error: err } = await supabase.auth.signInWithPassword({
         email: email.trim(),
@@ -48,11 +55,36 @@ export default function AdminLogin({ onLogin, onBack }) {
         throw new Error("Access Denied: You do not have admin privileges.");
       }
 
+      // Log Real Success Activity
+      const logEntry = {
+        id: Date.now(),
+        user: adminData.name || data.user.user_metadata?.full_name || "Admin",
+        email: email.trim(),
+        ip,
+        time: new Date().toLocaleString(),
+        status: "Success"
+      };
+      const existingLogs = JSON.parse(localStorage.getItem("arihant_admin_logs") || "[]");
+      localStorage.setItem("arihant_admin_logs", JSON.stringify([logEntry, ...existingLogs]));
+
       setSuccess(true);
       setTimeout(() => onLogin({ name: data.user.user_metadata?.full_name || adminData.name || "Admin", email: data.user.email, role: adminData.role || "super_admin", avatar: data.user.email.charAt(0).toUpperCase() }), 900);
     } catch (err) {
       const na = attempts + 1;
       setAttempts(na);
+
+      // Log Real Failure Activity
+      const logEntry = {
+        id: Date.now(),
+        user: "Unknown",
+        email: email.trim(),
+        ip,
+        time: new Date().toLocaleString(),
+        status: `Failed (${err.message.substring(0, 25)}...)`
+      };
+      const existingLogs = JSON.parse(localStorage.getItem("arihant_admin_logs") || "[]");
+      localStorage.setItem("arihant_admin_logs", JSON.stringify([logEntry, ...existingLogs]));
+
       if (na >= 5) setError("🔒 Account locked after 5 failed attempts.");
       else setError(`Login failed. ${5 - na} attempt${5 - na === 1 ? "" : "s"} remaining. (${err.message})`);
     } finally {
