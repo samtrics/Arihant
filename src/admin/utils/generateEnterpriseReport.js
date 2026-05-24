@@ -7,7 +7,8 @@ const GRAY = "F9FAFB";
 const TEXT_GRAY = "6B7280";
 
 export const generateEnterpriseReport = (dateRange, filteredOrders, allOrders, products = [], customers = [], distributors = []) => {
-  const pres = new pptxgen();
+  try {
+    const pres = new pptxgen();
   pres.layout = "LAYOUT_16x9";
   pres.author = "Arihant Report System";
   pres.company = "Arihant";
@@ -30,8 +31,19 @@ export const generateEnterpriseReport = (dateRange, filteredOrders, allOrders, p
   const productMap = {};
   filteredOrders.forEach(o => {
     if (o.status === "cancelled") return;
-    const prods = Array.isArray(o.products) ? o.products : (typeof o.products === 'string' ? JSON.parse(o.products || '[]') : []);
-    prods.forEach(p => {
+    let prods = [];
+    if (Array.isArray(o.products)) {
+      prods = o.products;
+    } else if (typeof o.products === 'string') {
+      try {
+        prods = JSON.parse(o.products || '[]');
+      } catch (e) {
+        console.warn("Failed to parse products for order:", o.id);
+        prods = [];
+      }
+    }
+    
+    (Array.isArray(prods) ? prods : []).forEach(p => {
       const name = typeof p === "string" ? p : p.name;
       const qty = p.qty || 1;
       const price = p.price || 0;
@@ -209,4 +221,8 @@ export const generateEnterpriseReport = (dateRange, filteredOrders, allOrders, p
   slide.addText("End of Report", { x: 1, y: 3.5, w: "80%", h: 0.5, fontSize: 18, color: "FFFFFF", align: "center" });
 
   pres.writeFile({ fileName: `ARIHANT_Enterprise_Report_${dateRange}.pptx` });
+  } catch (error) {
+    console.error("Error generating PPT:", error);
+    alert("An error occurred while generating the report. Please check the console for details.");
+  }
 };
