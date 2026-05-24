@@ -119,7 +119,7 @@ export default function Products({ products, onNavigate, onProductClick }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filters, setFilters] = useState({
     organic: false,
-    heritage: true,
+    heritage: false,
     bulk: false
   });
   const [sortBy, setSortBy] = useState("Featured First");
