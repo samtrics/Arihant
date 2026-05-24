@@ -17,11 +17,7 @@ const INITIAL_ADMINS = [
   { id: "ADM001", name: "Super Admin", email: "admin@arihant.in", role: "super_admin", roleLabel: "Super Admin", permissions: "Full system access — all modules", lastLogin: "Just now", status: "active", avatar: "SA" }
 ];
 
-const INITIAL_LOGS = [
-  { id: 1, user: "Super Admin", email: "admin@arihant.in", ip: "192.168.1.45", time: new Date(Date.now() - 1000*60*5).toLocaleString(), status: "Success" },
-  { id: 2, user: "Unknown", email: "admin@arihant.in", ip: "45.22.19.11", time: new Date(Date.now() - 1000*60*60*2).toLocaleString(), status: "Failed (Wrong Password)" },
-  { id: 3, user: "Super Admin", email: "admin@arihant.in", ip: "192.168.1.45", time: new Date(Date.now() - 1000*60*60*24).toLocaleString(), status: "Success" }
-];
+const INITIAL_LOGS = [];
 
 export default function AdminUsersPanel() {
   const [admins, setAdmins] = useState(() => {
@@ -172,9 +168,16 @@ export default function AdminUsersPanel() {
 
       {/* Login Activity Log */}
       <div style={{ ...card, overflow: "hidden" }}>
-        <div style={{ padding: "16px", borderBottom: "1px solid #f0ede8", background: "#fcfcfc" }}>
-          <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", margin: 0, color: "#1C1C1C" }}>Recent Login Activity</h3>
-          <p style={{ color: "#9ca3af", fontSize: "12px", margin: "2px 0 0" }}>Track IP addresses and login times for security</p>
+        <div style={{ padding: "16px", borderBottom: "1px solid #f0ede8", background: "#fcfcfc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", margin: 0, color: "#1C1C1C" }}>Recent Login Activity</h3>
+            <p style={{ color: "#9ca3af", fontSize: "12px", margin: "2px 0 0" }}>Track IP addresses and login times for security</p>
+          </div>
+          <button onClick={() => setLogs([])} style={{ padding: "6px 12px", borderRadius: "8px", border: "1px solid #e5e7eb", background: "white", color: "#6b7280", fontSize: "11px", fontWeight: "600", cursor: "pointer", transition: "all 0.2s" }}
+            onMouseEnter={e => { e.currentTarget.style.color = "#ef4444"; e.currentTarget.style.borderColor = "#fecaca"; e.currentTarget.style.background = "#fef2f2"; }}
+            onMouseLeave={e => { e.currentTarget.style.color = "#6b7280"; e.currentTarget.style.borderColor = "#e5e7eb"; e.currentTarget.style.background = "white"; }}>
+            Clear Logs
+          </button>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
