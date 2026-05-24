@@ -20,7 +20,7 @@ export default function AnalyticsView({ orders = [], b2bOrders = [] }) {
     const data = [];
     for(let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      data.push({ month: months[d.getMonth()], revenue: 0, orders: 0, customers: 0 });
+      data.push({ month: months[d.getMonth()], revenue: 0, orders: 0, customers: 0, _custSet: new Set() });
     }
     
     allOrders.forEach(o => {
@@ -32,9 +32,15 @@ export default function AnalyticsView({ orders = [], b2bOrders = [] }) {
       if(idx !== -1) {
         data[idx].revenue += Number(o.amount || 0);
         data[idx].orders += 1;
-        data[idx].customers += 1; 
+        if (o.customer) data[idx]._custSet.add(o.customer);
       }
     });
+
+    data.forEach(d => {
+      d.customers = d._custSet.size;
+      delete d._custSet;
+    });
+
     return data;
   }, [allOrders]);
 
