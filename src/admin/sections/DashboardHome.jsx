@@ -32,12 +32,61 @@ const statusColors = { delivered: "#10b981", shipped: "#3b82f6", processing: "#f
 const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbeb", pending: "#f5f3ff", cancelled: "#fef2f2" };
 
 export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [] }) {
+  const [dateRange, setDateRange] = useState("this_month");
+  
   const allOrders = [...orders, ...b2bOrders].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
   const recentOrders = allOrders.slice(0, 6);
 
-  // Dynamic calculations
-  const totalRevenue = allOrders.filter(o => o.status !== "cancelled").reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-  const totalOrders = allOrders.length;
+  const now = new Date();
+  const filteredOrders = allOrders.filter(o => {
+    if (dateRange === "all") return true;
+    const d = new Date(o.created_at || o.date || Date.now());
+    if (isNaN(d.getTime())) return true;
+    
+    if (dateRange === "this_month") {
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    } else if (dateRange === "last_month") {
+      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      return d.getMonth() === lastMonth.getMonth() && d.getFullYear() === lastMonth.getFullYear();
+    } else if (dateRange === "last_3") {
+      const threeMonthsAgo = new Date();
+      threeMonthsAgo.setMonth(now.getMonth() - 3);
+      return d >= threeMonthsAgo;
+    } else if (dateRange === "last_6") {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(now.getMonth() - 6);
+      return d >= sixMonthsAgo;
+    } else if (dateRange === "this_year") {
+      return d.getFullYear() === now.getFullYear();
+    }
+    return true;
+  });
+
+  const handleExport = () => {
+    if (filteredOrders.length === 0) return alert("No data to export for this range.");
+    const headers = ["Order ID", "Date", "Customer", "Amount", "Status", "Payment Status"];
+    const rows = filteredOrders.map(o => [
+      o.id || o.order_number || "N/A",
+      o.date || (o.created_at ? o.created_at.split('T')[0] : "N/A"),
+      `"${o.customer || o.customer_name || 'Unknown'}"`,
+      o.amount || 0,
+      o.status || "pending",
+      o.payment || o.payment_status || "pending"
+    ]);
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `dashboard_report_${dateRange}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Dynamic calculations based on selected date range
+  const totalRevenue = filteredOrders.filter(o => o.status !== "cancelled").reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  const totalOrders = filteredOrders.length;
   // All customers in the system are considered active
   const activeCustomers = customers.length;
   const totalDistributors = distributors.filter(d => d.status === "approved").length;
@@ -105,8 +154,8 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   }));
 
   const statCards = [
-    { label: "Total Revenue (All Time)", value: totalRevenue, prefix: "₹", icon: "payments", color: GREEN, bg: "rgba(31,81,50,0.08)", trend: "Live", trendUp: true },
-    { label: "Total Orders", value: totalOrders, prefix: "", suffix: "", icon: "shopping_bag", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", trend: "Live", trendUp: true },
+    { label: `Revenue (${dateRange.replace(/_/g, ' ')})`, value: totalRevenue, prefix: "₹", icon: "payments", color: GREEN, bg: "rgba(31,81,50,0.08)", trend: "Live", trendUp: true },
+    { label: `Orders (${dateRange.replace(/_/g, ' ')})`, value: totalOrders, prefix: "", suffix: "", icon: "shopping_bag", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", trend: "Live", trendUp: true },
     { label: "Active Customers", value: activeCustomers, prefix: "", suffix: "", icon: "group", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", trend: "Live", trendUp: true },
     { label: "Total Distributors", value: totalDistributors, prefix: "", suffix: "", icon: "local_shipping", color: GOLD, bg: "rgba(212,166,74,0.1)", trend: "Live", trendUp: true },
     { label: "Monthly Sales", value: monthlySales, prefix: "₹", icon: "bar_chart", color: "#10b981", bg: "rgba(16,185,129,0.08)", trend: "Live", trendUp: true },
@@ -122,15 +171,18 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
           <p style={{ color: "#9ca3af", fontSize: "13px", margin: "4px 0 0" }}>Welcome back, Super Admin! Here's what's happening today.</p>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
-          <motion.button style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid #f0ede8", background: "white", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-            whileHover={{ borderColor: GREEN, color: GREEN }}>
-            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>calendar_today</span>
-            May 2026
-          </motion.button>
-          <motion.button style={{ padding: "8px 14px", borderRadius: "10px", border: "none", background: GREEN, fontSize: "12px", fontWeight: "600", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          <select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid #f0ede8", background: "white", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", outline: "none" }}>
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="last_3">Last 3 Months</option>
+            <option value="last_6">Last 6 Months</option>
+            <option value="this_year">This Year</option>
+            <option value="all">All Time</option>
+          </select>
+          <motion.button onClick={handleExport} style={{ padding: "8px 14px", borderRadius: "10px", border: "none", background: GREEN, fontSize: "12px", fontWeight: "600", color: "white", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
             whileHover={{ opacity: 0.9 }} whileTap={{ scale: 0.97 }}>
             <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>download</span>
-            Export
+            Export Report
           </motion.button>
         </div>
       </div>
