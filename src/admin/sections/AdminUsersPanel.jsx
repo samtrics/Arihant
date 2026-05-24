@@ -13,8 +13,41 @@ const ROLE_PERMS = { super_admin: "Full system access — all modules", product_
 
 const emptyForm = { name: "", email: "", role: "product_manager" };
 
+const INITIAL_ADMINS = [
+  { id: "ADM001", name: "Super Admin", email: "admin@arihant.in", role: "super_admin", roleLabel: "Super Admin", permissions: "Full system access — all modules", lastLogin: "Just now", status: "active", avatar: "SA" }
+];
+
+const INITIAL_LOGS = [
+  { id: 1, user: "Super Admin", email: "admin@arihant.in", ip: "192.168.1.45", time: new Date(Date.now() - 1000*60*5).toLocaleString(), status: "Success" },
+  { id: 2, user: "Unknown", email: "admin@arihant.in", ip: "45.22.19.11", time: new Date(Date.now() - 1000*60*60*2).toLocaleString(), status: "Failed (Wrong Password)" },
+  { id: 3, user: "Super Admin", email: "admin@arihant.in", ip: "192.168.1.45", time: new Date(Date.now() - 1000*60*60*24).toLocaleString(), status: "Success" }
+];
+
 export default function AdminUsersPanel() {
-  const [admins, setAdmins] = useState([]);
+  const [admins, setAdmins] = useState(() => {
+    try {
+      const saved = localStorage.getItem("arihant_admins");
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return INITIAL_ADMINS;
+  });
+
+  const [logs, setLogs] = useState(() => {
+    try {
+      const saved = localStorage.getItem("arihant_admin_logs");
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return INITIAL_LOGS;
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("arihant_admins", JSON.stringify(admins));
+  }, [admins]);
+
+  React.useEffect(() => {
+    localStorage.setItem("arihant_admin_logs", JSON.stringify(logs));
+  }, [logs]);
+
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [deleteId, setDeleteId] = useState(null);
@@ -23,6 +56,18 @@ export default function AdminUsersPanel() {
     if (!form.name || !form.email) return;
     const na = { ...form, id: `ADM${String(admins.length + 1).padStart(3, "0")}`, roleLabel: ROLE_LABELS[form.role], permissions: ROLE_PERMS[form.role], lastLogin: "Never", status: "active", avatar: form.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase() };
     setAdmins([...admins, na]);
+    
+    // Simulate an activity log for account creation
+    const newLog = {
+      id: Date.now(),
+      user: "System",
+      email: "system@arihant.in",
+      ip: "127.0.0.1",
+      time: new Date().toLocaleString(),
+      status: `Created Admin: ${form.email}`
+    };
+    setLogs([newLog, ...logs]);
+    
     setModal(false);
     setForm(emptyForm);
   };
@@ -30,7 +75,7 @@ export default function AdminUsersPanel() {
   const toggleStatus = (id) => setAdmins(as => as.map(a => a.id === id && a.role !== "super_admin" ? { ...a, status: a.status === "active" ? "inactive" : "active" } : a));
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
         <div>
           <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "20px", color: "#1C1C1C", margin: 0 }}>Admin Users</h2>
@@ -64,6 +109,9 @@ export default function AdminUsersPanel() {
 
       {/* Admin table */}
       <div style={{ ...card, overflow: "hidden" }}>
+        <div style={{ padding: "16px", borderBottom: "1px solid #f0ede8", background: "#fcfcfc" }}>
+          <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", margin: 0, color: "#1C1C1C" }}>Manage Administrators</h3>
+        </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
             <thead>
@@ -117,6 +165,42 @@ export default function AdminUsersPanel() {
                   </tr>
                 );
               })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Login Activity Log */}
+      <div style={{ ...card, overflow: "hidden" }}>
+        <div style={{ padding: "16px", borderBottom: "1px solid #f0ede8", background: "#fcfcfc" }}>
+          <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", margin: 0, color: "#1C1C1C" }}>Recent Login Activity</h3>
+          <p style={{ color: "#9ca3af", fontSize: "12px", margin: "2px 0 0" }}>Track IP addresses and login times for security</p>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+            <thead>
+              <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
+                {["Timestamp", "User", "Email", "IP Address", "Status"].map((h) => (
+                  <th key={h} style={{ textAlign: "left", padding: "11px 14px", color: "#6b7280", fontWeight: "700", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em", whiteSpace: "nowrap" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id} style={{ borderBottom: "1px solid #faf8f5" }}>
+                  <td style={{ padding: "12px 14px", fontSize: "12px", color: "#6b7280" }}>{log.time}</td>
+                  <td style={{ padding: "12px 14px", fontWeight: "600", color: "#1C1C1C" }}>{log.user}</td>
+                  <td style={{ padding: "12px 14px", color: "#6b7280", fontSize: "12px" }}>{log.email}</td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <span style={{ fontFamily: "monospace", background: "#f3f4f6", padding: "2px 6px", borderRadius: "4px", fontSize: "12px", color: "#374151" }}>{log.ip}</span>
+                  </td>
+                  <td style={{ padding: "12px 14px" }}>
+                    <span style={{ padding: "3px 8px", borderRadius: "100px", fontSize: "11px", fontWeight: "600", background: String(log.status).includes("Failed") ? "#fef2f2" : "#ecfdf5", color: String(log.status).includes("Failed") ? "#ef4444" : "#10b981" }}>
+                      {log.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
