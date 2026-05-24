@@ -2,7 +2,7 @@ import React from "react";
 
 export default function Heritage({ onNavigate }) {
   return (
-    <section className="py-stack-xl bg-surface scroll-reveal">
+    <section className="py-stack-xl bg-surface scroll-reveal overflow-hidden relative">
       <div className="w-full px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
         <div className="relative">
           <div className="absolute -top-10 -left-10 w-40 h-40 bg-secondary-fixed opacity-20 rounded-full blur-2xl"></div>
