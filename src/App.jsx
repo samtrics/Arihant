@@ -118,8 +118,7 @@ export default function App() {
   }, []);
 
   const handleSetProducts = async (newValOrUpdater) => {
-    const updated = typeof newValOrUpdater === 'function' ? newValOrUpdater(products) : newValOrUpdater;
-    setProducts(updated);
+    setProducts(newValOrUpdater);
     // Supabase realtime will sync automatically via subscription above
   };
 
