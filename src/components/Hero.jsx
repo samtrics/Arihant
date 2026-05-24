@@ -19,11 +19,11 @@ export default function Hero({ onNavigate }) {
             Bringing the rich legacy of Indian agriculture to your kitchen. Arihant staples are
             double-cleaned, hygienically packed, and nutrient-dense.
           </p>
-          <div className="flex gap-4">
-            <button onClick={() => onNavigate('products')} className="px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:shadow-lg transition-all active:scale-95">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6">
+            <button onClick={() => onNavigate('products')} className="w-full sm:w-auto px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:shadow-lg transition-all active:scale-95 text-center">
               Explore Collection
             </button>
-            <button onClick={() => onNavigate('contact')} className="px-8 py-4 bg-transparent border-2 border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+            <button onClick={() => onNavigate('contact')} className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all text-center">
               Bulk Inquiry
             </button>
           </div>

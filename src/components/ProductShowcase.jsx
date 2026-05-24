@@ -5,7 +5,7 @@ export default function ProductShowcase({ products, onProductClick, onNavigate }
   return (
     <section id="products-showcase" className="py-stack-xl bg-surface relative scroll-reveal">
       <div className="w-full px-margin-mobile md:px-margin-desktop">
-        <div className="flex justify-between items-end mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 md:gap-0 mb-8 md:mb-12">
           <div>
             <h2 className="font-headline-lg text-headline-lg text-primary mb-2">
               Our Pure Staples
@@ -14,7 +14,7 @@ export default function ProductShowcase({ products, onProductClick, onNavigate }
               The foundation of every healthy Indian meal.
             </p>
           </div>
-          <button onClick={() => onNavigate('products')} className="flex items-center gap-2 text-primary font-label-md hover:underline">
+          <button onClick={() => onNavigate('products')} className="flex items-center gap-2 text-primary font-label-md hover:underline w-full md:w-auto justify-center md:justify-end border border-primary md:border-none p-3 md:p-0 rounded-lg md:rounded-none">
             View All Products{" "}
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </button>

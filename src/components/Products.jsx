@@ -438,14 +438,14 @@ export default function Products({ products, onNavigate, onProductClick }) {
           </div>
 
           {/* Pagination */}
-          <div className="mt-stack-xl flex items-center justify-center gap-4">
+          <div className="mt-stack-xl flex flex-wrap items-center justify-center gap-2 md:gap-4">
             <button
               onClick={() => setDummyPage((p) => Math.max(p - 1, 1))}
-              className="p-2 border border-outline-variant rounded-full text-outline hover:bg-surface-container hover:text-primary transition-all"
+              className="p-2 border border-outline-variant rounded-full text-outline hover:bg-surface-container hover:text-primary transition-all flex-shrink-0"
             >
               <span className="material-symbols-outlined">arrow_back</span>
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
               <button
                 onClick={() => setDummyPage(1)}
                 className={`w-10 h-10 flex items-center justify-center rounded-full font-bold transition-all ${

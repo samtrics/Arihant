@@ -125,14 +125,14 @@ export default function About({ onNavigate }) {
               national symbol of ethical commerce and manufacturing excellence. His commitment to
               'Modern Indian Purity' drives every innovation in our labs.
             </p>
-            <div className="flex flex-wrap gap-stack-md">
+            <div className="flex flex-col sm:flex-row gap-4 mt-6">
               <button
                 onClick={() => onNavigate("home", "products-showcase")}
-                className="bg-secondary text-white px-stack-lg py-stack-sm rounded-full font-label-md hover:scale-105 active:scale-95 transition-transform"
+                className="w-full sm:w-auto bg-secondary text-white px-8 py-3 rounded-full font-label-md hover:scale-105 active:scale-95 transition-transform text-center"
               >
                 Explore Collection
               </button>
-              <button className="border border-white/30 text-white px-stack-lg py-stack-sm rounded-full font-label-md hover:bg-white/10 active:scale-95 transition-all">
+              <button className="w-full sm:w-auto border border-white/30 text-white px-8 py-3 rounded-full font-label-md hover:bg-white/10 active:scale-95 transition-all text-center">
                 LinkedIn Profile
               </button>
             </div>
