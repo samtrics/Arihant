@@ -24,10 +24,10 @@ import { supabase } from "./supabaseClient";
 export default function App() {
   const [currentPage, setCurrentPage] = useState(() => {
     // Restore admin page on refresh
-    return sessionStorage.getItem('adminSession') ? 'admin-dashboard' : 'home';
+    return localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home';
   });
   const [adminUser, setAdminUser] = useState(() => {
-    const saved = sessionStorage.getItem('adminSession');
+    const saved = localStorage.getItem('adminSession');
     return saved ? JSON.parse(saved) : null;
   });
   const [customerUser, setCustomerUser] = useState(null);
@@ -35,7 +35,7 @@ export default function App() {
   const [products, setProducts] = useState([]);
 
   // Track current page in a ref so auth listener always has the latest value
-  const currentPageRef = useRef(sessionStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
+  const currentPageRef = useRef(localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
   const setPage = (page) => {
     currentPageRef.current = page;
     setCurrentPage(page);
@@ -43,9 +43,9 @@ export default function App() {
 
   const setAdminUserAndPersist = (user) => {
     if (user) {
-      sessionStorage.setItem('adminSession', JSON.stringify(user));
+      localStorage.setItem('adminSession', JSON.stringify(user));
     } else {
-      sessionStorage.removeItem('adminSession');
+      localStorage.removeItem('adminSession');
     }
     setAdminUser(user);
   };
@@ -63,7 +63,7 @@ export default function App() {
       if (event === 'SIGNED_IN') {
         const page = currentPageRef.current;
         // Skip redirect if admin is active OR if on any admin/distributor page
-        const isAdminFlow = !!sessionStorage.getItem('adminSession') || page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
+        const isAdminFlow = !!localStorage.getItem('adminSession') || page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
         if (!isAdminFlow) {
           setPage('customer-dashboard');
         }
@@ -159,7 +159,7 @@ export default function App() {
         }
       } else {
         const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get('page') || (sessionStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
+        const page = urlParams.get('page') || (localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
         setPage(page);
       }
     };
