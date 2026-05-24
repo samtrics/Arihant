@@ -44,8 +44,10 @@ export default function App() {
   const setAdminUserAndPersist = (user) => {
     if (user) {
       localStorage.setItem('adminSession', JSON.stringify(user));
+      setCustomerUser(null); // Ensure admin does not appear as a customer
     } else {
       localStorage.removeItem('adminSession');
+      supabase.auth.signOut(); // Fully sign out of Supabase to prevent ghost customer sessions
     }
     setAdminUser(user);
   };
@@ -53,12 +55,14 @@ export default function App() {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setCustomerUser(session?.user || null);
+      const isAdmin = !!localStorage.getItem('adminSession');
+      setCustomerUser(isAdmin ? null : (session?.user || null));
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setCustomerUser(session?.user || null);
+      const isAdmin = !!localStorage.getItem('adminSession');
+      setCustomerUser(isAdmin ? null : (session?.user || null));
 
       if (event === 'SIGNED_IN') {
         const page = currentPageRef.current;
