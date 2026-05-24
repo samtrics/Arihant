@@ -51,14 +51,24 @@ const SETTINGS = {
 
 export default function SettingsPanel() {
   const [activeTab, setActiveTab] = useState("General");
-  const [settings, setSettings] = useState(SETTINGS);
   const [saved, setSaved] = useState(false);
+
+  const loadSettings = () => {
+    try {
+      const stored = localStorage.getItem("arihant_admin_settings");
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    return SETTINGS;
+  };
+
+  const [settings, setSettings] = useState(loadSettings());
 
   const updateSetting = (tab, key, value) => {
     setSettings((s) => ({ ...s, [tab]: s[tab].map((item) => item.key === key ? { ...item, value } : item) }));
   };
 
   const handleSave = () => {
+    localStorage.setItem("arihant_admin_settings", JSON.stringify(settings));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
