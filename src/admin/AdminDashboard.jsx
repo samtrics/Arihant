@@ -150,7 +150,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       case "products": return <ProductsManager products={products} setProducts={setProducts} />;
       case "orders": return <OrdersManager products={products} retailOrders={orders} setRetailOrders={handleSetOrders} b2bOrders={b2bOrders} setB2bOrders={handleSetB2bOrders} distributors={distributors} />;
       case "customers": return <CustomersManager customers={customers} setCustomers={handleSetCustomers} distributors={distributors} setDistributors={handleSetDistributors} orders={orders} b2bOrders={b2bOrders} />;
-      case "distributors": return <DistributorManager distributors={distributors} setDistributors={handleSetDistributors} />;
+      case "distributors": return <DistributorManager distributors={distributors} setDistributors={handleSetDistributors} b2bOrders={b2bOrders} />;
       case "inventory": return <InventoryManager products={products} />;
       case "analytics":
       case "revenue": return <AnalyticsView orders={orders} b2bOrders={b2bOrders} />;

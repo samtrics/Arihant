@@ -9,7 +9,7 @@ const tabs = ["All", "pending", "approved", "rejected"];
 const statusColors = { approved: "#10b981", pending: "#f59e0b", rejected: "#ef4444" };
 const statusBg = { approved: "#ecfdf5", pending: "#fffbeb", rejected: "#fef2f2" };
 
-export default function DistributorManager({ distributors: propDistributors = [], setDistributors: setPropDistributors }) {
+export default function DistributorManager({ distributors: propDistributors = [], setDistributors: setPropDistributors, b2bOrders = [] }) {
   const [distributors, setDistributors] = useState(propDistributors);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("All");
@@ -18,6 +18,7 @@ export default function DistributorManager({ distributors: propDistributors = []
   const [detailTab, setDetailTab] = useState("overview");
   const [orderSearch, setOrderSearch] = useState("");
   const [modalOrders, setModalOrders] = useState([]);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -40,7 +41,13 @@ export default function DistributorManager({ distributors: propDistributors = []
     return () => supabase.removeChannel(channel);
   }, []);
 
-  const filtered = distributors.filter((d) => {
+  const distributorsWithStats = distributors.map(d => {
+    const dOrders = b2bOrders.filter(o => o.distributorId === d.id || o.customer === d.business);
+    const dSpent = dOrders.reduce((acc, o) => acc + Number(o.amount || 0), 0);
+    return { ...d, orders: dOrders.length, revenue: dSpent };
+  });
+
+  const filtered = distributorsWithStats.filter((d) => {
     const q = search.toLowerCase();
     const mQ = (d.business || '').toLowerCase().includes(q) || (d.owner || '').toLowerCase().includes(q) || (d.city || '').toLowerCase().includes(q);
     const mT = tab === "All" || d.status === tab;
@@ -57,45 +64,24 @@ export default function DistributorManager({ distributors: propDistributors = []
 
   const countByStatus = (s) => distributors.filter((d) => d.status === s).length;
 
-  // Generate mock orders for approved distributors
+  // Load real orders when a distributor is opened
   useEffect(() => {
-    if (!detail || detail.status !== "approved" || detail.orders <= 0) {
+    if (!detail || detail.status !== "approved") {
       setModalOrders([]);
       return;
     }
-    const numOrders = detail.orders;
-    let remainingSpent = detail.revenue;
-    const ordersList = [];
-    const statuses = ["delivered", "shipped", "processing", "pending"];
-    const today = new Date();
+    const distOrders = b2bOrders.filter(o => o.distributorId === detail.id || o.customer === detail.business);
+    distOrders.sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
     
-    for(let i=0; i<numOrders; i++) {
-      const isLast = i === numOrders - 1;
-      const amt = isLast ? remainingSpent : Math.floor(Math.random() * (remainingSpent * 0.4)) + 1000;
-      remainingSpent -= amt;
-      
-      const orderDate = new Date(today);
-      orderDate.setDate(orderDate.getDate() - (i * 14) - Math.floor(Math.random()*5));
-      
-      const status = i === 0 ? statuses[Math.floor(Math.random() * statuses.length)] : "delivered";
-      let paymentStatus = "paid";
-      let amountPaid = amt;
-      if (status === "pending" || status === "processing") {
-        paymentStatus = Math.random() > 0.5 ? "pending" : "partial";
-        amountPaid = paymentStatus === "pending" ? 0 : Math.floor(amt * 0.5);
-      }
-      
-      ordersList.push({
-        id: `ORD-B${Math.floor(1000 + Math.random()*9000)}`,
-        date: orderDate.toISOString().split('T')[0],
-        amount: amt,
-        status: status,
-        paymentStatus: paymentStatus,
-        amountPaid: amountPaid
-      });
-    }
-    setModalOrders(ordersList);
-  }, [detail]);
+    const formattedOrders = distOrders.map(o => ({
+      ...o,
+      id: o.order_number || o.id,
+      paymentStatus: o.payment || o.payment_status || "pending",
+      amountPaid: o.amountPaid ?? o.amount_paid ?? (o.payment === "paid" || o.payment_status === "paid" ? o.amount : 0),
+    }));
+    
+    setModalOrders(formattedOrders);
+  }, [detail, b2bOrders]);
 
   const financials = useMemo(() => {
     let totalBilled = 0;
@@ -362,61 +348,58 @@ export default function DistributorManager({ distributors: propDistributors = []
                                 </tr>
                               </thead>
                               <tbody>
-                                {modalOrders.filter(o => o.id.toLowerCase().includes(orderSearch.toLowerCase()) || o.date.includes(orderSearch)).map((o, i, arr) => {
+                                {modalOrders.filter(o => o.id.toLowerCase().includes(orderSearch.toLowerCase()) || (o.date && o.date.includes(orderSearch))).map((o, i, arr) => {
                                   const bal = o.amount - (o.amountPaid || 0);
+                                  const isExpanded = selectedOrder === o.id;
                                   return (
-                                    <tr key={o.id} style={{ borderBottom: i === arr.length - 1 ? "none" : "1px solid #e5e7eb", background: "white" }}>
-                                      <td style={{ padding: "12px 14px", fontWeight: "700", color: GOLD }}>{o.id}</td>
-                                      {detailTab === "orders" && <td style={{ padding: "12px 14px", color: "#6b7280" }}>{o.date}</td>}
-                                      <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{o.amount.toLocaleString("en-IN")}</td>
-                                      
-                                      {/* Editable Payment Status */}
-                                      <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                        <select value={o.paymentStatus} onChange={e => {
-                                            const newPay = e.target.value;
-                                            let newAmt = o.amountPaid;
-                                            if (newPay === "paid") newAmt = o.amount;
-                                            if (newPay === "pending") newAmt = 0;
-                                            updateModalPayment(o.id, newPay, newAmt);
-                                          }}
-                                          style={{ padding: "4px 8px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "11px", fontWeight: "600", cursor: "pointer", outline: "none", color: "#374151", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2" }}>
-                                          <option value="pending">Pending</option>
-                                          <option value="partial">Partial</option>
-                                          <option value="paid">Full Paid</option>
-                                        </select>
-                                      </td>
-                                      
-                                      {/* Editable Amount Paid */}
-                                      <td style={{ padding: "12px 14px", textAlign: "right" }}>
-                                        <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                          <span style={{ fontSize: "12px", color: "#9ca3af" }}>₹</span>
-                                          <input 
-                                            type="number" min="0" max={o.amount}
-                                            value={o.amountPaid === 0 ? "" : o.amountPaid}
-                                            placeholder="0"
-                                            onChange={e => {
-                                              const val = parseInt(e.target.value, 10) || 0;
-                                              let newPay = "partial";
-                                              if (val <= 0) newPay = "pending";
-                                              if (val >= o.amount) newPay = "paid";
-                                              updateModalPayment(o.id, newPay, val);
-                                            }}
-                                            style={{ width: "70px", padding: "4px 6px", borderRadius: "6px", border: "1px solid #d1d5db", fontSize: "12px", outline: "none", color: "#1C1C1C", fontWeight: "600", textAlign: "right" }}
-                                            onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = "#d1d5db"}
-                                          />
-                                        </div>
-                                      </td>
-
-                                      <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "700", color: bal > 0 ? "#ef4444" : "#10b981" }}>₹{bal.toLocaleString("en-IN")}</td>
-                                      
-                                      {detailTab === "orders" && (
+                                    <React.Fragment key={o.id}>
+                                      <tr onClick={() => setSelectedOrder(isExpanded ? null : o.id)} style={{ borderBottom: isExpanded ? "none" : (i === arr.length - 1 ? "none" : "1px solid #e5e7eb"), background: isExpanded ? "#f9fafb" : "white", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e=>!isExpanded && (e.currentTarget.style.background="#faf8f5")} onMouseLeave={e=>!isExpanded && (e.currentTarget.style.background="white")}>
+                                        <td style={{ padding: "12px 14px", fontWeight: "700", color: GOLD }}>{o.id}</td>
+                                        {detailTab === "orders" && <td style={{ padding: "12px 14px", color: "#6b7280" }}>{o.date || "N/A"}</td>}
+                                        <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{Number(o.amount || 0).toLocaleString("en-IN")}</td>
+                                        
+                                        {/* Read-only Payment Status */}
                                         <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                          <button style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GOLD} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"}>
-                                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
-                                          </button>
+                                          <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2", color: o.paymentStatus==="paid"?"#10b981":o.paymentStatus==="partial"?"#f59e0b":"#ef4444" }}>
+                                            {o.paymentStatus || "pending"}
+                                          </span>
                                         </td>
+                                        
+                                        {/* Read-only Amount Paid */}
+                                        <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>
+                                          ₹{Number(o.amountPaid || 0).toLocaleString("en-IN")}
+                                        </td>
+
+                                        <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "700", color: bal > 0 ? "#ef4444" : "#10b981" }}>₹{bal.toLocaleString("en-IN")}</td>
+                                        
+                                        {detailTab === "orders" && (
+                                          <td style={{ padding: "12px 14px", textAlign: "center" }}>
+                                            <button onClick={(e) => { e.stopPropagation(); alert(`Downloading invoice for Order ID: ${o.id}`); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GOLD} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"} title="Download Invoice">
+                                              <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
+                                            </button>
+                                          </td>
+                                        )}
+                                      </tr>
+                                      {isExpanded && (
+                                        <tr style={{ background: "#f9fafb", borderBottom: i === arr.length - 1 ? "none" : "1px solid #e5e7eb" }}>
+                                          <td colSpan={detailTab === "orders" ? 7 : 6} style={{ padding: "8px 24px 20px 24px" }}>
+                                            <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>Order Details & Products</div>
+                                            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                                              {(Array.isArray(o.products) ? o.products : (typeof o.products === 'string' ? JSON.parse(o.products || '[]') : [])).map((p, pIdx) => (
+                                                <span key={pIdx} style={{ padding: "6px 12px", borderRadius: "8px", background: "white", border: "1px solid #e5e7eb", fontSize: "12px", color: "#374151", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                                                  {p.qty && <span style={{ color: "#9ca3af", fontWeight: "700" }}>{p.qty}x</span>}
+                                                  {typeof p === 'object' ? (p.name || JSON.stringify(p)) : String(p)}
+                                                  {p.price && <span style={{ color: GREEN, marginLeft: "4px" }}>₹{(p.price * (p.qty || 1)).toLocaleString("en-IN")}</span>}
+                                                </span>
+                                              ))}
+                                              {(!o.products || (Array.isArray(o.products) && o.products.length === 0) || (typeof o.products === 'string' && o.products.length < 5)) && (
+                                                <span style={{ fontSize: "12px", color: "#9ca3af" }}>No product details found for this order.</span>
+                                              )}
+                                            </div>
+                                          </td>
+                                        </tr>
                                       )}
-                                    </tr>
+                                    </React.Fragment>
                                   );
                                 })}
                               </tbody>
