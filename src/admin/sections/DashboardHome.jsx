@@ -31,9 +31,9 @@ const customTooltipRevenue = ({ active, payload, label }) => {
 const statusColors = { delivered: "#10b981", shipped: "#3b82f6", processing: "#f59e0b", pending: "#8b5cf6", cancelled: "#ef4444" };
 const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbeb", pending: "#f5f3ff", cancelled: "#fef2f2" };
 
-import pptxgen from "pptxgenjs";
+import { generateEnterpriseReport } from "../utils/generateEnterpriseReport";
 
-export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [] }) {
+export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [], products = [] }) {
   const [dateRange, setDateRange] = useState("this_month");
   
   const allOrders = [...orders, ...b2bOrders].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
@@ -69,75 +69,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
 
   const handleExport = () => {
     if (filteredOrders.length === 0) return alert("No data to export for this range.");
-    
-    const pres = new pptxgen();
-    
-    // Slide 1: Title
-    let slide = pres.addSlide();
-    slide.background = { color: "1F5132" };
-    slide.addText("Arihant Admin Dashboard", { x: 1, y: 1.5, w: "80%", h: 1, fontSize: 36, color: "FFFFFF", bold: true, align: "center" });
-    slide.addText(`Performance & Revenue Report`, { x: 1, y: 2.5, w: "80%", h: 0.5, fontSize: 24, color: "D4A64A", align: "center" });
-    slide.addText(`Date Range: ${dateRange.replace(/_/g, ' ').toUpperCase()}`, { x: 1, y: 3.2, w: "80%", h: 0.5, fontSize: 16, color: "FFFFFF", align: "center" });
-    
-    // Slide 2: Summary Metrics
-    slide = pres.addSlide();
-    slide.background = { color: "F9FAFB" };
-    slide.addText("Executive Summary", { x: 0.5, y: 0.5, w: "90%", h: 0.5, fontSize: 24, color: "1C1C1C", bold: true });
-    
-    const kpiData = [
-      [
-        { text: "Total Revenue", options: { bold: true, fontSize: 18, color: "1F5132" } },
-        { text: `Rs. ${totalRevenue.toLocaleString("en-IN")}`, options: { bold: true, fontSize: 28, color: "1C1C1C" } }
-      ],
-      [
-        { text: "Total Orders", options: { bold: true, fontSize: 18, color: "3B82F6" } },
-        { text: `${totalOrders}`, options: { bold: true, fontSize: 28, color: "1C1C1C" } }
-      ],
-      [
-        { text: "Avg Order Value", options: { bold: true, fontSize: 18, color: "D4A64A" } },
-        { text: `Rs. ${(totalOrders > 0 ? Math.round(totalRevenue/totalOrders) : 0).toLocaleString("en-IN")}`, options: { bold: true, fontSize: 28, color: "1C1C1C" } }
-      ]
-    ];
-    
-    slide.addTable(kpiData, { x: 0.5, y: 1.5, w: "90%", rowH: 1.2, fill: "FFFFFF", border: { pt: 1, color: "E5E7EB" }, align: "center", valign: "middle" });
-    
-    // Slide 3: Order Details (Auto-paginating Table)
-    const headers = [
-      { text: "Order ID", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
-      { text: "Date", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
-      { text: "Customer", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
-      { text: "Amount (Rs)", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
-      { text: "Status", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
-      { text: "Payment", options: { bold: true, color: "FFFFFF", fill: "1F5132" } }
-    ];
-    
-    const rows = filteredOrders.map(o => [
-      o.id || o.order_number || "N/A",
-      o.date || (o.created_at ? o.created_at.split('T')[0] : "N/A"),
-      o.customer || o.customer_name || 'Unknown',
-      o.amount ? o.amount.toLocaleString("en-IN") : "0",
-      (o.status || "pending").toUpperCase(),
-      (o.payment || o.payment_status || "pending").toUpperCase()
-    ]);
-    
-    const tableData = [headers, ...rows];
-    
-    slide = pres.addSlide();
-    slide.background = { color: "FFFFFF" };
-    slide.addText("Order Details Breakdown", { x: 0.5, y: 0.3, w: "90%", h: 0.5, fontSize: 20, color: "1C1C1C", bold: true });
-    
-    slide.addTable(tableData, { 
-      x: 0.5, y: 1.0, w: 9.0, 
-      colW: [1.5, 1.2, 2.5, 1.3, 1.2, 1.3],
-      border: { pt: 1, color: "E5E7EB" },
-      fill: "FFFFFF",
-      color: "374151",
-      fontSize: 10,
-      autoPage: true,
-      autoPageSlideStartY: 1.0
-    });
-    
-    pres.writeFile({ fileName: `Arihant_Report_${dateRange}.pptx` });
+    generateEnterpriseReport(dateRange, filteredOrders, allOrders, products, customers, distributors);
   };
   // All customers in the system are considered active
   const activeCustomers = customers.length;

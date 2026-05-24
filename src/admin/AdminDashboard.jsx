@@ -146,7 +146,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
   const renderSection = () => {
     switch (activeSection) {
-      case "dashboard": return <DashboardHome orders={orders} b2bOrders={b2bOrders} customers={customers} distributors={distributors} />;
+      case "dashboard": return <DashboardHome orders={orders} b2bOrders={b2bOrders} customers={customers} distributors={distributors} products={products} />;
       case "products": return <ProductsManager products={products} setProducts={setProducts} />;
       case "orders": return <OrdersManager products={products} retailOrders={orders} setRetailOrders={handleSetOrders} b2bOrders={b2bOrders} setB2bOrders={handleSetB2bOrders} distributors={distributors} />;
       case "customers": return <CustomersManager customers={customers} setCustomers={handleSetCustomers} distributors={distributors} setDistributors={handleSetDistributors} orders={orders} b2bOrders={b2bOrders} />;
