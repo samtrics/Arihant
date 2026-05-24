@@ -8,28 +8,7 @@ import {
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
 
-function AnimCounter({ target, prefix = "", suffix = "", duration = 2 }) {
-  const [val, setVal] = useState(0);
-  const ref = useRef(null);
-  const started = useRef(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started.current) {
-        started.current = true;
-        let s = 0;
-        const step = target / (duration * 60);
-        const t = setInterval(() => {
-          s += step;
-          if (s >= target) { setVal(target); clearInterval(t); }
-          else setVal(Math.floor(s));
-        }, 1000 / 60);
-      }
-    }, { threshold: 0.1 });
-    if (ref.current) obs.observe(ref.current);
-    return () => obs.disconnect();
-  }, [target, duration]);
-  return <span ref={ref}>{prefix}{val.toLocaleString("en-IN")}{suffix}</span>;
-}
+// (Removed AnimCounter component)
 
 const card = { background: "white", borderRadius: "16px", padding: "20px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 
@@ -59,7 +38,8 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   // Dynamic calculations
   const totalRevenue = allOrders.filter(o => o.status !== "cancelled").reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   const totalOrders = allOrders.length;
-  const activeCustomers = customers.filter(c => c.status === "active").length;
+  // All customers in the system are considered active
+  const activeCustomers = customers.length;
   const totalDistributors = distributors.filter(d => d.status === "approved").length;
   
   // Calculate this month's sales
@@ -125,11 +105,11 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   }));
 
   const statCards = [
-    { label: "Total Revenue (All Time)", value: totalRevenue, prefix: "₹", format: "lakh", icon: "payments", color: GREEN, bg: "rgba(31,81,50,0.08)", trend: "Live", trendUp: true },
+    { label: "Total Revenue (All Time)", value: totalRevenue, prefix: "₹", icon: "payments", color: GREEN, bg: "rgba(31,81,50,0.08)", trend: "Live", trendUp: true },
     { label: "Total Orders", value: totalOrders, prefix: "", suffix: "", icon: "shopping_bag", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", trend: "Live", trendUp: true },
     { label: "Active Customers", value: activeCustomers, prefix: "", suffix: "", icon: "group", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", trend: "Live", trendUp: true },
     { label: "Total Distributors", value: totalDistributors, prefix: "", suffix: "", icon: "local_shipping", color: GOLD, bg: "rgba(212,166,74,0.1)", trend: "Live", trendUp: true },
-    { label: "Monthly Sales", value: monthlySales, prefix: "₹", format: "lakh", icon: "bar_chart", color: "#10b981", bg: "rgba(16,185,129,0.08)", trend: "Live", trendUp: true },
+    { label: "Monthly Sales", value: monthlySales, prefix: "₹", icon: "bar_chart", color: "#10b981", bg: "rgba(16,185,129,0.08)", trend: "Live", trendUp: true },
     { label: "Low Stock Items", value: 3, prefix: "", suffix: " items", icon: "warning", color: "#ef4444", bg: "rgba(239,68,68,0.08)", trend: "Action needed", trendUp: false },
   ];
 
@@ -171,9 +151,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
             </div>
             <div>
               <div style={{ fontSize: "24px", fontWeight: "700", fontFamily: "'Poppins',sans-serif", color: "#1C1C1C", lineHeight: 1.2 }}>
-                {s.format === "lakh"
-                  ? <AnimCounter target={Math.round(s.value / 100000)} prefix={s.prefix} suffix=" L" />
-                  : <AnimCounter target={s.value} prefix={s.prefix} suffix={s.suffix || ""} />}
+                {s.prefix}{Number(s.value).toLocaleString("en-IN")}{s.suffix || ""}
               </div>
               <div style={{ fontSize: "12.5px", color: "#6b7280", marginTop: "4px" }}>{s.label}</div>
             </div>
