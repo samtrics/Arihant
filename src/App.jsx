@@ -124,8 +124,20 @@ export default function App() {
   };
 
 
-  const handleNavigate = (page, sectionId) => {
+  const handleNavigate = (page, sectionId, replace = false) => {
     setPage(page);
+    
+    const url = new URL(window.location);
+    url.searchParams.set('page', page);
+    if (sectionId) url.searchParams.set('section', sectionId);
+    else url.searchParams.delete('section');
+
+    if (replace) {
+      window.history.replaceState({ page, sectionId }, '', url);
+    } else {
+      window.history.pushState({ page, sectionId }, '', url);
+    }
+
     if (sectionId) {
       setTimeout(() => {
         const element = document.getElementById(sectionId);
@@ -135,6 +147,42 @@ export default function App() {
       }, 100);
     }
   };
+
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.page) {
+        setPage(event.state.page);
+        if (event.state.sectionId) {
+          setTimeout(() => {
+            const element = document.getElementById(event.state.sectionId);
+            if (element) element.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 100);
+        }
+      } else {
+        const urlParams = new URLSearchParams(window.location.search);
+        const page = urlParams.get('page') || (sessionStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
+        setPage(page);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    
+    // Set initial state
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialPage = urlParams.get('page') || currentPageRef.current;
+    
+    if (!window.history.state) {
+      const url = new URL(window.location);
+      url.searchParams.set('page', initialPage);
+      window.history.replaceState({ page: initialPage }, '', url);
+    }
+    
+    if (urlParams.get('page') && urlParams.get('page') !== currentPageRef.current) {
+      setPage(urlParams.get('page'));
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     // Reset scroll position to top instantly on page change
