@@ -96,7 +96,7 @@ export default function AnalyticsView({ orders = [], b2bOrders = [] }) {
     { label: "Total Revenue", val: `₹${totalRev.toLocaleString("en-IN")}`, change: "+0.0%", up: true, icon: "payments" },
     { label: "Avg Order Value", val: `₹${avgOrder.toLocaleString("en-IN")}`, change: "+0.0%", up: true, icon: "receipt" },
     { label: "Total Orders", val: allOrders.length.toString(), change: "+0.0%", up: true, icon: "shopping_bag" },
-    { label: "Total Customers", val: new Set(allOrders.map(o => o.customer)).size.toString(), change: "+0.0%", up: true, icon: "groups" },
+    { label: "Total Customers", val: new Set(allOrders.map(o => o.customer).filter(Boolean)).size.toString(), change: "+0.0%", up: true, icon: "groups" },
   ];
 
   const slicedData = revenueData.slice(-(parseInt(dateRange)));

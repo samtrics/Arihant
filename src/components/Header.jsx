@@ -24,10 +24,10 @@ export default function Header({ currentPage, onNavigate, customerUser }) {
         <div className="flex-shrink-0">
           <a
             onClick={(e) => handleLinkClick(e, "home", null)}
-            className="font-headline-md text-headline-md font-bold text-primary cursor-pointer"
+            className="cursor-pointer block"
             href="#"
           >
-            ARIHANT
+            <img src="/logo.png" alt="Arihant Logo" className="h-[84px] w-auto object-contain scale-[1.7] origin-left -ml-2" />
           </a>
         </div>
 

@@ -205,12 +205,13 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       top: 0, left: 0, zIndex: 40,
     }}>
       {/* Logo row */}
-      <div style={{ padding: "20px 16px 16px", display: "flex", alignItems: "center", gap: "10px", borderBottom: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
-        <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg,#D4A64A,#c49030)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "900", fontSize: "17px", color: "#1C1C1C", fontFamily: "'Poppins',sans-serif", flexShrink: 0 }}>A</div>
+      <div style={{ padding: "16px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
+        <div style={{ width: (!collapsed || mobile) ? "120px" : "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", marginLeft: "-8px", flexShrink: 0, transition: "width 0.3s" }}>
+          <img src="/logo.png" alt="Arihant" style={{ height: "90px", width: "auto", objectFit: "contain", transform: "scale(1.2)", transformOrigin: "center left", marginLeft: "8px" }} />
+        </div>
         {(!collapsed || mobile) && (
-          <div style={{ overflow: "hidden" }}>
-            <div style={{ color: "white", fontWeight: "700", fontSize: "15px", fontFamily: "'Poppins',sans-serif", lineHeight: 1.1 }}>ARIHANT</div>
-            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase" }}>Admin Panel</div>
+          <div style={{ overflow: "hidden", marginLeft: "4px" }}>
+            <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "10px", letterSpacing: "1.5px", textTransform: "uppercase", marginTop: "2px" }}>Admin Panel</div>
           </div>
         )}
         {!mobile && (

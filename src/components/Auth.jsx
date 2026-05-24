@@ -230,8 +230,7 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
         <div className="w-full lg:w-1/2 p-6 md:p-12 flex flex-col justify-center">
           {/* Logo representation on mobile */}
           <div className="lg:hidden flex items-center gap-2 mb-6">
-            <span className="px-2 py-0.5 bg-primary text-white rounded font-bold text-label-sm">A</span>
-            <span className="font-headline-md font-bold text-primary">ARIHANT</span>
+            <img src="/logo.png" alt="Arihant" className="h-[84px] w-auto object-contain scale-[1.5] origin-left -ml-2" />
           </div>
 
           {/* Mode Switcher Tabs */}

@@ -137,10 +137,11 @@ export default function AdminLogin({ onLogin, onBack }) {
           </button>
 
           {/* Logo block */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "10px", padding: "8px 14px", background: "rgba(212,166,74,0.14)", border: "1px solid rgba(212,166,74,0.3)", borderRadius: "12px", marginBottom: "28px" }}>
-            <div style={{ width: "34px", height: "34px", borderRadius: "8px", background: "linear-gradient(135deg,#D4A64A,#c49030)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "900", fontSize: "16px", color: "#1C1C1C", fontFamily: "'Poppins',sans-serif" }}>A</div>
-            <span style={{ color: "white", fontWeight: "700", fontSize: "17px", fontFamily: "'Poppins',sans-serif" }}>ARIHANT</span>
-            <span style={{ fontSize: "10px", color: "#D4A64A", background: "rgba(212,166,74,0.18)", padding: "2px 8px", borderRadius: "100px", fontWeight: "700", letterSpacing: "1px" }}>ADMIN</span>
+          <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 12px 4px 6px", background: "rgba(212,166,74,0.14)", border: "1px solid rgba(212,166,74,0.3)", borderRadius: "12px", marginBottom: "28px" }}>
+            <div style={{ width: "110px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+              <img src="/logo.png" alt="Arihant" style={{ height: "100px", objectFit: "contain" }} />
+            </div>
+            <span style={{ fontSize: "10px", color: "#D4A64A", background: "rgba(212,166,74,0.18)", padding: "2px 8px", borderRadius: "100px", fontWeight: "700", letterSpacing: "1px", marginLeft: "4px" }}>ADMIN</span>
           </div>
 
           <h1 style={{ color: "white", fontWeight: "700", fontSize: "clamp(26px,2.8vw,38px)", lineHeight: "1.2", marginBottom: "16px", fontFamily: "'Poppins',sans-serif" }}>
@@ -180,9 +181,11 @@ export default function AdminLogin({ onLogin, onBack }) {
         <motion.div initial={{ x: 40, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }} style={{ width: "100%", maxWidth: "440px" }}>
 
           {/* Mobile logo */}
-          <div className="lg:hidden" style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "32px" }}>
-            <div style={{ width: "34px", height: "34px", borderRadius: "8px", background: "linear-gradient(135deg,#1F5132,#2d6b45)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "900", fontSize: "16px" }}>A</div>
-            <span style={{ fontWeight: "700", fontSize: "17px", color: "#1F5132", fontFamily: "'Poppins',sans-serif" }}>ARIHANT ADMIN</span>
+          <div className="lg:hidden" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "32px" }}>
+            <div style={{ width: "110px", height: "44px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", marginLeft: "-10px" }}>
+              <img src="/logo.png" alt="Arihant" style={{ height: "100px", objectFit: "contain", transform: "scale(1.1)" }} />
+            </div>
+            <span style={{ fontWeight: "700", fontSize: "17px", color: "#1F5132", fontFamily: "'Poppins',sans-serif" }}>ADMIN</span>
           </div>
 
           <AnimatePresence mode="wait">
