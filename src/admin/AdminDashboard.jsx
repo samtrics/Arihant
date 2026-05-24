@@ -137,6 +137,33 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
+  // Generate real notifications based on data
+  useEffect(() => {
+    const newNotifs = [];
+    
+    const lowStock = products.filter(p => p.stock > 0 && p.stock < (p.min_stock || 20));
+    lowStock.forEach(p => {
+      newNotifs.push({ id: `inv-${p.id}`, type: "inventory", title: "Low Stock Alert", message: `${p.name} is running low. Only ${p.stock} units remaining.`, time: "Recent", read: false });
+    });
+
+    const outStock = products.filter(p => p.stock === 0);
+    outStock.forEach(p => {
+      newNotifs.push({ id: `out-${p.id}`, type: "inventory", title: "Out of Stock", message: `${p.name} is completely out of stock!`, time: "Recent", read: false });
+    });
+
+    const pendingOrders = [...orders, ...b2bOrders].filter(o => o.status === "Pending" || o.status === "Processing").slice(0, 10);
+    pendingOrders.forEach(o => {
+      newNotifs.push({ id: `ord-${o.id}`, type: "order", title: `New Order ${o.id}`, message: `A new order has been placed by ${o.customer} for ₹${o.total_amount || o.total_price || 0}.`, time: o.date, read: false });
+    });
+
+    setNotifications(prev => {
+      const existingIds = new Set(prev.map(n => n.id));
+      const toAdd = newNotifs.filter(n => !existingIds.has(n.id));
+      if (toAdd.length === 0) return prev;
+      return [...toAdd, ...prev];
+    });
+  }, [products, orders, b2bOrders]);
+
   const markAllRead = () => setNotifications((n) => n.map((x) => ({ ...x, read: true })));
 
   const navigate = (id) => {
@@ -155,7 +182,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       case "analytics":
       case "revenue": return <AnalyticsView orders={orders} b2bOrders={b2bOrders} />;
       case "coupons": return <CouponsManager />;
-      case "notifications": return <NotificationsPanel />;
+      case "notifications": return <NotificationsPanel notifications={notifications} setNotifications={setNotifications} />;
       case "settings": return <SettingsPanel />;
       case "admin-users": return <AdminUsersPanel />;
       default: return <ComingSoon section={activeSection} />;

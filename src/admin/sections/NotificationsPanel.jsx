@@ -7,22 +7,27 @@ const typeColors = { order: "#3b82f6", inventory: "#f59e0b", distributor: GREEN,
 const typeBg = { order: "#eff6ff", inventory: "#fffbeb", distributor: "rgba(31,81,50,0.08)", review: "#f5f3ff", default: "#f3f4f6" };
 const typeIcons = { order: "shopping_bag", inventory: "warehouse", distributor: "local_shipping", review: "star", default: "notifications" };
 
-export default function NotificationsPanel() {
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: "order", title: "New Order #ORD-8921", message: "A new order has been placed by Anjali Sharma for ₹1,250.", time: "10 mins ago", read: false },
-    { id: 2, type: "inventory", title: "Low Stock Alert", message: "Sharbati Atta (5kg) is running low. Only 12 units remaining in stock.", time: "1 hour ago", read: false },
-    { id: 3, type: "distributor", title: "Bulk Order Received", message: "Distributor 'Raman Traders' placed a bulk order for 500 units of Besan.", time: "3 hours ago", read: true },
-    { id: 4, type: "review", title: "New 5-Star Review", message: "Rajiv Mehta left a 5-star review for Roasted Daliya.", time: "Yesterday", read: true },
-    { id: 5, type: "order", title: "Payment Failed #ORD-8910", message: "Payment processing failed for order #ORD-8910. Customer has been notified.", time: "Yesterday", read: true }
-  ]);
+export default function NotificationsPanel({ notifications = [], setNotifications }) {
   const [filter, setFilter] = useState("All");
 
   const filtered = notifications.filter(n => filter === "All" || (filter === "Unread" ? !n.read : filter === n.type));
   const unread = notifications.filter(n => !n.read).length;
 
-  const markRead = (id) => setNotifications(ns => ns.map(n => n.id === id ? { ...n, read: true } : n));
-  const markAllRead = () => setNotifications(ns => ns.map(n => ({ ...n, read: true })));
-  const remove = (id) => setNotifications(ns => ns.filter(n => n.id !== id));
+  const markRead = (id) => {
+    if (setNotifications) {
+      setNotifications(ns => ns.map(n => n.id === id ? { ...n, read: true } : n));
+    }
+  };
+  const markAllRead = () => {
+    if (setNotifications) {
+      setNotifications(ns => ns.map(n => ({ ...n, read: true })));
+    }
+  };
+  const remove = (id) => {
+    if (setNotifications) {
+      setNotifications(ns => ns.filter(n => n.id !== id));
+    }
+  };
 
   const tabs = ["All", "Unread", "order", "inventory", "distributor", "review"];
 
