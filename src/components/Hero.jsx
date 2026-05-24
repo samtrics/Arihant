@@ -28,9 +28,9 @@ export default function Hero({ onNavigate }) {
             </button>
           </div>
         </div>
-        <div className="col-span-12 lg:col-span-6 relative h-full flex justify-center lg:justify-end mt-12 lg:mt-0">
+        <div className="col-span-12 lg:col-span-6 relative h-full flex justify-start lg:justify-end mt-12 lg:mt-0 w-full">
           <div className="relative w-full max-w-md aspect-square bg-secondary-fixed opacity-10 rounded-full blur-3xl absolute -right-20 -top-20"></div>
-          <div className="relative z-10 flex gap-4 md:gap-0 md:-space-x-6 lg:space-x-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-8 md:pb-0 px-4 md:px-0 w-full md:w-auto items-center md:items-end justify-start md:justify-center scrollbar-hide">
+          <div className="relative z-10 flex gap-4 md:gap-0 md:-space-x-6 lg:space-x-4 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-8 md:pb-0 w-[100vw] md:w-auto -ml-4 md:ml-0 px-4 md:px-0 items-center md:items-end justify-start md:justify-center scrollbar-hide">
             <div className="snap-center shrink-0 z-10 bg-surface-container-lowest p-4 rounded-xl border border-outline-variant shadow-sm md:-rotate-6 transform hover:rotate-0 transition-all duration-500 w-48 md:w-48">
               <img
                 className="w-full h-64 object-cover rounded-lg shadow-inner"
