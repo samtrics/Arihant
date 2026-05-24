@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Heritage() {
+export default function Heritage({ onNavigate }) {
   return (
     <section className="py-stack-xl bg-surface scroll-reveal">
       <div className="w-full px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
@@ -62,7 +62,7 @@ export default function Heritage() {
               </div>
             </div>
           </div>
-          <button className="px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all">
+          <button onClick={() => onNavigate('about')} className="px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all">
             Read Full Story
           </button>
         </div>

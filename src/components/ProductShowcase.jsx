@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function ProductShowcase({ products, onProductClick }) {
+export default function ProductShowcase({ products, onProductClick, onNavigate }) {
   const showcaseProducts = products.filter((p) => (p.bestseller || p.featured) && p.status !== "inactive").slice(0, 5);
   return (
     <section id="products-showcase" className="py-stack-xl bg-surface relative scroll-reveal">
@@ -14,7 +14,7 @@ export default function ProductShowcase({ products, onProductClick }) {
               The foundation of every healthy Indian meal.
             </p>
           </div>
-          <button className="flex items-center gap-2 text-primary font-label-md hover:underline">
+          <button onClick={() => onNavigate('products')} className="flex items-center gap-2 text-primary font-label-md hover:underline">
             View All Products{" "}
             <span className="material-symbols-outlined text-sm">arrow_forward</span>
           </button>

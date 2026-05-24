@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Hero() {
+export default function Hero({ onNavigate }) {
   return (
     <section className="relative bg-background overflow-hidden min-h-[640px] flex items-center">
       <div className="grain-overlay"></div>
@@ -20,10 +20,10 @@ export default function Hero() {
             double-cleaned, hygienically packed, and nutrient-dense.
           </p>
           <div className="flex gap-4">
-            <button className="px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:shadow-lg transition-all active:scale-95">
+            <button onClick={() => onNavigate('products')} className="px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:shadow-lg transition-all active:scale-95">
               Explore Collection
             </button>
-            <button className="px-8 py-4 bg-transparent border-2 border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
+            <button onClick={() => onNavigate('contact')} className="px-8 py-4 bg-transparent border-2 border-primary text-primary rounded-lg font-label-md text-label-md hover:bg-surface-container-low transition-all">
               Bulk Inquiry
             </button>
           </div>

@@ -172,10 +172,10 @@ export default function App() {
       <main>
         {currentPage === "home" && (
           <div className="page-transition">
-            <Hero />
-            <ProductShowcase products={products} onProductClick={setSelectedProduct} />
+            <Hero onNavigate={handleNavigate} />
+            <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
             <PromiseSection />
-            <Heritage />
+            <Heritage onNavigate={handleNavigate} />
             <Testimonials />
           </div>
         )}

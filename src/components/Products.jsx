@@ -241,7 +241,7 @@ export default function Products({ products, onNavigate, onProductClick }) {
               <p className="text-label-md text-on-secondary-container/80 mb-4">
                 Planning for commercial orders? Get specialized pricing.
               </p>
-              <button className="w-full py-2 bg-on-secondary-container text-white rounded-lg font-label-md transition-transform active:scale-95">
+              <button onClick={() => onNavigate('contact')} className="w-full py-2 bg-on-secondary-container text-white rounded-lg font-label-md transition-transform active:scale-95">
                 Contact Sales
               </button>
             </div>
@@ -371,7 +371,7 @@ export default function Products({ products, onNavigate, onProductClick }) {
                       Planning for commercial orders? Get specialized pricing.
                     </p>
                   </div>
-                  <button className="w-full sm:w-auto px-5 py-2.5 bg-on-secondary-container text-white rounded-lg font-label-md transition-transform active:scale-95 text-center whitespace-nowrap">
+                  <button onClick={() => onNavigate('contact')} className="w-full sm:w-auto px-5 py-2.5 bg-on-secondary-container text-white rounded-lg font-label-md transition-transform active:scale-95 text-center whitespace-nowrap">
                     Contact Sales
                   </button>
                 </div>
