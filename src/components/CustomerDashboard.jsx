@@ -15,9 +15,16 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   
   const getInitAddress = () => {
     const a = user?.user_metadata?.address;
-    if (typeof a === 'object' && a !== null) return { flat: a.flat || "", area: a.area || "", city: a.city || "", state: a.state || "", pincode: a.pincode || "" };
-    if (typeof a === 'string') return { flat: "", area: a, city: "", state: "", pincode: "" };
-    return { flat: "", area: "", city: "", state: "", pincode: "" };
+    if (typeof a === 'object' && a !== null) return { flat: a.flat || "", area: a.area || "", city: a.city || "", state: a.state || "", pincode: a.pincode || "", lat: a.lat || null, lng: a.lng || null };
+    if (typeof a === 'string') return { flat: "", area: a, city: "", state: "", pincode: "", lat: null, lng: null };
+    return { flat: "", area: "", city: "", state: "", pincode: "", lat: null, lng: null };
+  };
+
+  const getInitShopAddress = () => {
+    const a = user?.user_metadata?.shop_address;
+    if (typeof a === 'object' && a !== null) return { flat: a.flat || "", area: a.area || "", city: a.city || "", state: a.state || "", pincode: a.pincode || "", lat: a.lat || null, lng: a.lng || null };
+    if (typeof a === 'string') return { flat: "", area: a, city: "", state: "", pincode: "", lat: null, lng: null };
+    return { flat: "", area: "", city: "", state: "", pincode: "", lat: null, lng: null };
   };
 
   // Profile State
@@ -25,11 +32,12 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
     full_name: user?.user_metadata?.full_name || "",
     phone: user?.user_metadata?.phone || "",
     address: getInitAddress(),
-    shop_address: user?.user_metadata?.shop_address || ""
+    shop_address: getInitShopAddress()
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [isLocatingShop, setIsLocatingShop] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -124,7 +132,9 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                 area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
                 city: data.address.city || data.address.town || data.address.state_district || "",
                 state: data.address.state || "",
-                pincode: data.address.postcode || ""
+                pincode: data.address.postcode || "",
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
               }
             }));
           }
@@ -137,6 +147,44 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
       (error) => {
         setIsLocating(false);
         alert("Failed to get location. Please ensure location permissions are granted.");
+      }
+    );
+  };
+
+  const handleGetShopLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsLocatingShop(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+          const data = await res.json();
+          if (data && data.address) {
+            setProfileData(prev => ({
+              ...prev,
+              shop_address: {
+                ...prev.shop_address,
+                area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
+                city: data.address.city || data.address.town || data.address.state_district || "",
+                state: data.address.state || "",
+                pincode: data.address.postcode || "",
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              }
+            }));
+          }
+        } catch (err) {
+          alert("Could not fetch address details.");
+        } finally {
+          setIsLocatingShop(false);
+        }
+      },
+      (error) => {
+        setIsLocatingShop(false);
+        alert("Failed to get location.");
       }
     );
   };
@@ -282,14 +330,54 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                   </div>
                   
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Shop/Business Address <span className="text-gray-400 normal-case font-normal">(Optional)</span></label>
-                    <textarea 
-                      value={profileData.shop_address} 
-                      onChange={e => setProfileData({...profileData, shop_address: e.target.value})}
-                      placeholder="Enter your shop or business address if different from above"
-                      rows="2"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all resize-none" 
-                    ></textarea>
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Shop/Business Address <span className="text-gray-400 normal-case font-normal">(Optional)</span></label>
+                      <button 
+                        onClick={handleGetShopLocation}
+                        disabled={isLocatingShop}
+                        className="text-xs font-bold text-[#D4A64A] hover:underline flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">my_location</span>
+                        {isLocatingShop ? "Locating..." : "Use Current Location"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input 
+                        type="text" 
+                        value={profileData.shop_address.flat} 
+                        onChange={e => setProfileData({...profileData, shop_address: {...profileData.shop_address, flat: e.target.value}})}
+                        placeholder="Shop No., Building, Complex"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all md:col-span-2" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.shop_address.area} 
+                        onChange={e => setProfileData({...profileData, shop_address: {...profileData.shop_address, area: e.target.value}})}
+                        placeholder="Market, Area, Road"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all md:col-span-2" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.shop_address.city} 
+                        onChange={e => setProfileData({...profileData, shop_address: {...profileData.shop_address, city: e.target.value}})}
+                        placeholder="Town/City"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.shop_address.state} 
+                        onChange={e => setProfileData({...profileData, shop_address: {...profileData.shop_address, state: e.target.value}})}
+                        placeholder="State"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.shop_address.pincode} 
+                        onChange={e => setProfileData({...profileData, shop_address: {...profileData.shop_address, pincode: e.target.value}})}
+                        placeholder="Pincode"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all md:col-span-2" 
+                      />
+                    </div>
                   </div>
                   <div className="md:col-span-2 mt-2 pt-6 border-t border-gray-100 flex items-center justify-between">
                     <div>
