@@ -154,6 +154,29 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!formData.email.trim()) {
+      setErrors(prev => ({ ...prev, email: "Please enter your email address first to reset your password.", _general: "" }));
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setErrors(prev => ({ ...prev, _general: "", email: "" }));
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.email.trim().toLowerCase(), {
+        redirectTo: window.location.origin,
+      });
+      if (error) throw error;
+      
+      alert("A password reset link has been dispatched to your email! Please check your inbox and spam folders.");
+    } catch (err) {
+      setErrors(prev => ({ ...prev, _general: "Failed to send reset link: " + err.message }));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="bg-background min-h-[calc(100vh-80px)] text-on-surface flex items-center justify-center py-stack-xl px-margin-mobile md:px-margin-desktop relative overflow-hidden">
       {/* Background grain detail */}
@@ -359,9 +382,8 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
                 {mode === "signin" && (
                   <button
                     type="button"
-                    onClick={() => {
-                      alert("Simulating: A password reset link has been dispatched to your email!");
-                    }}
+                    onClick={handleForgotPassword}
+                    disabled={isSubmitting}
                     className="text-label-sm text-secondary hover:text-primary hover:underline font-semibold"
                   >
                     Forgot Password?

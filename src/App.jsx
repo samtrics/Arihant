@@ -16,6 +16,7 @@ import Footer from "./components/Footer";
 
 import ProductDetailsModal from "./components/ProductDetailsModal";
 import DistributorLogin from "./components/DistributorLogin";
+import ResetPassword from "./components/ResetPassword";
 import DistributorDashboard from "./components/DistributorDashboard";
 import CustomerDashboard from "./components/CustomerDashboard";
 import CartDrawer from "./components/CartDrawer";
@@ -111,11 +112,16 @@ export default function App() {
       const isAdmin = !!localStorage.getItem('adminSession');
       setCustomerUser(isAdmin ? null : (session?.user || null));
 
+      if (event === 'PASSWORD_RECOVERY') {
+        setPage('reset-password');
+        return; // Prevent SIGNED_IN logic below from overriding this
+      }
+
       if (event === 'SIGNED_IN') {
         const page = currentPageRef.current;
         // Skip redirect if admin is active OR if on any admin/distributor page
         const isAdminFlow = !!localStorage.getItem('adminSession') || page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
-        if (!isAdminFlow) {
+        if (!isAdminFlow && page !== 'reset-password') {
           setPage('customer-dashboard');
         }
       }
@@ -309,6 +315,7 @@ export default function App() {
         {(currentPage === "login" || currentPage === "register") && <Auth onNavigate={handleNavigate} initialMode={currentPage === "login" ? "signin" : "signup"} />}
         {currentPage === "customer-dashboard" && customerUser && <CustomerDashboard user={customerUser} onNavigate={handleNavigate} onLogout={() => handleNavigate("home")} />}
         {currentPage === "customer-dashboard" && !customerUser && <Auth onNavigate={handleNavigate} initialMode="signin" />}
+        {currentPage === "reset-password" && <ResetPassword onNavigate={handleNavigate} />}
         {currentPage === "distributor-login" && <DistributorLogin onNavigate={handleNavigate} />}
         {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
         {currentPage === "admin" && !adminUser && (
