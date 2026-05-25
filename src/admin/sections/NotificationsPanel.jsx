@@ -3,9 +3,9 @@ import { motion } from "framer-motion";
 
 const GREEN = "#1F5132";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
-const typeColors = { order: "#3b82f6", inventory: "#f59e0b", distributor: GREEN, review: "#8b5cf6", default: "#6b7280" };
-const typeBg = { order: "#eff6ff", inventory: "#fffbeb", distributor: "rgba(31,81,50,0.08)", review: "#f5f3ff", default: "#f3f4f6" };
-const typeIcons = { order: "shopping_bag", inventory: "warehouse", distributor: "local_shipping", review: "star", default: "notifications" };
+const typeColors = { order: "#3b82f6", inventory: "#f59e0b", distributor: GREEN, review: "#8b5cf6", customer: "#10b981", payment: "#ef4444", default: "#6b7280" };
+const typeBg = { order: "#eff6ff", inventory: "#fffbeb", distributor: "rgba(31,81,50,0.08)", review: "#f5f3ff", customer: "#ecfdf5", payment: "#fef2f2", default: "#f3f4f6" };
+const typeIcons = { order: "shopping_bag", inventory: "warehouse", distributor: "local_shipping", review: "star", customer: "person_add", payment: "error", default: "notifications" };
 
 export default function NotificationsPanel({ notifications = [], setNotifications }) {
   const [filter, setFilter] = useState("All");
@@ -26,10 +26,16 @@ export default function NotificationsPanel({ notifications = [], setNotification
   const remove = (id) => {
     if (setNotifications) {
       setNotifications(ns => ns.filter(n => n.id !== id));
+      try {
+        const dismissedStr = localStorage.getItem("dismissed_notifs") || "[]";
+        const dismissedIds = JSON.parse(dismissedStr);
+        dismissedIds.push(id);
+        localStorage.setItem("dismissed_notifs", JSON.stringify(dismissedIds));
+      } catch(e) {}
     }
   };
 
-  const tabs = ["All", "Unread", "order", "inventory", "distributor", "review"];
+  const tabs = ["All", "Unread", "order", "inventory", "customer", "payment", "distributor"];
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>

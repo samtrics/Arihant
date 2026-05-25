@@ -211,30 +211,84 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
   // Generate real notifications based on data
   useEffect(() => {
-    const newNotifs = [];
+    const generatedNotifs = [];
     
-    const lowStock = products.filter(p => p.stock > 0 && p.stock < (p.min_stock || 20));
+    // 1. Low Inventory (Stock < 20)
+    const lowStock = products.filter(p => typeof p.stock === 'number' && p.stock < 20);
     lowStock.forEach(p => {
-      newNotifs.push({ id: `inv-${p.id}`, type: "inventory", title: "Low Stock Alert", message: `${p.name} is running low. Only ${p.stock} units remaining.`, time: "Recent", read: false });
+      generatedNotifs.push({ 
+        id: `inv-${p.id}`, 
+        type: "inventory", 
+        title: "Low Stock Alert", 
+        message: `${p.name} is running low. Only ${p.stock} units remaining.`, 
+        time: "Active Alert", 
+        read: false 
+      });
     });
 
-    const outStock = products.filter(p => p.stock === 0);
-    outStock.forEach(p => {
-      newNotifs.push({ id: `out-${p.id}`, type: "inventory", title: "Out of Stock", message: `${p.name} is completely out of stock!`, time: "Recent", read: false });
+    const now = Date.now();
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const FOUR_DAYS = 4 * 24 * 60 * 60 * 1000;
+
+    // 2. New Orders & 3. Delayed Payments
+    const allOrders = [...orders, ...b2bOrders];
+    allOrders.forEach(o => {
+      const orderDate = new Date(o.created_at || o.date).getTime();
+      
+      // New Order (< 48 hours)
+      if (now - orderDate < FORTY_EIGHT_HOURS) {
+        generatedNotifs.push({ 
+          id: `ord-new-${o.id}`, 
+          type: "order", 
+          title: `New Order ${o.id}`, 
+          message: `A new order was placed by ${o.customer} for ₹${o.amount || o.total_amount || 0}.`, 
+          time: new Date(orderDate).toLocaleDateString('en-IN'), 
+          read: false 
+        });
+      }
+
+      // Delayed Payment (> 4 days AND payment pending)
+      const payStatus = (o.payment_status || "").toLowerCase();
+      if (now - orderDate > FOUR_DAYS && !payStatus.includes("paid") && o.status !== "cancelled") {
+        generatedNotifs.push({ 
+          id: `pay-delay-${o.id}`, 
+          type: "payment", 
+          title: `Delayed Payment: ${o.id}`, 
+          message: `Order ${o.id} is over 4 days old and payment is still pending. Please review.`, 
+          time: new Date(orderDate).toLocaleDateString('en-IN'), 
+          read: false 
+        });
+      }
     });
 
-    const pendingOrders = [...orders, ...b2bOrders].filter(o => o.status === "Pending" || o.status === "Processing").slice(0, 10);
-    pendingOrders.forEach(o => {
-      newNotifs.push({ id: `ord-${o.id}`, type: "order", title: `New Order ${o.id}`, message: `A new order has been placed by ${o.customer} for ₹${o.total_amount || o.total_price || 0}.`, time: o.date, read: false });
+    // 4. New Customers (< 48 hours)
+    customers.forEach(c => {
+      const joinDate = new Date(c.joined).getTime();
+      if (now - joinDate < FORTY_EIGHT_HOURS) {
+        generatedNotifs.push({
+          id: `cust-new-${c.id}`,
+          type: "customer",
+          title: "New Customer Registration",
+          message: `${c.name} (${c.email}) joined recently.`,
+          time: new Date(joinDate).toLocaleDateString('en-IN'),
+          read: false
+        });
+      }
     });
+
+    // Apply localStorage filtering for read/dismissed
+    const dismissedStr = localStorage.getItem("dismissed_notifs") || "[]";
+    let dismissedIds = [];
+    try { dismissedIds = JSON.parse(dismissedStr); } catch(e) {}
+    const dismissedSet = new Set(dismissedIds);
+
+    const activeNotifs = generatedNotifs.filter(n => !dismissedSet.has(n.id));
 
     setNotifications(prev => {
-      const existingIds = new Set(prev.map(n => n.id));
-      const toAdd = newNotifs.filter(n => !existingIds.has(n.id));
-      if (toAdd.length === 0) return prev;
-      return [...toAdd, ...prev];
+      const existingReads = new Map(prev.map(n => [n.id, n.read]));
+      return activeNotifs.map(n => ({ ...n, read: existingReads.has(n.id) ? existingReads.get(n.id) : false })).sort((a,b) => (a.read === b.read ? 0 : a.read ? 1 : -1));
     });
-  }, [products, orders, b2bOrders]);
+  }, [products, orders, b2bOrders, customers]);
 
   const markAllRead = () => setNotifications((n) => n.map((x) => ({ ...x, read: true })));
 

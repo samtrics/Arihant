@@ -7,8 +7,8 @@ const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 
 const STATUS_OPTIONS = ["pending", "processing", "shipped", "delivered", "cancelled"];
-const statusColors = { delivered: "#10b981", shipped: "#3b82f6", processing: "#f59e0b", pending: "#8b5cf6", cancelled: "#ef4444" };
-const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbeb", pending: "#f5f3ff", cancelled: "#fef2f2" };
+const statusColors = { delivered: "#10b981", shipped: "#3b82f6", processing: "#f59e0b", pending: "#8b5cf6", cancelled: "#ef4444", New: "#ef4444" };
+const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbeb", pending: "#f5f3ff", cancelled: "#fef2f2", New: "#fef2f2" };
 const payColors = { paid: "#10b981", pending: "#f59e0b", refunded: "#6b7280" };
 const payBg = { paid: "#ecfdf5", pending: "#fffbeb", refunded: "#f3f4f6" };
 
@@ -53,7 +53,15 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const filtered = currentOrders.filter((o) => {
     const q = search.toLowerCase();
     const mQ = (o.id || '').toLowerCase().includes(q) || (o.customer || '').toLowerCase().includes(q);
-    const mS = statusFilter === "All" || o.status === statusFilter;
+    
+    const orderDateStr = o.created_at || o.date;
+    const isNew = orderDateStr ? (Date.now() - new Date(orderDateStr).getTime()) < 48 * 60 * 60 * 1000 : false;
+    
+    let mS = false;
+    if (statusFilter === "All") mS = true;
+    else if (statusFilter === "New") mS = isNew;
+    else mS = o.status === statusFilter;
+    
     return mQ && mS;
   });
   const totalPages = Math.ceil(filtered.length / PER);
@@ -220,13 +228,23 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
 
       {/* ── Filters ── */}
       <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
-        {["All", ...STATUS_OPTIONS].map((s) => (
+        {["All", "New", ...STATUS_OPTIONS].map((s) => {
+          let count = 0;
+          if (s === "All") count = currentOrders.length;
+          else if (s === "New") count = currentOrders.filter(o => {
+            const d = o.created_at || o.date;
+            return d ? (Date.now() - new Date(d).getTime()) < 48 * 60 * 60 * 1000 : false;
+          }).length;
+          else count = currentOrders.filter(o => o.status === s).length;
+          
+          return (
           <motion.button key={s} onClick={() => { setStatusFilter(s); setPage(1); }}
             style={{ padding: "7px 14px", borderRadius: "100px", fontSize: "12px", fontWeight: "600", border: "1.5px solid", cursor: "pointer", transition: "all 0.15s", textTransform: "capitalize", borderColor: statusFilter === s ? (s === "All" ? (activeTab==="b2b"?GOLD:GREEN) : statusColors[s] || GREEN) : "#e5e7eb", background: statusFilter === s ? (s === "All" ? (activeTab==="b2b"?GOLD:GREEN) : statusColors[s] + "18") : "white", color: statusFilter === s ? (s === "All" ? "white" : statusColors[s]) : "#6b7280" }}
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            {s === "All" ? `All (${currentOrders.length})` : `${s.charAt(0).toUpperCase() + s.slice(1)} (${currentOrders.filter(o => o.status === s).length})`}
+            {s === "All" ? `All (${count})` : s === "New" ? `New Orders (${count})` : `${s.charAt(0).toUpperCase() + s.slice(1)} (${count})`}
           </motion.button>
-        ))}
+          )
+        })}
       </div>
 
       {/* ── Search ── */}
@@ -258,7 +276,17 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                   onMouseEnter={e => e.currentTarget.style.background = "#faf8f5"}
                   onMouseLeave={e => e.currentTarget.style.background = ""}
                   onClick={() => setDetail({ ...o, distributorId: dCode, city: dCity })}>
-                  <td style={{ padding: "13px", fontWeight: "700", color: activeTab === "b2b" ? GOLD : GREEN }}>{o.id}</td>
+                  <td style={{ padding: "13px", fontWeight: "700", color: activeTab === "b2b" ? GOLD : GREEN }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      {o.id}
+                      {(() => {
+                        const d = o.created_at || o.date;
+                        const isNew = d ? (Date.now() - new Date(d).getTime()) < 48 * 60 * 60 * 1000 : false;
+                        if (isNew) return <span style={{ padding: "2px 6px", borderRadius: "4px", background: "#ef4444", color: "white", fontSize: "9px", fontWeight: "800", letterSpacing: "0.5px" }}>NEW</span>;
+                        return null;
+                      })()}
+                    </div>
+                  </td>
                   <td style={{ padding: "13px" }}>
                     <div style={{ fontWeight: "600", color: "#1C1C1C" }}>{o.customer}</div>
                     <div style={{ fontSize: "11px", color: "#9ca3af" }}>{activeTab === "b2b" ? `Code: ${dCode} | ${dCity}` : dCity}</div>
