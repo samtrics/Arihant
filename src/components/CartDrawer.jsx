@@ -194,100 +194,106 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 ))}
               </div>
             )}
+            
+            {/* Address and Payment Options inside scrollable area */}
+            {cartItems.length > 0 && !orderSuccess && (
+              <div className="mt-8 flex flex-col gap-6">
+                
+                {/* Address Form */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <label className="text-sm font-bold text-on-surface">Delivery Details</label>
+                    <button 
+                      onClick={handleGetLocation} 
+                      disabled={isLocating}
+                      className="text-xs text-primary font-bold flex items-center gap-1 hover:bg-surface-container py-1 px-2 rounded-md transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">{isLocating ? 'hourglass_empty' : 'my_location'}</span>
+                      {isLocating ? 'Locating...' : 'Use Current Location'}
+                    </button>
+                  </div>
+                  
+                  <input 
+                    type="text" placeholder="Flat, House no., Building, Apartment *" 
+                    value={address.flat} onChange={(e) => setAddress({...address, flat: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  />
+                  <input 
+                    type="text" placeholder="Area, Street, Sector, Village *" 
+                    value={address.area} onChange={(e) => setAddress({...address, area: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  />
+                  <input 
+                    type="text" placeholder="Landmark (Optional)" 
+                    value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  />
+                  <div className="flex gap-3">
+                    <input 
+                      type="text" placeholder="Town/City *" 
+                      value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})}
+                      className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                    />
+                    <input 
+                      type="text" placeholder="Pincode *" 
+                      value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})}
+                      className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                    />
+                  </div>
+                  <input 
+                    type="tel" 
+                    placeholder="Phone Number *" 
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  />
+                </div>
+
+                {/* Payment Method */}
+                <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant">
+                  <label className="text-sm font-bold text-on-surface">Payment Method</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setPaymentMethod("COD")}
+                      className={`p-3 rounded-lg border font-bold text-sm transition-all ${paymentMethod === "COD" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
+                    >
+                      Cash on Delivery
+                    </button>
+                    <button 
+                      onClick={() => setPaymentMethod("UPI")}
+                      className={`p-3 rounded-lg border font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === "UPI" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
+                    >
+                      <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                      UPI / QR
+                    </button>
+                  </div>
+
+                  {paymentMethod === "UPI" && (
+                    <div className="mt-2 p-4 bg-white border border-outline-variant rounded-xl flex flex-col items-center text-center animate-fade-in shadow-inner">
+                      <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Scan to Pay ₹{cartTotal.toFixed(2)}</p>
+                      <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 mb-3">
+                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${cartTotal}&cu=INR`)}`} alt="UPI QR Code" className="w-32 h-32" />
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3">Pay using any UPI app (GPay, PhonePe, Paytm)</p>
+                      <input 
+                        type="text" 
+                        placeholder="Enter UPI Transaction ID (Required) *" 
+                        value={upiTxnId}
+                        onChange={(e) => setUpiTxnId(e.target.value)}
+                        className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm text-center font-medium"
+                      />
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            )}
           </div>
 
           {/* Footer Checkout */}
           {cartItems.length > 0 && !orderSuccess && (
             <div className="border-t border-outline-variant p-6 bg-surface-container-low flex flex-col gap-4">
-              
-              {/* Address Form */}
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-between items-center">
-                  <label className="text-sm font-bold text-on-surface">Delivery Details</label>
-                  <button 
-                    onClick={handleGetLocation} 
-                    disabled={isLocating}
-                    className="text-xs text-primary font-bold flex items-center gap-1 hover:bg-surface-container py-1 px-2 rounded-md transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">{isLocating ? 'hourglass_empty' : 'my_location'}</span>
-                    {isLocating ? 'Locating...' : 'Use Current Location'}
-                  </button>
-                </div>
-                
-                <input 
-                  type="text" placeholder="Flat, House no., Building, Apartment *" 
-                  value={address.flat} onChange={(e) => setAddress({...address, flat: e.target.value})}
-                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                />
-                <input 
-                  type="text" placeholder="Area, Street, Sector, Village *" 
-                  value={address.area} onChange={(e) => setAddress({...address, area: e.target.value})}
-                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                />
-                <input 
-                  type="text" placeholder="Landmark (Optional)" 
-                  value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})}
-                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                />
-                <div className="flex gap-3">
-                  <input 
-                    type="text" placeholder="Town/City *" 
-                    value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                  />
-                  <input 
-                    type="text" placeholder="Pincode *" 
-                    value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                  />
-                </div>
-                <input 
-                  type="tel" 
-                  placeholder="Phone Number *" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                />
-              </div>
-
-              {/* Payment Method */}
-              <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant">
-                <label className="text-sm font-bold text-on-surface">Payment Method</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => setPaymentMethod("COD")}
-                    className={`p-3 rounded-lg border font-bold text-sm transition-all ${paymentMethod === "COD" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
-                  >
-                    Cash on Delivery
-                  </button>
-                  <button 
-                    onClick={() => setPaymentMethod("UPI")}
-                    className={`p-3 rounded-lg border font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === "UPI" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
-                    UPI / QR
-                  </button>
-                </div>
-
-                {paymentMethod === "UPI" && (
-                  <div className="mt-2 p-4 bg-white border border-outline-variant rounded-xl flex flex-col items-center text-center animate-fade-in shadow-inner">
-                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Scan to Pay ₹{cartTotal.toFixed(2)}</p>
-                    <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 mb-3">
-                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${cartTotal}&cu=INR`)}`} alt="UPI QR Code" className="w-32 h-32" />
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">Pay using any UPI app (GPay, PhonePe, Paytm)</p>
-                    <input 
-                      type="text" 
-                      placeholder="Enter UPI Transaction ID (Required) *" 
-                      value={upiTxnId}
-                      onChange={(e) => setUpiTxnId(e.target.value)}
-                      className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm text-center font-medium"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center pt-2 mt-2 border-t border-outline-variant">
+              <div className="flex justify-between items-center">
                 <span className="text-on-surface-variant font-medium text-lg">Subtotal</span>
                 <span className="text-2xl font-bold text-primary">₹{cartTotal.toFixed(2)}</span>
               </div>
