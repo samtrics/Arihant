@@ -78,8 +78,42 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           amountPaid: o.amount_paid || 0,
           date: o.date || (o.created_at ? o.created_at.split('T')[0] : null),
         }));
-        setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
+        const b2cOrders = mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B')));
+        setOrders(b2cOrders);
         setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));
+        
+        // Dynamically generate customers from B2C orders
+        const uniqueCustomers = [];
+        const seenEmails = new Set();
+        
+        b2cOrders.forEach(o => {
+          let email = "unknown@example.com";
+          let name = o.customer_name;
+          
+          if (o.customer_name && o.customer_name.includes(" | ")) {
+            const parts = o.customer_name.split(" | ");
+            name = parts[0].trim();
+            email = parts[1].trim();
+          } else if (o.customer_name && o.customer_name.includes("@")) {
+            email = o.customer_name;
+            name = email.split("@")[0];
+          }
+          
+          if (!seenEmails.has(email)) {
+            seenEmails.add(email);
+            uniqueCustomers.push({
+              id: `CUST-${Math.abs(email.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).toUpperCase().slice(0, 6)}`,
+              name: name || "Unknown Customer",
+              email: email,
+              phone: o.city?.split(" | Phone: ")[1] || "N/A",
+              city: o.city?.split(" | ")[0] || "N/A",
+              state: "N/A",
+              status: "active",
+              joined: o.date
+            });
+          }
+        });
+        setCustomers(uniqueCustomers);
       }
     });
     supabase.from('distributors').select('*').then(({ data }) => {
@@ -99,8 +133,42 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
               amountPaid: o.amount_paid || 0,
               date: o.date || (o.created_at ? o.created_at.split('T')[0] : null),
             }));
-            setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
+            const b2cOrders = mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B')));
+            setOrders(b2cOrders);
             setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));
+            
+            // Dynamically generate customers from B2C orders
+            const uniqueCustomers = [];
+            const seenEmails = new Set();
+            
+            b2cOrders.forEach(o => {
+              let email = "unknown@example.com";
+              let name = o.customer_name;
+              
+              if (o.customer_name && o.customer_name.includes(" | ")) {
+                const parts = o.customer_name.split(" | ");
+                name = parts[0].trim();
+                email = parts[1].trim();
+              } else if (o.customer_name && o.customer_name.includes("@")) {
+                email = o.customer_name;
+                name = email.split("@")[0];
+              }
+              
+              if (!seenEmails.has(email)) {
+                seenEmails.add(email);
+                uniqueCustomers.push({
+                  id: `CUST-${Math.abs(email.split('').reduce((a,b)=>{a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)).toString(16).toUpperCase().slice(0, 6)}`,
+                  name: name || "Unknown Customer",
+                  email: email,
+                  phone: o.city?.split(" | Phone: ")[1] || "N/A",
+                  city: o.city?.split(" | ")[0] || "N/A",
+                  state: "N/A",
+                  status: "active",
+                  joined: o.date
+                });
+              }
+            });
+            setCustomers(uniqueCustomers);
           }
         });
       })

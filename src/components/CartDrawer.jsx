@@ -6,6 +6,8 @@ export default function CartDrawer({ customerUser, onNavigate }) {
   const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
+  const [address, setAddress] = useState("");
+  const [phone, setPhone] = useState("");
 
   if (!isCartOpen) return null;
 
@@ -17,6 +19,10 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
 
     if (cartItems.length === 0) return;
+    if (!address.trim() || !phone.trim()) {
+      alert("Please provide your delivery address and phone number.");
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -27,10 +33,12 @@ export default function CartDrawer({ customerUser, onNavigate }) {
         customer_name: `${customerUser.user_metadata?.full_name || customerUser.email.split('@')[0]} | ${customerUser.email}`,
         amount: cartTotal,
         status: 'pending',
+        payment_status: 'pending',
+        city: `${address.trim()} | Phone: ${phone.trim()}`,
         products: JSON.stringify(cartItems.map(item => ({
           id: item.id,
           name: item.name,
-          quantity: item.quantity,
+          qty: item.quantity,
           price: item.offerPrice || item.price,
           unit: item.unit
         })))
@@ -146,14 +154,33 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
           {/* Footer Checkout */}
           {cartItems.length > 0 && !orderSuccess && (
-            <div className="border-t border-outline-variant p-6 bg-surface-container-low">
-              <div className="flex justify-between items-center mb-6">
+            <div className="border-t border-outline-variant p-6 bg-surface-container-low flex flex-col gap-4">
+              
+              {/* Address Form */}
+              <div className="flex flex-col gap-3">
+                <label className="text-sm font-bold text-on-surface">Delivery Details</label>
+                <textarea 
+                  placeholder="Full Delivery Address" 
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary resize-none h-20 text-sm"
+                />
+                <input 
+                  type="tel" 
+                  placeholder="Phone Number" 
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full p-3 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
                 <span className="text-on-surface-variant font-medium text-lg">Subtotal</span>
                 <span className="text-2xl font-bold text-primary">₹{cartTotal.toFixed(2)}</span>
               </div>
               <button 
                 onClick={handleCheckout}
-                disabled={isProcessing}
+                disabled={isProcessing || !address.trim() || !phone.trim()}
                 className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
@@ -169,7 +196,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 )}
               </button>
               {!customerUser && (
-                <p className="text-center text-xs text-on-surface-variant mt-3">
+                <p className="text-center text-xs text-on-surface-variant mt-1">
                   You will be asked to sign in to place your order.
                 </p>
               )}
