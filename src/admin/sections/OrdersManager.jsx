@@ -357,52 +357,51 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                 <div>
                   <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>Products & Bill Summary</div>
                   
-                  {activeTab === "retail" ? (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                      {(Array.isArray(detail.products) ? detail.products : (typeof detail.products === 'string' ? JSON.parse(detail.products || '[]') : [])).map((p, i) => (
-                        <span key={i} style={{ padding: "4px 12px", borderRadius: "100px", fontSize: "12px", fontWeight: "600", background: "rgba(31,81,50,0.08)", color: GREEN }}>
-                          {typeof p === 'object' ? p.name || JSON.stringify(p) : String(p)}
-                        </span>
-                      ))}
-                    </div>
-                  ) : (
-                    <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                        <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-                          <tr>
-                            <th style={{ padding: "8px 12px", textAlign: "left", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Product</th>
-                            <th style={{ padding: "8px 12px", textAlign: "center", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Qty</th>
-                            <th style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Price</th>
-                            <th style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Total</th>
+                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                      <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
+                        <tr>
+                          <th style={{ padding: "8px 12px", textAlign: "left", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Product</th>
+                          <th style={{ padding: "8px 12px", textAlign: "center", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Qty</th>
+                          <th style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Price</th>
+                          <th style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(Array.isArray(detail.products) ? detail.products : (typeof detail.products === 'string' ? JSON.parse(detail.products || '[]') : [])).map((p, i) => (
+                          <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                            <td style={{ padding: "8px 12px", fontWeight: "600", color: "#374151" }}>{typeof p === 'object' ? p.name || "Unknown Product" : String(p)}</td>
+                            <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: "#1C1C1C" }}>{p.qty || p.quantity || 1}</td>
+                            <td style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280" }}>₹{Number(p.price || 0).toLocaleString("en-IN")}</td>
+                            <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{(Number(p.price || 0) * Number(p.qty || p.quantity || 1)).toLocaleString("en-IN")}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {(Array.isArray(detail.products) ? detail.products : (typeof detail.products === 'string' ? JSON.parse(detail.products || '[]') : [])).map((p, i) => (
-                            <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                              <td style={{ padding: "8px 12px", fontWeight: "600", color: "#374151" }}>{p.name}</td>
-                              <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: "#1C1C1C" }}>{p.qty || 1}</td>
-                              <td style={{ padding: "8px 12px", textAlign: "right", color: "#6b7280" }}>₹{(p.price || 0).toLocaleString("en-IN")}</td>
-                              <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{((p.price || 0) * (p.qty || 1)).toLocaleString("en-IN")}</td>
+                        ))}
+                      </tbody>
+                      <tfoot style={{ background: "#faf8f5" }}>
+                        <tr>
+                          <td colSpan={3} style={{ padding: "10px 12px", textAlign: "right", fontWeight: "700", fontSize: "12px", color: "#6b7280", textTransform: "uppercase" }}>Total Bill Generate:</td>
+                          <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: "800", fontSize: "15px", color: activeTab === "b2b" ? GOLD : GREEN }}>₹{Number(detail.amount || 0).toLocaleString("en-IN")}</td>
+                        </tr>
+                        {activeTab === "retail" ? (
+                          <tr>
+                            <td colSpan={3} style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Payment Status:</td>
+                            <td style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: (detail.payment || detail.payment_status || "").toLowerCase().includes("paid") ? "#10b981" : "#f59e0b" }}>{detail.payment || detail.payment_status || "Pending"}</td>
+                          </tr>
+                        ) : (
+                          <>
+                            <tr>
+                              <td colSpan={3} style={{ padding: "6px 12px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Amount Paid:</td>
+                              <td style={{ padding: "6px 12px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#10b981" }}>₹{(detail.amountPaid || 0).toLocaleString("en-IN")}</td>
                             </tr>
-                          ))}
-                        </tbody>
-                        <tfoot style={{ background: "#faf8f5" }}>
-                          <tr>
-                            <td colSpan={3} style={{ padding: "10px 12px", textAlign: "right", fontWeight: "700", fontSize: "12px", color: "#6b7280", textTransform: "uppercase" }}>Total Bill Generate:</td>
-                            <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: "800", fontSize: "15px", color: GOLD }}>₹{Number(detail.amount || 0).toLocaleString("en-IN")}</td>
-                          </tr>
-                          <tr>
-                            <td colSpan={3} style={{ padding: "6px 12px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Amount Paid:</td>
-                            <td style={{ padding: "6px 12px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#10b981" }}>₹{(detail.amountPaid || 0).toLocaleString("en-IN")}</td>
-                          </tr>
-                          <tr>
-                            <td colSpan={3} style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Balance Due:</td>
-                            <td style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#ef4444" }}>₹{(detail.amount - (detail.amountPaid || 0)).toLocaleString("en-IN")}</td>
-                          </tr>
-                        </tfoot>
-                      </table>
-                    </div>
-                  )}
+                            <tr>
+                              <td colSpan={3} style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Balance Due:</td>
+                              <td style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#ef4444" }}>₹{(detail.amount - (detail.amountPaid || 0)).toLocaleString("en-IN")}</td>
+                            </tr>
+                          </>
+                        )}
+                      </tfoot>
+                    </table>
+                  </div>
                 </div>
 
                 {/* Timeline */}
@@ -440,7 +439,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     </select>
                   </div>
                   
-                  {activeTab === "b2b" && (
+                  {activeTab === "b2b" ? (
                     <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
                       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                         <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Status</span>
@@ -474,6 +473,18 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                           onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = "#d1d5db"}
                         />
                         <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: "600" }}>/ {detail.amount.toLocaleString("en-IN")}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center", width: "100%" }}>
+                        <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>Payment Info</span>
+                        <input 
+                          type="text" 
+                          value={detail.payment || detail.payment_status || ""}
+                          onChange={e => setDetail({ ...detail, payment: e.target.value })}
+                          style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "12px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "600" }}
+                        />
                       </div>
                     </div>
                   )}
