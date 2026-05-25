@@ -141,7 +141,12 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
       );
 
     } catch (err) {
-      setErrors(prev => ({ ...prev, _general: err.message }));
+      const msg = err.message || "";
+      if (msg.toLowerCase().includes("already registered") || msg.toLowerCase().includes("already exists")) {
+        setErrors(prev => ({ ...prev, email: "An account with this email address already exists. Please sign in instead.", _general: "" }));
+      } else {
+        setErrors(prev => ({ ...prev, _general: msg }));
+      }
     } finally {
       setIsSubmitting(false);
     }
