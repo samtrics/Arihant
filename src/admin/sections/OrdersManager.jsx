@@ -39,6 +39,15 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
   const [isCreatingB2B, setIsCreatingB2B] = useState(false);
   const [newB2BOrder, setNewB2BOrder] = useState({ distributorId: "", cart: {} });
 
+  const parseProducts = (prod) => {
+    if (!prod) return [];
+    if (Array.isArray(prod)) return prod;
+    if (typeof prod === "string") {
+      try { return JSON.parse(prod); } catch (e) { return []; }
+    }
+    return [];
+  };
+
   const currentOrders = activeTab === "b2b" ? b2bOrders : retailOrders;
 
   const filtered = currentOrders.filter((o) => {
@@ -255,7 +264,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     <div style={{ fontSize: "11px", color: "#9ca3af" }}>{activeTab === "b2b" ? `Code: ${dCode} | ${dCity}` : dCity}</div>
                   </td>
                   <td style={{ padding: "13px", color: "#6b7280", fontSize: "12px" }}>{o.date || "N/A"}</td>
-                  <td style={{ padding: "13px", fontWeight: "600" }}>{o.items || (Array.isArray(o.products) ? o.products.length : 0)} {activeTab === "b2b" ? "SKUs" : "Items"}</td>
+                  <td style={{ padding: "13px", fontWeight: "600" }}>{o.items || parseProducts(o.products).length} {activeTab === "b2b" ? "SKUs" : "Items"}</td>
                   <td style={{ padding: "13px", fontWeight: "700", color: "#1C1C1C" }}>₹{Number(o.amount || 0).toLocaleString("en-IN")}</td>
                   <td style={{ padding: "13px" }}>
                     <select value={o.status} onChange={e => { e.stopPropagation(); updateStatus(o.id, e.target.value); }}
@@ -368,7 +377,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                         </tr>
                       </thead>
                       <tbody>
-                        {(Array.isArray(detail.products) ? detail.products : (typeof detail.products === 'string' ? JSON.parse(detail.products || '[]') : [])).map((p, i) => (
+                        {parseProducts(detail.products).map((p, i) => (
                           <tr key={i} style={{ borderBottom: "1px solid #e5e7eb" }}>
                             <td style={{ padding: "8px 12px", fontWeight: "600", color: "#374151" }}>{typeof p === 'object' ? p.name || "Unknown Product" : String(p)}</td>
                             <td style={{ padding: "8px 12px", textAlign: "center", fontWeight: "700", color: "#1C1C1C" }}>{p.qty || p.quantity || 1}</td>
@@ -382,23 +391,15 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                           <td colSpan={3} style={{ padding: "10px 12px", textAlign: "right", fontWeight: "700", fontSize: "12px", color: "#6b7280", textTransform: "uppercase" }}>Total Bill Generate:</td>
                           <td style={{ padding: "10px 12px", textAlign: "right", fontWeight: "800", fontSize: "15px", color: activeTab === "b2b" ? GOLD : GREEN }}>₹{Number(detail.amount || 0).toLocaleString("en-IN")}</td>
                         </tr>
-                        {activeTab === "retail" ? (
-                          <tr>
-                            <td colSpan={3} style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Payment Status:</td>
-                            <td style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: (detail.payment || detail.payment_status || "").toLowerCase().includes("paid") ? "#10b981" : "#f59e0b" }}>{detail.payment || detail.payment_status || "Pending"}</td>
-                          </tr>
-                        ) : (
-                          <>
-                            <tr>
-                              <td colSpan={3} style={{ padding: "6px 12px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Amount Paid:</td>
-                              <td style={{ padding: "6px 12px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#10b981" }}>₹{(detail.amountPaid || 0).toLocaleString("en-IN")}</td>
-                            </tr>
-                            <tr>
-                              <td colSpan={3} style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Balance Due:</td>
-                              <td style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#ef4444" }}>₹{(detail.amount - (detail.amountPaid || 0)).toLocaleString("en-IN")}</td>
-                            </tr>
-                          </>
-                        )}
+                        {/* Always show Amount Paid and Balance for both B2B and B2C now */}
+                        <tr>
+                          <td colSpan={3} style={{ padding: "6px 12px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Amount Paid:</td>
+                          <td style={{ padding: "6px 12px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#10b981" }}>₹{(detail.amountPaid || 0).toLocaleString("en-IN")}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan={3} style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "600", fontSize: "11px", color: "#6b7280", textTransform: "uppercase" }}>Balance Due:</td>
+                          <td style={{ padding: "6px 12px 10px", textAlign: "right", fontWeight: "700", fontSize: "13px", color: "#ef4444" }}>₹{(detail.amount - (detail.amountPaid || 0)).toLocaleString("en-IN")}</td>
+                        </tr>
                       </tfoot>
                     </table>
                   </div>
@@ -439,55 +440,49 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     </select>
                   </div>
                   
-                  {activeTab === "b2b" ? (
-                    <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Status</span>
-                        <select value={detail.payment || "pending"} onChange={e => {
-                          const newPay = e.target.value;
-                          let newAmt = detail.amountPaid || 0;
-                          if (newPay === "paid") newAmt = detail.amount;
-                          if (newPay === "pending") newAmt = 0;
-                          setDetail({ ...detail, payment: newPay, amountPaid: newAmt });
+                  {/* Same Payment Editor for B2B and B2C */}
+                  <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                      <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Payment</span>
+                      <select value={detail.payment || "pending"} onChange={e => {
+                        const newPay = e.target.value;
+                        let newAmt = detail.amountPaid || 0;
+                        if (newPay === "paid") newAmt = detail.amount;
+                        if (newPay === "pending") newAmt = 0;
+                        setDetail({ ...detail, payment: newPay, amountPaid: newAmt });
+                      }}
+                        style={{ padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "12px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "600" }}>
+                        <option value="pending">Pending</option>
+                        <option value="partial">Partial</option>
+                        <option value="paid">Full Paid</option>
+                      </select>
+                    </div>
+                    
+                    <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                      <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Amount Paid: ₹</span>
+                      <input 
+                        type="number" min="0" max={detail.amount}
+                        value={detail.amountPaid || ""}
+                        onChange={e => {
+                          const val = parseInt(e.target.value, 10) || 0;
+                          let newPay = "partial";
+                          if (val <= 0) newPay = "pending";
+                          if (val >= detail.amount) newPay = "paid";
+                          setDetail({ ...detail, payment: newPay, amountPaid: val });
                         }}
-                          style={{ padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "12px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "600" }}>
-                          <option value="pending">Pending</option>
-                          <option value="partial">Partial</option>
-                          <option value="paid">Full Paid</option>
-                        </select>
-                      </div>
-                      
-                      <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px" }}>Amount Paid: ₹</span>
-                        <input 
-                          type="number" min="0" max={detail.amount}
-                          value={detail.amountPaid || ""}
-                          onChange={e => {
-                            const val = parseInt(e.target.value, 10) || 0;
-                            let newPay = "partial";
-                            if (val <= 0) newPay = "pending";
-                            if (val >= detail.amount) newPay = "paid";
-                            setDetail({ ...detail, payment: newPay, amountPaid: val });
-                          }}
-                          style={{ width: "90px", padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "13px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "700", textAlign: "right" }}
-                          onFocus={e => e.target.style.borderColor = GOLD} onBlur={e => e.target.style.borderColor = "#d1d5db"}
-                        />
-                        <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: "600" }}>/ {detail.amount.toLocaleString("en-IN")}</span>
-                      </div>
+                        style={{ width: "90px", padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "13px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "700", textAlign: "right" }}
+                        onFocus={e => e.target.style.borderColor = activeTab === "b2b" ? GOLD : GREEN} onBlur={e => e.target.style.borderColor = "#d1d5db"}
+                      />
+                      <span style={{ fontSize: "11px", color: "#9ca3af", fontWeight: "600" }}>/ {detail.amount.toLocaleString("en-IN")}</span>
                     </div>
-                  ) : (
-                    <div style={{ display: "flex", gap: "16px", alignItems: "center", flex: 2, minWidth: "320px", flexWrap: "wrap", background: "#f9fafb", padding: "8px 12px", borderRadius: "10px", border: "1px solid #e5e7eb" }}>
-                      <div style={{ display: "flex", gap: "8px", alignItems: "center", width: "100%" }}>
-                        <span style={{ fontSize: "11px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.5px", whiteSpace: "nowrap" }}>Payment Info</span>
-                        <input 
-                          type="text" 
-                          value={detail.payment || detail.payment_status || ""}
-                          onChange={e => setDetail({ ...detail, payment: e.target.value })}
-                          style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: "1.5px solid #d1d5db", fontSize: "12px", outline: "none", background: "white", color: "#1C1C1C", fontWeight: "600" }}
-                        />
+
+                    {/* Preserve string transactions like UPI ID for retail if they exist */}
+                    {activeTab === "retail" && detail.payment_status && detail.payment_status.includes("UPI") && (
+                      <div style={{ width: "100%", fontSize: "11px", color: "#9ca3af", marginTop: "4px" }}>
+                        Original Txn: {detail.payment_status}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
               <div style={{ padding: "14px 22px", borderTop: "1px solid #f0ede8", display: "flex", gap: "8px", justifyContent: "flex-end", alignItems: "center" }}>
