@@ -12,6 +12,15 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const [paymentModalOrder, setPaymentModalOrder] = useState(null);
   const [upiTxnId, setUpiTxnId] = useState("");
   const [isPaying, setIsPaying] = useState(false);
+  
+  // Profile State
+  const [profileData, setProfileData] = useState({
+    full_name: user?.user_metadata?.full_name || "",
+    phone: user?.user_metadata?.phone || "",
+    address: user?.user_metadata?.address || ""
+  });
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -59,6 +68,30 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
       console.error("Payment error:", err);
     } finally {
       setIsPaying(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsSavingProfile(true);
+    setProfileSuccess(false);
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          full_name: profileData.full_name,
+          phone: profileData.phone,
+          address: profileData.address
+        }
+      });
+      if (!error) {
+        setProfileSuccess(true);
+        setTimeout(() => setProfileSuccess(false), 3000);
+      } else {
+        alert("Failed to update profile: " + error.message);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -123,27 +156,62 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address <span className="text-gray-400 normal-case font-normal">(Cannot be changed)</span></label>
                     <input 
                       type="text" 
                       readOnly 
                       value={user?.email || ""} 
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" 
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 outline-none cursor-not-allowed font-medium" 
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
                     <input 
                       type="text" 
-                      readOnly 
-                      value={user?.user_metadata?.full_name || ""} 
-                      placeholder="Not provided"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 outline-none cursor-not-allowed" 
+                      value={profileData.full_name} 
+                      onChange={e => setProfileData({...profileData, full_name: e.target.value})}
+                      placeholder="Enter your full name"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all" 
                     />
                   </div>
-                  <div className="md:col-span-2 mt-4 pt-4 border-t border-gray-100 flex justify-end">
-                    <button className="px-6 py-2.5 bg-[#1F5132] text-white rounded-xl font-medium hover:shadow-lg transition-all active:scale-95">
-                      Save Changes
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Mobile Number</label>
+                    <input 
+                      type="tel" 
+                      value={profileData.phone} 
+                      onChange={e => setProfileData({...profileData, phone: e.target.value})}
+                      placeholder="e.g., +91 9876543210"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all" 
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Delivery Address</label>
+                    <textarea 
+                      value={profileData.address} 
+                      onChange={e => setProfileData({...profileData, address: e.target.value})}
+                      placeholder="Enter your complete delivery address"
+                      rows="3"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all resize-none" 
+                    ></textarea>
+                  </div>
+                  <div className="md:col-span-2 mt-2 pt-6 border-t border-gray-100 flex items-center justify-between">
+                    <div>
+                      {profileSuccess && (
+                        <span className="text-[#10b981] font-semibold text-sm flex items-center gap-1 animate-fade-in">
+                          <span className="material-symbols-outlined text-[18px]">check_circle</span> Profile updated successfully!
+                        </span>
+                      )}
+                    </div>
+                    <button 
+                      onClick={handleSaveProfile}
+                      disabled={isSavingProfile}
+                      className="px-8 py-3 bg-[#1F5132] text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {isSavingProfile ? (
+                        <><span className="material-symbols-outlined text-[18px] animate-spin">autorenew</span> Saving...</>
+                      ) : (
+                        "Save Changes"
+                      )}
                     </button>
                   </div>
                 </div>
