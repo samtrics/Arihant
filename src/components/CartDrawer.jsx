@@ -9,6 +9,8 @@ export default function CartDrawer({ customerUser, onNavigate }) {
   const [address, setAddress] = useState({ flat: "", area: "", landmark: "", city: "", pincode: "" });
   const [phone, setPhone] = useState("");
   const [isLocating, setIsLocating] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("COD");
+  const [upiTxnId, setUpiTxnId] = useState("");
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -60,6 +62,10 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       alert("Please fill in all required delivery details (Flat, Area, City, Pincode, and Phone).");
       return;
     }
+    if (paymentMethod === "UPI" && !upiTxnId.trim()) {
+      alert("Please enter the UPI Transaction ID after making the payment.");
+      return;
+    }
 
     setIsProcessing(true);
     try {
@@ -71,7 +77,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
         customer_name: `${customerUser.user_metadata?.full_name || customerUser.email.split('@')[0]} | ${customerUser.email}`,
         amount: cartTotal,
         status: 'pending',
-        payment_status: 'pending',
+        payment_status: paymentMethod === 'COD' ? 'Pending (COD)' : `Paid (UPI Txn: ${upiTxnId.trim()})`,
         city: `${fullAddress} | Phone: ${phone.trim()}`,
         products: JSON.stringify(cartItems.map(item => ({
           id: item.id,
@@ -244,13 +250,50 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 />
               </div>
 
-              <div className="flex justify-between items-center pt-2">
+              {/* Payment Method */}
+              <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant">
+                <label className="text-sm font-bold text-on-surface">Payment Method</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button 
+                    onClick={() => setPaymentMethod("COD")}
+                    className={`p-3 rounded-lg border font-bold text-sm transition-all ${paymentMethod === "COD" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
+                  >
+                    Cash on Delivery
+                  </button>
+                  <button 
+                    onClick={() => setPaymentMethod("UPI")}
+                    className={`p-3 rounded-lg border font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === "UPI" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                    UPI / QR
+                  </button>
+                </div>
+
+                {paymentMethod === "UPI" && (
+                  <div className="mt-2 p-4 bg-white border border-outline-variant rounded-xl flex flex-col items-center text-center animate-fade-in shadow-inner">
+                    <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Scan to Pay ₹{cartTotal.toFixed(2)}</p>
+                    <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 mb-3">
+                      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${cartTotal}&cu=INR`)}`} alt="UPI QR Code" className="w-32 h-32" />
+                    </div>
+                    <p className="text-xs text-gray-500 mb-3">Pay using any UPI app (GPay, PhonePe, Paytm)</p>
+                    <input 
+                      type="text" 
+                      placeholder="Enter UPI Transaction ID (Required) *" 
+                      value={upiTxnId}
+                      onChange={(e) => setUpiTxnId(e.target.value)}
+                      className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm text-center font-medium"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center pt-2 mt-2 border-t border-outline-variant">
                 <span className="text-on-surface-variant font-medium text-lg">Subtotal</span>
                 <span className="text-2xl font-bold text-primary">₹{cartTotal.toFixed(2)}</span>
               </div>
               <button 
                 onClick={handleCheckout}
-                disabled={isProcessing || !address.flat.trim() || !address.area.trim() || !address.city.trim() || !address.pincode.trim() || !phone.trim()}
+                disabled={isProcessing || !address.flat.trim() || !address.area.trim() || !address.city.trim() || !address.pincode.trim() || !phone.trim() || (paymentMethod === "UPI" && !upiTxnId.trim())}
                 className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (

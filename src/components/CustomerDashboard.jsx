@@ -9,6 +9,9 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [paymentModalOrder, setPaymentModalOrder] = useState(null);
+  const [upiTxnId, setUpiTxnId] = useState("");
+  const [isPaying, setIsPaying] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -33,6 +36,31 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
         setOrdersLoading(false);
       });
   }, [activeTab, user]);
+
+  const handlePaymentSubmit = async () => {
+    if (!upiTxnId.trim()) return;
+    setIsPaying(true);
+    
+    const newStatus = `Paid (UPI Txn: ${upiTxnId.trim()})`;
+    
+    try {
+      const { error } = await supabase.from('orders')
+        .update({ payment_status: newStatus })
+        .eq('id', paymentModalOrder.id);
+        
+      if (!error) {
+        setOrders(prev => prev.map(o => o.id === paymentModalOrder.id ? { ...o, payment_status: newStatus } : o));
+        setPaymentModalOrder(null);
+        setUpiTxnId("");
+      } else {
+        alert("There was an error updating your payment. Please contact support.");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   return (
     <div className="bg-[#FAF7F0] min-h-screen pt-24 pb-16 px-4 md:px-8 font-['Inter',sans-serif]">
@@ -223,11 +251,17 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                                   </div>
                                   <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100">
                                     <span>Total Paid</span>
-                                    <span className={order.payment_status === "paid" ? "text-green-600" : "text-gray-900"}>
-                                      ₹{order.payment_status === "paid" ? Number(order.amount || 0).toLocaleString('en-IN') : "0"}
+                                    <span className={order.payment_status?.toLowerCase().includes("paid") ? "text-green-600" : "text-gray-900"}>
+                                      ₹{order.payment_status?.toLowerCase().includes("paid") ? Number(order.amount || 0).toLocaleString('en-IN') : "0"}
                                     </span>
                                   </div>
                                 </div>
+                                {order.payment_status?.toLowerCase().includes("pending") && (
+                                  <button onClick={() => { setPaymentModalOrder(order); setUpiTxnId(""); }} className="mt-4 w-full py-2 bg-[#1F5132]/10 text-[#1F5132] font-bold rounded-lg hover:bg-[#1F5132]/20 transition-all flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+                                    Pay via UPI Now
+                                  </button>
+                                )}
                               </div>
                             </div>
 
@@ -326,6 +360,49 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
           </div>
         </div>
       </div>
+      
+      {/* UPI Payment Modal */}
+      {paymentModalOrder && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl animate-fade-in text-center relative">
+            <button onClick={() => setPaymentModalOrder(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            <h3 className="text-xl font-bold text-gray-900 mb-1">Complete Payment</h3>
+            <p className="text-sm text-gray-500 mb-6">Order #{paymentModalOrder.order_number || paymentModalOrder.id}</p>
+            
+            <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 inline-block mb-4 shadow-inner">
+              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${paymentModalOrder.amount}&cu=INR`)}`} alt="UPI QR Code" className="w-48 h-48" />
+            </div>
+            <p className="text-2xl font-bold text-[#1F5132] mb-1">₹{Number(paymentModalOrder.amount || 0).toLocaleString('en-IN')}</p>
+            <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider font-semibold">Scan to Pay via any UPI app</p>
+            
+            <div className="text-left mb-6">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Transaction ID *</label>
+              <input 
+                type="text" 
+                placeholder="Enter 12-digit UTR/Txn ID" 
+                value={upiTxnId}
+                onChange={(e) => setUpiTxnId(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all font-medium" 
+              />
+            </div>
+            
+            <button 
+              onClick={handlePaymentSubmit}
+              disabled={isPaying || !upiTxnId.trim()}
+              className="w-full py-3.5 bg-[#1F5132] text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isPaying ? (
+                <span className="material-symbols-outlined animate-spin text-[20px]">autorenew</span>
+              ) : (
+                <span className="material-symbols-outlined text-[20px]">check_circle</span>
+              )}
+              {isPaying ? "Verifying..." : "Confirm Payment"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
