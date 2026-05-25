@@ -8,6 +8,7 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const [activeTab, setActiveTab] = useState("profile");
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [expandedOrder, setExpandedOrder] = useState(null);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -154,29 +155,134 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map(order => (
-                      <div key={order.id} className="border border-gray-100 rounded-xl p-5 hover:shadow-md transition-all">
-                        <div className="flex items-center justify-between flex-wrap gap-3">
-                          <div>
-                            <div className="font-bold text-[#1F5132] text-sm">{order.order_number || order.id}</div>
-                            <div className="text-xs text-gray-500 mt-1">{order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : 'N/A'}</div>
+                    {orders.map(order => {
+                      const isExpanded = expandedOrder === order.id;
+                      const productsList = Array.isArray(order.products) ? order.products : JSON.parse(order.products || '[]');
+                      return (
+                      <div 
+                        key={order.id} 
+                        onClick={() => setExpandedOrder(isExpanded ? null : order.id)}
+                        className={`border ${isExpanded ? 'border-[#1F5132]/30 shadow-md bg-white' : 'border-gray-100 bg-white hover:border-gray-200'} rounded-xl transition-all cursor-pointer overflow-hidden`}
+                      >
+                        <div className="p-5 flex items-center justify-between flex-wrap gap-3">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isExpanded ? 'bg-[#1F5132] text-white' : 'bg-gray-50 text-gray-400'}`}>
+                              <span className="material-symbols-outlined">{isExpanded ? 'keyboard_arrow_up' : 'receipt_long'}</span>
+                            </div>
+                            <div>
+                              <div className="font-bold text-[#1F5132] text-sm">{order.order_number || order.id}</div>
+                              <div className="text-xs text-gray-500 mt-1">{order.created_at ? new Date(order.created_at).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'N/A'}</div>
+                            </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-gray-800 text-lg">₹{Number(order.amount || 0).toLocaleString('en-IN')}</div>
-                            <span style={{ background: statusBg[order.status] || "#f3f4f6", color: statusColors[order.status] || "#6b7280" }} className="text-xs font-bold px-3 py-1 rounded-full capitalize">{order.status || "processing"}</span>
+                          <div className="text-right flex items-center gap-4">
+                            <div>
+                              <div className="font-bold text-gray-800 text-lg">₹{Number(order.amount || 0).toLocaleString('en-IN')}</div>
+                              <span style={{ background: statusBg[order.status] || "#f3f4f6", color: statusColors[order.status] || "#6b7280" }} className="text-xs font-bold px-3 py-1 rounded-full capitalize">{order.status || "processing"}</span>
+                            </div>
                           </div>
                         </div>
-                        {order.products && (
-                          <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2">
-                            {(Array.isArray(order.products) ? order.products : JSON.parse(order.products || '[]')).map((p, i) => (
-                              <span key={i} className="text-xs px-3 py-1 bg-[#1F5132]/08 text-[#1F5132] rounded-full font-medium" style={{background:'rgba(31,81,50,0.08)'}}>
-                                {typeof p === 'string' ? p : p.name}
-                              </span>
-                            ))}
+
+                        {/* Expanded Content */}
+                        {isExpanded && (
+                          <div className="border-t border-gray-100 bg-gray-50/50 p-5 cursor-default" onClick={e => e.stopPropagation()}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                              {/* Left: Delivery Address */}
+                              <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-[16px]">local_shipping</span> Delivery Details
+                                </h4>
+                                <div className="text-sm text-gray-700 leading-relaxed">
+                                  {order.city ? (
+                                    <>
+                                      <p className="font-medium text-gray-900">{order.customer_name?.split(' | ')[0]}</p>
+                                      {order.city.split(' | Phone:').map((line, i) => (
+                                        <p key={i} className={i === 1 ? 'font-medium mt-1' : ''}>
+                                          {i === 1 ? `Phone: ${line}` : line}
+                                        </p>
+                                      ))}
+                                    </>
+                                  ) : (
+                                    <p className="text-gray-400 italic">No delivery address provided.</p>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Right: Payment Details */}
+                              <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                  <span className="material-symbols-outlined text-[16px]">payments</span> Payment Summary
+                                </h4>
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between text-gray-600">
+                                    <span>Payment Status</span>
+                                    <span className="font-bold capitalize text-gray-900">{order.payment_status || "Pending"}</span>
+                                  </div>
+                                  <div className="flex justify-between text-gray-600">
+                                    <span>Subtotal</span>
+                                    <span>₹{Number(order.amount || 0).toLocaleString('en-IN')}</span>
+                                  </div>
+                                  <div className="flex justify-between font-bold text-gray-900 pt-2 border-t border-gray-100">
+                                    <span>Total Paid</span>
+                                    <span className={order.payment_status === "paid" ? "text-green-600" : "text-gray-900"}>
+                                      ₹{order.payment_status === "paid" ? Number(order.amount || 0).toLocaleString('en-IN') : "0"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Products Table */}
+                            <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
+                              <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider p-4 border-b border-gray-100 bg-gray-50">
+                                Ordered Items ({productsList.length})
+                              </h4>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left">
+                                  <thead className="text-xs text-gray-500 bg-white border-b border-gray-50">
+                                    <tr>
+                                      <th className="px-4 py-3 font-medium">Product</th>
+                                      <th className="px-4 py-3 font-medium text-center">Qty</th>
+                                      <th className="px-4 py-3 font-medium text-right">Price</th>
+                                      <th className="px-4 py-3 font-medium text-right">Total</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-gray-50">
+                                    {productsList.map((p, i) => (
+                                      <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-4 py-3 font-medium text-gray-900">
+                                          {typeof p === 'string' ? p : (p.name || "Unknown Product")}
+                                          {p.unit && <div className="text-xs text-gray-500 font-normal mt-0.5">{p.unit}</div>}
+                                        </td>
+                                        <td className="px-4 py-3 text-center text-gray-600 bg-gray-50/30">
+                                          {p.qty || p.quantity || 1}x
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-gray-600">
+                                          ₹{Number(p.price || 0).toLocaleString('en-IN')}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-semibold text-[#1F5132]">
+                                          ₹{(Number(p.price || 0) * Number(p.qty || p.quantity || 1)).toLocaleString('en-IN')}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                    {productsList.length === 0 && (
+                                      <tr><td colSpan="4" className="px-4 py-6 text-center text-gray-400 italic">No products found for this order.</td></tr>
+                                    )}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-6 flex justify-end">
+                              <button onClick={() => alert("Downloading invoice...")} className="flex items-center gap-2 px-5 py-2.5 bg-[#D4A64A] text-white rounded-lg font-semibold text-sm hover:shadow-md transition-all active:scale-95">
+                                <span className="material-symbols-outlined text-[18px]">download</span>
+                                Download Invoice
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
