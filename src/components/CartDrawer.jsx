@@ -11,6 +11,24 @@ export default function CartDrawer({ customerUser, onNavigate }) {
   const [isLocating, setIsLocating] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [upiTxnId, setUpiTxnId] = useState("");
+  const [addressSelection, setAddressSelection] = useState("new");
+  const [saveNewAddress, setSaveNewAddress] = useState(false);
+
+  const parseAddr = (a) => {
+    if (typeof a === 'object' && a !== null) return { flat: a.flat || "", area: a.area || "", landmark: "", city: a.city || "", state: a.state || "", pincode: a.pincode || "" };
+    if (typeof a === 'string' && a.trim() !== '') return { flat: "", area: a, landmark: "", city: "", state: "", pincode: "" };
+    return null;
+  };
+
+  const primaryAddressObj = parseAddr(customerUser?.user_metadata?.address);
+  const shopAddressObj = parseAddr(customerUser?.user_metadata?.shop_address);
+
+  React.useEffect(() => {
+    if (customerUser) {
+      if (!phone) setPhone(customerUser.user_metadata?.phone || "");
+      if (primaryAddressObj) setAddressSelection("primary");
+    }
+  }, [customerUser]);
 
   const handleGetLocation = () => {
     if (!navigator.geolocation) {
@@ -58,7 +76,12 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
 
     if (cartItems.length === 0) return;
-    if (!address.flat.trim() || !address.area.trim() || !address.city.trim() || !address.pincode.trim() || !phone.trim()) {
+    
+    let finalAddr = address;
+    if (addressSelection === "primary" && primaryAddressObj) finalAddr = primaryAddressObj;
+    else if (addressSelection === "shop" && shopAddressObj) finalAddr = shopAddressObj;
+
+    if (!finalAddr.flat?.trim() || !finalAddr.area?.trim() || !finalAddr.city?.trim() || !finalAddr.pincode?.trim() || !phone.trim()) {
       alert("Please fill in all required delivery details (Flat, Area, City, Pincode, and Phone).");
       return;
     }
@@ -70,7 +93,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     setIsProcessing(true);
     try {
       const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
-      const fullAddress = `${address.flat.trim()}, ${address.area.trim()}, ${address.landmark ? `Near ${address.landmark.trim()}, ` : ''}${address.city.trim()} - ${address.pincode.trim()}`;
+      const fullAddress = `${finalAddr.flat?.trim()}, ${finalAddr.area?.trim()}, ${finalAddr.landmark ? `Near ${finalAddr.landmark.trim()}, ` : ''}${finalAddr.city?.trim()} - ${finalAddr.pincode?.trim()}`;
       
       const { error } = await supabase.from('orders').insert([{
         order_number: orderNumber,
@@ -89,6 +112,12 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       }]);
 
       if (error) throw error;
+
+      if (addressSelection === "new" && saveNewAddress) {
+        await supabase.auth.updateUser({
+          data: { address: { flat: address.flat, area: address.area, city: address.city, pincode: address.pincode } }
+        });
+      }
 
       clearCart();
       setOrderSuccess(true);
@@ -201,51 +230,91 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 
                 {/* Address Form */}
                 <div className="flex flex-col gap-3">
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center mb-1">
                     <label className="text-sm font-bold text-on-surface">Delivery Details</label>
-                    <button 
-                      onClick={handleGetLocation} 
-                      disabled={isLocating}
-                      className="text-xs text-primary font-bold flex items-center gap-1 hover:bg-surface-container py-1 px-2 rounded-md transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">{isLocating ? 'hourglass_empty' : 'my_location'}</span>
-                      {isLocating ? 'Locating...' : 'Use Current Location'}
-                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-2 mb-3">
+                    {primaryAddressObj && (
+                      <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${addressSelection === 'primary' ? 'border-primary bg-primary/5' : 'border-outline-variant bg-surface'}`}>
+                        <input type="radio" name="addressSelect" checked={addressSelection === 'primary'} onChange={() => setAddressSelection('primary')} className="mt-1" />
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-primary">Primary Delivery Address</p>
+                          <p className="text-xs text-on-surface-variant line-clamp-2">{primaryAddressObj.flat}, {primaryAddressObj.area}, {primaryAddressObj.city} - {primaryAddressObj.pincode}</p>
+                        </div>
+                      </label>
+                    )}
+                    {shopAddressObj && (
+                      <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${addressSelection === 'shop' ? 'border-primary bg-primary/5' : 'border-outline-variant bg-surface'}`}>
+                        <input type="radio" name="addressSelect" checked={addressSelection === 'shop'} onChange={() => setAddressSelection('shop')} className="mt-1" />
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-primary">Shop / Business Address</p>
+                          <p className="text-xs text-on-surface-variant line-clamp-2">{shopAddressObj.flat}, {shopAddressObj.area}, {shopAddressObj.city} - {shopAddressObj.pincode}</p>
+                        </div>
+                      </label>
+                    )}
+                    <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${addressSelection === 'new' ? 'border-primary bg-primary/5' : 'border-outline-variant bg-surface'}`}>
+                      <input type="radio" name="addressSelect" checked={addressSelection === 'new'} onChange={() => setAddressSelection('new')} className="mt-1" />
+                      <div className="flex-1">
+                        <p className="font-bold text-sm text-primary">Use a Different Address</p>
+                        <p className="text-xs text-on-surface-variant">Enter a new address below</p>
+                      </div>
+                    </label>
                   </div>
                   
-                  <input 
-                    type="text" placeholder="Flat, House no., Building, Apartment *" 
-                    value={address.flat} onChange={(e) => setAddress({...address, flat: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                  />
-                  <input 
-                    type="text" placeholder="Area, Street, Sector, Village *" 
-                    value={address.area} onChange={(e) => setAddress({...address, area: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                  />
-                  <input 
-                    type="text" placeholder="Landmark (Optional)" 
-                    value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})}
-                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                  />
-                  <div className="flex gap-3">
-                    <input 
-                      type="text" placeholder="Town/City *" 
-                      value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})}
-                      className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                    />
-                    <input 
-                      type="text" placeholder="Pincode *" 
-                      value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})}
-                      className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
-                    />
-                  </div>
+                  {addressSelection === 'new' && (
+                    <div className="flex flex-col gap-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/50 animate-fade-in">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-bold text-on-surface-variant uppercase">New Address Details</span>
+                        <button 
+                          onClick={handleGetLocation} 
+                          disabled={isLocating}
+                          className="text-xs text-[#D4A64A] font-bold flex items-center gap-1 hover:underline transition-colors disabled:opacity-50"
+                        >
+                          <span className="material-symbols-outlined text-[14px]">{isLocating ? 'hourglass_empty' : 'my_location'}</span>
+                          {isLocating ? 'Locating...' : 'Use Current Location'}
+                        </button>
+                      </div>
+                      <input 
+                        type="text" placeholder="Flat, House no., Building, Apartment *" 
+                        value={address.flat} onChange={(e) => setAddress({...address, flat: e.target.value})}
+                        className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
+                      />
+                      <input 
+                        type="text" placeholder="Area, Street, Sector, Village *" 
+                        value={address.area} onChange={(e) => setAddress({...address, area: e.target.value})}
+                        className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
+                      />
+                      <input 
+                        type="text" placeholder="Landmark (Optional)" 
+                        value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})}
+                        className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
+                      />
+                      <div className="flex gap-3">
+                        <input 
+                          type="text" placeholder="Town/City *" 
+                          value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})}
+                          className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
+                        />
+                        <input 
+                          type="text" placeholder="Pincode *" 
+                          value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})}
+                          className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
+                        />
+                      </div>
+                      <label className="flex items-center gap-2 mt-1 cursor-pointer">
+                        <input type="checkbox" checked={saveNewAddress} onChange={e => setSaveNewAddress(e.target.checked)} className="rounded text-primary" />
+                        <span className="text-xs font-medium text-on-surface-variant">Save as Primary Delivery Address for future</span>
+                      </label>
+                    </div>
+                  )}
+                  
                   <input 
                     type="tel" 
                     placeholder="Phone Number *" 
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                    className="w-full p-3 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm font-medium mt-2"
                   />
                 </div>
 
