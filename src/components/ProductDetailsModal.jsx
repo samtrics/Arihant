@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { useCart } from "../context/CartContext";
 
 export default function ProductDetailsModal({ product, onClose }) {
   // Close on escape key
@@ -17,6 +18,9 @@ export default function ProductDetailsModal({ product, onClose }) {
   }, [onClose]);
 
   if (!product) return null;
+
+  const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   const currentPrice = product.offerPrice ? product.offerPrice : product.price;
 
@@ -107,20 +111,30 @@ export default function ProductDetailsModal({ product, onClose }) {
           <div className="pt-6 border-t border-outline-variant mt-auto">
             <div className="flex items-center gap-4">
               <div className="flex items-center border border-outline-variant rounded-lg overflow-hidden h-[48px]">
-                <button className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg">-</button>
-                <span className="px-4 font-bold text-on-surface">1</span>
-                <button className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg">+</button>
+                <button 
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg"
+                >-</button>
+                <span className="px-4 font-bold text-on-surface w-10 text-center">{quantity}</span>
+                <button 
+                  onClick={() => setQuantity(quantity + 1)}
+                  className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg"
+                >+</button>
               </div>
               <button 
+                onClick={() => {
+                  addToCart(product, quantity);
+                  onClose();
+                }}
                 className={`flex-1 h-[48px] rounded-lg font-bold flex items-center justify-center gap-2 transition-transform ${
-                  product.stock > 0 
-                    ? "bg-primary text-white hover:bg-primary-container active:scale-[0.98]" 
-                    : "bg-surface-container-high text-outline cursor-not-allowed"
+                  product.stock !== undefined && product.stock <= 0 
+                    ? "bg-surface-container-high text-outline cursor-not-allowed"
+                    : "bg-primary text-white hover:bg-primary-container active:scale-[0.98]" 
                 }`}
-                disabled={product.stock <= 0}
+                disabled={product.stock !== undefined && product.stock <= 0}
               >
                 <span className="material-symbols-outlined">shopping_cart</span>
-                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+                {product.stock !== undefined && product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
               </button>
             </div>
             

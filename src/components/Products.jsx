@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useCart } from "../context/CartContext";
 
 const productsData = [
   {
@@ -125,6 +126,7 @@ export default function Products({ products, onNavigate, onProductClick }) {
   const [sortBy, setSortBy] = useState("Featured First");
   const [dummyPage, setDummyPage] = useState(1);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const { addToCart } = useCart();
 
   const handleFilterToggle = (key) => {
     setFilters((prev) => ({
@@ -414,7 +416,10 @@ export default function Products({ products, onNavigate, onProductClick }) {
                     </span>
                     <button 
                       className="bg-primary text-white p-3 rounded-full hover:bg-primary-container transition-colors flex items-center justify-center"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product, 1);
+                      }}
                     >
                       <span className="material-symbols-outlined" data-icon="add_shopping_cart">
                         add_shopping_cart
@@ -425,7 +430,13 @@ export default function Products({ products, onNavigate, onProductClick }) {
                 {product.featured && (
                   <div className="add-to-cart-overlay absolute inset-0 bg-primary/90 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 flex flex-col items-center justify-center p-6 text-center pointer-events-none group-hover:pointer-events-auto">
                     <p className="text-white font-headline-md mb-4">{product.overlayTitle}</p>
-                    <button className="w-full py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold hover:scale-105 transition-transform">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product, 1);
+                      }}
+                      className="w-full py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold hover:scale-105 transition-transform"
+                    >
                       Add to Cart
                     </button>
                     {product.hasDetails && (

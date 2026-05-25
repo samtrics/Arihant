@@ -1,6 +1,8 @@
 import React from "react";
+import { useCart } from "../context/CartContext";
 
 export default function ProductShowcase({ products, onProductClick, onNavigate }) {
+  const { addToCart } = useCart();
   const showcaseProducts = products.filter((p) => (p.bestseller || p.featured) && p.status !== "inactive").slice(0, 5);
   return (
     <section id="products-showcase" className="py-stack-xl bg-surface relative scroll-reveal">
@@ -57,7 +59,10 @@ export default function ProductShowcase({ products, onProductClick, onNavigate }
                   </span>
                   <button 
                     className="bg-secondary-fixed text-on-secondary-fixed px-3 py-2 rounded-lg hover:bg-secondary-container transition-colors active:scale-90"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(product, 1);
+                    }}
                   >
                     <span className="material-symbols-outlined">
                       {product.icon || "add_shopping_cart"}

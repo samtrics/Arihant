@@ -1,7 +1,10 @@
 import React, { useState } from "react";
+import { useCart } from "../context/CartContext";
 
 export default function Header({ currentPage, onNavigate, customerUser }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { cartItems, setIsCartOpen } = useCart();
+  const cartCount = cartItems.length;
 
   const navLinks = [
     { label: "Home", page: "home", sectionId: null },
@@ -73,10 +76,18 @@ export default function Header({ currentPage, onNavigate, customerUser }) {
                 notifications
               </span>
             </button>
-            <button className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95 relative"
+            >
               <span className="material-symbols-outlined text-primary" data-icon="shopping_cart">
                 shopping_cart
               </span>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 -mt-1 -mr-1 bg-error text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-surface">
+                  {cartCount}
+                </span>
+              )}
             </button>
             <button 
               onClick={(e) => handleLinkClick(e, customerUser ? "customer-dashboard" : "login", null)}

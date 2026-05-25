@@ -18,6 +18,7 @@ import ProductDetailsModal from "./components/ProductDetailsModal";
 import DistributorLogin from "./components/DistributorLogin";
 import DistributorDashboard from "./components/DistributorDashboard";
 import CustomerDashboard from "./components/CustomerDashboard";
+import CartDrawer from "./components/CartDrawer";
 import { socket } from "./socket";
 import { supabase } from "./supabaseClient";
 
@@ -267,6 +268,7 @@ export default function App() {
       </main>
       {!isAdminPage && <Footer currentPage={currentPage} onNavigate={handleNavigate} />}
       {selectedProduct && <ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
+      <CartDrawer customerUser={customerUser} onNavigate={handleNavigate} />
     </>
   );
 }
