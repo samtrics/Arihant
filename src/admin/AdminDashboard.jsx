@@ -101,6 +101,8 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
             name = email.split("@")[0];
           }
           
+          email = email.trim().toLowerCase();
+          
           if (!seenEmails.has(email)) {
             seenEmails.add(email);
             uniqueCustomers.push({
@@ -158,6 +160,8 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
                 name = email.split("@")[0];
               }
               
+              email = email.trim().toLowerCase();
+
               if (!seenEmails.has(email)) {
                 seenEmails.add(email);
                 uniqueCustomers.push({

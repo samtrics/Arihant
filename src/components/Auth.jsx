@@ -98,7 +98,7 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
     try {
       if (mode === "signup") {
         const { data, error } = await supabase.auth.signUp({
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
           options: {
             data: {
@@ -114,7 +114,7 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: formData.email,
+          email: formData.email.trim().toLowerCase(),
           password: formData.password,
         });
         
