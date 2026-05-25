@@ -24,8 +24,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       
       const { error } = await supabase.from('orders').insert([{
         order_number: orderNumber,
-        customer_name: customerUser.user_metadata?.full_name || customerUser.email.split('@')[0],
-        customer_email: customerUser.email,
+        customer_name: `${customerUser.user_metadata?.full_name || customerUser.email.split('@')[0]} | ${customerUser.email}`,
         amount: cartTotal,
         status: 'pending',
         products: JSON.stringify(cartItems.map(item => ({

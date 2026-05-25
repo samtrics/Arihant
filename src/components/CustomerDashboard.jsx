@@ -24,7 +24,7 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
     setOrdersLoading(true);
     supabase.from('orders')
       .select('*')
-      .eq('customer_email', user.email)
+      .ilike('customer_name', `%${user.email}%`)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
         if (!error && data) setOrders(data);
