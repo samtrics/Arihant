@@ -77,11 +77,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
     if (cartItems.length === 0) return;
     
-    let finalAddr = address;
-    if (addressSelection === "primary" && primaryAddressObj) finalAddr = primaryAddressObj;
-    else if (addressSelection === "shop" && shopAddressObj) finalAddr = shopAddressObj;
-
-    if (!finalAddr.flat?.trim() || !finalAddr.area?.trim() || !finalAddr.city?.trim() || !finalAddr.pincode?.trim() || !phone.trim()) {
+    if (!finalAddr.flat?.trim() || !finalAddr.area?.trim() || !finalAddr.city?.trim() || !finalAddr.pincode?.trim() || !phone?.trim()) {
       alert("Please fill in all required delivery details (Flat, Area, City, Pincode, and Phone).");
       return;
     }
@@ -135,6 +131,10 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       setIsProcessing(false);
     }
   };
+
+  let finalAddr = address;
+  if (addressSelection === "primary" && primaryAddressObj) finalAddr = primaryAddressObj;
+  else if (addressSelection === "shop" && shopAddressObj) finalAddr = shopAddressObj;
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -368,7 +368,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
               </div>
               <button 
                 onClick={handleCheckout}
-                disabled={isProcessing || !address.flat.trim() || !address.area.trim() || !address.city.trim() || !address.pincode.trim() || !phone.trim() || (paymentMethod === "UPI" && !upiTxnId.trim())}
+                disabled={isProcessing || !finalAddr?.flat?.trim() || !finalAddr?.area?.trim() || !finalAddr?.city?.trim() || !finalAddr?.pincode?.trim() || !phone?.trim() || (paymentMethod === "UPI" && !upiTxnId.trim())}
                 className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
