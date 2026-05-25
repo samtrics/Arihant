@@ -6,8 +6,45 @@ export default function CartDrawer({ customerUser, onNavigate }) {
   const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState({ flat: "", area: "", landmark: "", city: "", pincode: "" });
   const [phone, setPhone] = useState("");
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          
+          if (data && data.address) {
+            setAddress(prev => ({
+              ...prev,
+              area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
+              city: data.address.city || data.address.town || data.address.state_district || "",
+              pincode: data.address.postcode || ""
+            }));
+          }
+        } catch (err) {
+          console.error("Error fetching address:", err);
+          alert("Could not fetch address automatically. Please enter it manually.");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        alert("Unable to retrieve your location. Please ensure location permissions are granted.");
+        setIsLocating(false);
+      }
+    );
+  };
 
   if (!isCartOpen) return null;
 
@@ -19,14 +56,15 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
 
     if (cartItems.length === 0) return;
-    if (!address.trim() || !phone.trim()) {
-      alert("Please provide your delivery address and phone number.");
+    if (!address.flat.trim() || !address.area.trim() || !address.city.trim() || !address.pincode.trim() || !phone.trim()) {
+      alert("Please fill in all required delivery details (Flat, Area, City, Pincode, and Phone).");
       return;
     }
 
     setIsProcessing(true);
     try {
       const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+      const fullAddress = `${address.flat.trim()}, ${address.area.trim()}, ${address.landmark ? `Near ${address.landmark.trim()}, ` : ''}${address.city.trim()} - ${address.pincode.trim()}`;
       
       const { error } = await supabase.from('orders').insert([{
         order_number: orderNumber,
@@ -34,7 +72,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
         amount: cartTotal,
         status: 'pending',
         payment_status: 'pending',
-        city: `${address.trim()} | Phone: ${phone.trim()}`,
+        city: `${fullAddress} | Phone: ${phone.trim()}`,
         products: JSON.stringify(cartItems.map(item => ({
           id: item.id,
           name: item.name,
@@ -158,19 +196,51 @@ export default function CartDrawer({ customerUser, onNavigate }) {
               
               {/* Address Form */}
               <div className="flex flex-col gap-3">
-                <label className="text-sm font-bold text-on-surface">Delivery Details</label>
-                <textarea 
-                  placeholder="Full Delivery Address" 
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary resize-none h-20 text-sm"
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-bold text-on-surface">Delivery Details</label>
+                  <button 
+                    onClick={handleGetLocation} 
+                    disabled={isLocating}
+                    className="text-xs text-primary font-bold flex items-center gap-1 hover:bg-surface-container py-1 px-2 rounded-md transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">{isLocating ? 'hourglass_empty' : 'my_location'}</span>
+                    {isLocating ? 'Locating...' : 'Use Current Location'}
+                  </button>
+                </div>
+                
+                <input 
+                  type="text" placeholder="Flat, House no., Building, Apartment *" 
+                  value={address.flat} onChange={(e) => setAddress({...address, flat: e.target.value})}
+                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
                 />
                 <input 
+                  type="text" placeholder="Area, Street, Sector, Village *" 
+                  value={address.area} onChange={(e) => setAddress({...address, area: e.target.value})}
+                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                />
+                <input 
+                  type="text" placeholder="Landmark (Optional)" 
+                  value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})}
+                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                />
+                <div className="flex gap-3">
+                  <input 
+                    type="text" placeholder="Town/City *" 
+                    value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  />
+                  <input 
+                    type="text" placeholder="Pincode *" 
+                    value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})}
+                    className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  />
+                </div>
+                <input 
                   type="tel" 
-                  placeholder="Phone Number" 
+                  placeholder="Phone Number *" 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full p-3 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
+                  className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm"
                 />
               </div>
 
@@ -180,7 +250,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
               </div>
               <button 
                 onClick={handleCheckout}
-                disabled={isProcessing || !address.trim() || !phone.trim()}
+                disabled={isProcessing || !address.flat.trim() || !address.area.trim() || !address.city.trim() || !address.pincode.trim() || !phone.trim()}
                 className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
