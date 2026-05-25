@@ -22,11 +22,22 @@ import { socket } from "./socket";
 import { supabase } from "./supabaseClient";
 
 export default function App() {
+  const checkAuthRedirect = () => {
+    if (typeof window === 'undefined') return false;
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    return hash.includes('access_token=') || hash.includes('type=signup') || hash.includes('type=recovery') || search.includes('error_code=');
+  };
+
   const [currentPage, setCurrentPage] = useState(() => {
-    // Restore admin page on refresh
+    if (checkAuthRedirect()) return 'customer-dashboard';
     return localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home';
   });
   const [adminUser, setAdminUser] = useState(() => {
+    if (checkAuthRedirect()) {
+      localStorage.removeItem('adminSession');
+      return null;
+    }
     const saved = localStorage.getItem('adminSession');
     return saved ? JSON.parse(saved) : null;
   });
@@ -35,7 +46,7 @@ export default function App() {
   const [products, setProducts] = useState([]);
 
   // Track current page in a ref so auth listener always has the latest value
-  const currentPageRef = useRef(localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
+  const currentPageRef = useRef(currentPage);
   const setPage = (page) => {
     currentPageRef.current = page;
     setCurrentPage(page);
