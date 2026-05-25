@@ -1,25 +1,6 @@
 import React from "react";
 
-const testimonials = [
-  {
-    id: 1,
-    stars: 5,
-    text: `"The quality of Arihant Atta is unparalleled. My rotis are softer than ever, and I feel good knowing it's 100% pure wheat with no additives."`,
-    name: "Anjali Sharma",
-    location: "Homemaker, Delhi",
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuAVfddR4PUg2x5sTwxnbOMGVlkjWpgan-PxjpFqrugkPsSxp-SJv7IRleCvSLPj-UrOVcJLIsSpF1a5MhV2kL_SySgplL4jzwK-t4JJDzQgzcW8ArzAsSy7K1_eisHUsQgLg5hFb-gyCbLitAq-k9oHYhCqIt7Hr7Lf1hTIauCJ3jlDv8lldzOpija5L0l5zHC_SHvbr59WgP69qnixYkOC_1yeiDzUvu4lVgMEJT_rnMg816G5032ehTQebmkoWy1ggScYv-uFKvg",
-    imgAlt: "Portrait of a satisfied Indian female consumer in a modern minimalist home setting. She is smiling naturally, conveying trust and happiness. The background is softly blurred with warm lighting, creating a high-quality, professional testimonial aesthetic for a food brand.",
-  },
-  {
-    id: 2,
-    stars: 5,
-    text: `"As a health-conscious person, I swear by Arihant Daliya. The cleaning is perfect, and the golden grains cook up so beautifully every morning."`,
-    name: "Rajiv Mehta",
-    location: "Fitness Enthusiast, Mumbai",
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuCXEgTHgmsB1RcPRwRNuwtReMcP3ZmprVDCiJBR9iNJrw694qlUnkvtincsVFJMhPwcZxlKy7OCnHbbYxkrrcDFWJ-hPPrq11SwAKgh-kWcyP_qXk9YU5qMZVM1y-KtnS5P939wPjhUSZ86y43MZG8j0LgeZwAHRATRQN5T8mkrBScUfT62y1d23q_GEd_B2tYUR-IkHymj7ec86WkM3zq-D5-ATrfo-5gugasiFxR39rVdggN7AsvyMNTE8TW0YQeGWehNfqdnwOM",
-    imgAlt: "Professional portrait of a middle-aged Indian man with a warm, confident expression. The lighting is studio-quality and clean, focusing on a sense of reliable consumer trust. Minimalist background with high-key lighting to match the modern corporate UI design system.",
-  },
-];
+const testimonials = [];
 
 export default function Testimonials() {
   return (
