@@ -13,11 +13,18 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const [upiTxnId, setUpiTxnId] = useState("");
   const [isPaying, setIsPaying] = useState(false);
   
+  const getInitAddress = () => {
+    const a = user?.user_metadata?.address;
+    if (typeof a === 'object' && a !== null) return { flat: a.flat || "", area: a.area || "", city: a.city || "", state: a.state || "", pincode: a.pincode || "" };
+    if (typeof a === 'string') return { flat: "", area: a, city: "", state: "", pincode: "" };
+    return { flat: "", area: "", city: "", state: "", pincode: "" };
+  };
+
   // Profile State
   const [profileData, setProfileData] = useState({
     full_name: user?.user_metadata?.full_name || "",
     phone: user?.user_metadata?.phone || "",
-    address: user?.user_metadata?.address || "",
+    address: getInitAddress(),
     shop_address: user?.user_metadata?.shop_address || ""
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -109,8 +116,17 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
         try {
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
           const data = await res.json();
-          if (data && data.display_name) {
-            setProfileData(prev => ({ ...prev, address: data.display_name }));
+          if (data && data.address) {
+            setProfileData(prev => ({
+              ...prev,
+              address: {
+                ...prev.address,
+                area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
+                city: data.address.city || data.address.town || data.address.state_district || "",
+                state: data.address.state || "",
+                pincode: data.address.postcode || ""
+              }
+            }));
           }
         } catch (err) {
           alert("Could not fetch address details.");
@@ -215,7 +231,7 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-4">
                       <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Primary Delivery Address</label>
                       <button 
                         onClick={handleGetLocation}
@@ -226,13 +242,43 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                         {isLocating ? "Locating..." : "Use Current Location"}
                       </button>
                     </div>
-                    <textarea 
-                      value={profileData.address} 
-                      onChange={e => setProfileData({...profileData, address: e.target.value})}
-                      placeholder="Enter your complete delivery address"
-                      rows="3"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all resize-none" 
-                    ></textarea>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input 
+                        type="text" 
+                        value={profileData.address.flat} 
+                        onChange={e => setProfileData({...profileData, address: {...profileData.address, flat: e.target.value}})}
+                        placeholder="Flat, House no., Building, Company, Apartment"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all md:col-span-2" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.address.area} 
+                        onChange={e => setProfileData({...profileData, address: {...profileData.address, area: e.target.value}})}
+                        placeholder="Area, Street, Sector, Village"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all md:col-span-2" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.address.city} 
+                        onChange={e => setProfileData({...profileData, address: {...profileData.address, city: e.target.value}})}
+                        placeholder="Town/City"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.address.state} 
+                        onChange={e => setProfileData({...profileData, address: {...profileData.address, state: e.target.value}})}
+                        placeholder="State"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all" 
+                      />
+                      <input 
+                        type="text" 
+                        value={profileData.address.pincode} 
+                        onChange={e => setProfileData({...profileData, address: {...profileData.address, pincode: e.target.value}})}
+                        placeholder="Pincode"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all md:col-span-2" 
+                      />
+                    </div>
                   </div>
                   
                   <div className="md:col-span-2">
