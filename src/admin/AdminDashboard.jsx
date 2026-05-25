@@ -68,7 +68,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
   useEffect(() => {
     // Initial fetch for dashboard stats
-    supabase.from('orders').select('*').then(({ data }) => {
+    supabase.from('orders').select('*').order('created_at', { ascending: false }).then(({ data }) => {
       if (data) {
         const mapped = data.map(o => ({
           ...o,
@@ -125,7 +125,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
     // Realtime subscriptions
     const channel = supabase.channel('admin-dashboard-stats')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        supabase.from('orders').select('*').then(({ data }) => {
+        supabase.from('orders').select('*').order('created_at', { ascending: false }).then(({ data }) => {
           if (data) {
             const mapped = data.map(o => ({
               ...o,
