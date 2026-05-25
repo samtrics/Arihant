@@ -28,7 +28,10 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
   });
   
   const mappedCustomers = customers.map(c => {
-    const cOrders = orders.filter(o => o.customer === c.name || o.email === c.email);
+    const cOrders = orders.filter(o => {
+      const fullCustomer = o.customer || "";
+      return fullCustomer.includes(c.email) || fullCustomer === c.name;
+    });
     const cSpent = cOrders.reduce((acc, o) => acc + Number(o.amount || 0), 0);
     return {
       ...c,
@@ -82,7 +85,10 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
     if (detail.type === "B2B") {
       custOrders = b2bOrders.filter(o => o.distributorId === detail.id || o.customer === detail.name);
     } else {
-      custOrders = orders.filter(o => o.customer === detail.name || o.email === detail.email);
+      custOrders = orders.filter(o => {
+        const fullCustomer = o.customer || "";
+        return fullCustomer.includes(detail.email) || fullCustomer === detail.name;
+      });
     }
     
     // Sort by most recent

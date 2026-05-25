@@ -86,7 +86,9 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
         const uniqueCustomers = [];
         const seenEmails = new Set();
         
-        b2cOrders.forEach(o => {
+        const sortedB2c = [...b2cOrders].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
+        
+        sortedB2c.forEach(o => {
           let email = "unknown@example.com";
           let name = o.customer_name;
           
@@ -141,7 +143,9 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
             const uniqueCustomers = [];
             const seenEmails = new Set();
             
-            b2cOrders.forEach(o => {
+            const sortedB2c = [...b2cOrders].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
+            
+            sortedB2c.forEach(o => {
               let email = "unknown@example.com";
               let name = o.customer_name;
               
