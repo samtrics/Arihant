@@ -17,10 +17,12 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const [profileData, setProfileData] = useState({
     full_name: user?.user_metadata?.full_name || "",
     phone: user?.user_metadata?.phone || "",
-    address: user?.user_metadata?.address || ""
+    address: user?.user_metadata?.address || "",
+    shop_address: user?.user_metadata?.shop_address || ""
   });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileSuccess, setProfileSuccess] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -79,7 +81,8 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
         data: {
           full_name: profileData.full_name,
           phone: profileData.phone,
-          address: profileData.address
+          address: profileData.address,
+          shop_address: profileData.shop_address
         }
       });
       if (!error) {
@@ -93,6 +96,33 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
     } finally {
       setIsSavingProfile(false);
     }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+          const data = await res.json();
+          if (data && data.display_name) {
+            setProfileData(prev => ({ ...prev, address: data.display_name }));
+          }
+        } catch (err) {
+          alert("Could not fetch address details.");
+        } finally {
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        alert("Failed to get location. Please ensure location permissions are granted.");
+      }
+    );
   };
 
   return (
@@ -185,12 +215,33 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Delivery Address</label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Primary Delivery Address</label>
+                      <button 
+                        onClick={handleGetLocation}
+                        disabled={isLocating}
+                        className="text-xs font-bold text-[#D4A64A] hover:underline flex items-center gap-1 disabled:opacity-50"
+                      >
+                        <span className="material-symbols-outlined text-[14px]">my_location</span>
+                        {isLocating ? "Locating..." : "Use Current Location"}
+                      </button>
+                    </div>
                     <textarea 
                       value={profileData.address} 
                       onChange={e => setProfileData({...profileData, address: e.target.value})}
                       placeholder="Enter your complete delivery address"
                       rows="3"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all resize-none" 
+                    ></textarea>
+                  </div>
+                  
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Shop/Business Address <span className="text-gray-400 normal-case font-normal">(Optional)</span></label>
+                    <textarea 
+                      value={profileData.shop_address} 
+                      onChange={e => setProfileData({...profileData, shop_address: e.target.value})}
+                      placeholder="Enter your shop or business address if different from above"
+                      rows="2"
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-800 outline-none focus:border-[#1F5132] focus:ring-1 focus:ring-[#1F5132] transition-all resize-none" 
                     ></textarea>
                   </div>
