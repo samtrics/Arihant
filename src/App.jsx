@@ -32,15 +32,43 @@ export default function App() {
 
   const [currentPage, setCurrentPage] = useState(() => {
     if (checkAuthRedirect()) return 'customer-dashboard';
-    return localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home';
+    
+    // Check session validity on load
+    const saved = localStorage.getItem('adminSession');
+    if (saved) {
+      try {
+        const sessionData = JSON.parse(saved);
+        if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
+          localStorage.removeItem('adminSession');
+          return 'home';
+        }
+        return 'admin-dashboard';
+      } catch (e) {
+        return 'admin-dashboard';
+      }
+    }
+    return 'home';
   });
+
   const [adminUser, setAdminUser] = useState(() => {
     if (checkAuthRedirect()) {
       localStorage.removeItem('adminSession');
       return null;
     }
     const saved = localStorage.getItem('adminSession');
-    return saved ? JSON.parse(saved) : null;
+    if (saved) {
+      try {
+        const sessionData = JSON.parse(saved);
+        if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
+          localStorage.removeItem('adminSession');
+          return null;
+        }
+        return sessionData.user || sessionData;
+      } catch (e) {
+        return JSON.parse(saved);
+      }
+    }
+    return null;
   });
   const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -55,11 +83,15 @@ export default function App() {
 
   const setAdminUserAndPersist = (user) => {
     if (user) {
-      localStorage.setItem('adminSession', JSON.stringify(user));
-      setCustomerUser(null); // Ensure admin does not appear as a customer
+      const sessionData = {
+        user,
+        expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes expiry
+      };
+      localStorage.setItem('adminSession', JSON.stringify(sessionData));
+      setCustomerUser(null);
     } else {
       localStorage.removeItem('adminSession');
-      supabase.auth.signOut(); // Fully sign out of Supabase to prevent ghost customer sessions
+      supabase.auth.signOut();
     }
     setAdminUser(user);
   };
@@ -94,7 +126,25 @@ export default function App() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // 10 minute auto-logout interval for Admin
+    const interval = setInterval(() => {
+      const saved = localStorage.getItem('adminSession');
+      if (saved) {
+        try {
+          const sessionData = JSON.parse(saved);
+          if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
+            setAdminUserAndPersist(null);
+            setPage('home');
+            alert("Admin session expired. Please log in again.");
+          }
+        } catch (e) {}
+      }
+    }, 60000); // check every minute
+
+    return () => {
+      subscription.unsubscribe();
+      clearInterval(interval);
+    };
   }, []);
 
   // Load products from Supabase and subscribe to realtime changes
