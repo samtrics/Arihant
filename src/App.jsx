@@ -63,6 +63,9 @@ export default function App() {
           localStorage.removeItem('adminSession');
           return null;
         }
+        // Extend session on reload to keep it active
+        sessionData.expiresAt = Date.now() + 10 * 60 * 1000;
+        localStorage.setItem('adminSession', JSON.stringify(sessionData));
         return sessionData.user || sessionData;
       } catch (e) {
         return JSON.parse(saved);
@@ -277,6 +280,13 @@ export default function App() {
     };
   }, [currentPage]);
 
+  useEffect(() => {
+    // If user is already logged in but URL says 'admin', redirect to 'admin-dashboard'
+    if (currentPage === "admin" && adminUser) {
+      handleNavigate("admin-dashboard", null, true);
+    }
+  }, [currentPage, adminUser]);
+
   const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard";
 
   return (
@@ -301,10 +311,10 @@ export default function App() {
         {currentPage === "customer-dashboard" && !customerUser && <Auth onNavigate={handleNavigate} initialMode="signin" />}
         {currentPage === "distributor-login" && <DistributorLogin onNavigate={handleNavigate} />}
         {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
-        {currentPage === "admin" && (
+        {currentPage === "admin" && !adminUser && (
           <AdminLogin
-            onLogin={(user) => { setAdminUserAndPersist(user); setPage("admin-dashboard"); }}
-            onBack={() => setPage("home")}
+            onLogin={(user) => { setAdminUserAndPersist(user); handleNavigate("admin-dashboard", null, true); }}
+            onBack={() => handleNavigate("home", null, true)}
           />
         )}
         {currentPage === "admin-dashboard" && adminUser && (
