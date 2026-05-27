@@ -173,6 +173,7 @@
 
 .hide-number-arrows {
     -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 /* ── Responsive Dashboard Grids ── */
