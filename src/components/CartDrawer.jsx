@@ -210,7 +210,18 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="px-2 py-1 text-primary hover:bg-surface-container transition-colors"
                           >-</button>
-                          <span className="px-2 font-medium text-sm w-8 text-center">{item.quantity}</span>
+                          <input 
+                            type="number" 
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              if (!isNaN(val) && val > 0) {
+                                updateQuantity(item.id, val);
+                              }
+                            }}
+                            className="font-medium text-sm w-12 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded hide-number-arrows"
+                          />
                           <button 
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="px-2 py-1 text-primary hover:bg-surface-container transition-colors"

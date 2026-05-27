@@ -16,6 +16,7 @@ import Footer from "./components/Footer";
 
 import ProductDetailsModal from "./components/ProductDetailsModal";
 import DistributorLogin from "./components/DistributorLogin";
+
 import ResetPassword from "./components/ResetPassword";
 import DistributorDashboard from "./components/DistributorDashboard";
 import CustomerDashboard from "./components/CustomerDashboard";
@@ -74,11 +75,32 @@ export default function App() {
     }
     return null;
   });
+
+  const [distributorUser, setDistributorUser] = useState(() => {
+    if (checkAuthRedirect()) return null;
+    const saved = localStorage.getItem('distributorSession');
+    if (saved) {
+      try {
+        const sessionData = JSON.parse(saved);
+        if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
+          localStorage.removeItem('distributorSession');
+          return null;
+        }
+        sessionData.expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+        localStorage.setItem('distributorSession', JSON.stringify(sessionData));
+        return sessionData.user;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
+  const [globalSearchQuery, setGlobalSearchQuery] = useState("");
 
-  // Track current page in a ref so auth listener always has the latest value
   const currentPageRef = useRef(currentPage);
   const setPage = (page) => {
     currentPageRef.current = page;
@@ -93,6 +115,7 @@ export default function App() {
       };
       localStorage.setItem('adminSession', JSON.stringify(sessionData));
       setCustomerUser(null);
+      setDistributorUserAndPersist(null);
     } else {
       localStorage.removeItem('adminSession');
       supabase.auth.signOut();
@@ -100,17 +123,34 @@ export default function App() {
     setAdminUser(user);
   };
 
+  const setDistributorUserAndPersist = (user) => {
+    if (user) {
+      const sessionData = {
+        user,
+        expiresAt: Date.now() + 60 * 60 * 1000 // 1 hour expiry
+      };
+      localStorage.setItem('distributorSession', JSON.stringify(sessionData));
+      setCustomerUser(null);
+      setAdminUserAndPersist(null);
+    } else {
+      localStorage.removeItem('distributorSession');
+    }
+    setDistributorUser(user);
+  };
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const isAdmin = !!localStorage.getItem('adminSession');
-      setCustomerUser(isAdmin ? null : (session?.user || null));
+      const isDistributor = !!localStorage.getItem('distributorSession');
+      setCustomerUser(isAdmin || isDistributor ? null : (session?.user || null));
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const isAdmin = !!localStorage.getItem('adminSession');
-      setCustomerUser(isAdmin ? null : (session?.user || null));
+      const isDistributor = !!localStorage.getItem('distributorSession');
+      setCustomerUser(isAdmin || isDistributor ? null : (session?.user || null));
 
       if (event === 'PASSWORD_RECOVERY') {
         setPage('reset-password');
@@ -127,9 +167,9 @@ export default function App() {
       }
 
       if (event === 'SIGNED_OUT') {
-        // Only redirect to home if not in admin dashboard (admin handles its own logout)
+        // Only redirect to home if not in admin or distributor flows
         const page = currentPageRef.current;
-        if (page !== 'admin-dashboard' && page !== 'admin') {
+        if (page !== 'admin-dashboard' && page !== 'admin' && page !== 'distributor-dashboard' && page !== 'distributor-login') {
           setPage('home');
         }
       }
@@ -199,6 +239,7 @@ export default function App() {
 
 
   const handleNavigate = (page, sectionId, replace = false) => {
+    console.log("handleNavigate called:", { page, sectionId, replace });
     setPage(page);
     
     const url = new URL(window.location);
@@ -291,13 +332,17 @@ export default function App() {
     if (currentPage === "admin" && adminUser) {
       handleNavigate("admin-dashboard", null, true);
     }
-  }, [currentPage, adminUser]);
+    // If distributor is already logged in but URL says 'distributor-login', redirect to 'distributor-dashboard'
+    if (currentPage === "distributor-login" && distributorUser) {
+      handleNavigate("distributor-dashboard", null, true);
+    }
+  }, [currentPage, adminUser, distributorUser]);
 
   const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard";
 
   return (
     <>
-      {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} customerUser={customerUser} />}
+      {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} customerUser={customerUser} onSearch={(q) => { setGlobalSearchQuery(q); handleNavigate('products'); }} />}
       <main>
         {currentPage === "home" && (
           <div className="page-transition">
@@ -309,15 +354,32 @@ export default function App() {
           </div>
         )}
         {currentPage === "about" && <About onNavigate={handleNavigate} />}
-        {currentPage === "products" && <Products products={products} onNavigate={handleNavigate} onProductClick={setSelectedProduct} />}
+        {currentPage === "products" && <Products products={products} onNavigate={handleNavigate} onProductClick={setSelectedProduct} initialSearchQuery={globalSearchQuery} />}
         {currentPage === "contact" && <Contact onNavigate={handleNavigate} />}
         {currentPage === "distributors" && <Distributor onNavigate={handleNavigate} />}
         {(currentPage === "login" || currentPage === "register") && <Auth onNavigate={handleNavigate} initialMode={currentPage === "login" ? "signin" : "signup"} />}
         {currentPage === "customer-dashboard" && customerUser && <CustomerDashboard user={customerUser} onNavigate={handleNavigate} onLogout={() => handleNavigate("home")} />}
         {currentPage === "customer-dashboard" && !customerUser && <Auth onNavigate={handleNavigate} initialMode="signin" />}
         {currentPage === "reset-password" && <ResetPassword onNavigate={handleNavigate} />}
-        {currentPage === "distributor-login" && <DistributorLogin onNavigate={handleNavigate} />}
-        {currentPage === "distributor-dashboard" && <DistributorDashboard products={products} onLogout={() => handleNavigate("home")} />}
+        {currentPage === "distributor-login" && !distributorUser && (
+          <DistributorLogin 
+            onLogin={(user) => { setDistributorUserAndPersist(user); handleNavigate("distributor-dashboard", null, true); }}
+            onNavigate={handleNavigate} 
+          />
+        )}
+        {currentPage === "distributor-dashboard" && distributorUser && (
+          <DistributorDashboard 
+            distributorUser={distributorUser} 
+            products={products} 
+            onLogout={() => { setDistributorUserAndPersist(null); handleNavigate("home"); }} 
+          />
+        )}
+        {currentPage === "distributor-dashboard" && !distributorUser && (
+          <DistributorLogin 
+            onLogin={(user) => { setDistributorUserAndPersist(user); handleNavigate("distributor-dashboard", null, true); }}
+            onNavigate={handleNavigate} 
+          />
+        )}
         {currentPage === "admin" && !adminUser && (
           <AdminLogin
             onLogin={(user) => { setAdminUserAndPersist(user); handleNavigate("admin-dashboard", null, true); }}

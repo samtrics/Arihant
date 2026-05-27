@@ -1,18 +1,102 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-const dashboardStats = { totalOrders: 0, monthlyPurchases: 0, pendingDeliveries: 0, totalEarnings: 0, activeProducts: 0, currentDiscount: 0 };
-const monthlyRevenueData = [];
-const partnerProfile = { ownerName: "Distributor", tier: "Partner" };
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { supabase } from "../../supabaseClient";
 
-export default function DashboardHome() {
-  const stats = [
-    { label: "Total Orders", value: dashboardStats.totalOrders, icon: "inventory_2", color: "#D4A64A", bg: "rgba(212,166,74,0.15)" },
-    { label: "Monthly Purchases", value: dashboardStats.monthlyPurchases, icon: "account_balance_wallet", color: "#1F5132", bg: "rgba(31,81,50,0.15)" },
-    { label: "Pending Deliveries", value: dashboardStats.pendingDeliveries, icon: "local_shipping", color: "#f59e0b", bg: "#fffbeb" },
-    { label: "Total Earnings", value: dashboardStats.totalEarnings, icon: "trending_up", color: "#10b981", bg: "#ecfdf5" },
-    { label: "Active Products", value: dashboardStats.activeProducts, icon: "category", color: "#6366f1", bg: "#e0e7ff" },
-    { label: "Current Discounts", value: dashboardStats.currentDiscount, icon: "sell", color: "#ec4899", bg: "#fce7f3" },
+export default function DashboardHome({ distributorUser }) {
+  const [orders, setOrders] = useState([]);
+  const [stats, setStats] = useState({ totalOrders: 0, monthlyPurchases: 0, pendingDeliveries: 0, totalEarnings: 0, activeProducts: 0, currentDiscount: 5 });
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState([]);
+
+  useEffect(() => {
+    if (!distributorUser) return;
+    
+    const fetchOrdersAndProducts = async () => {
+      const { data: b2bOrdersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('*');
+        
+      const { data: productsData, error: productsError } = await supabase
+        .from('products')
+        .select('*');
+
+      if (!ordersError && b2bOrdersData) {
+        const b2bOrders = b2bOrdersData.filter(o => 
+          o.order_number && 
+          String(o.order_number).startsWith('B2B') && 
+          o.customer_name?.trim().toLowerCase() === distributorUser.business?.trim().toLowerCase()
+        );
+        
+        setOrders(b2bOrders);
+        
+        const pending = b2bOrders.filter(o => {
+          const s = (o.status || "").toLowerCase();
+          return s !== "delivered" && s !== "completed" && s !== "cancelled";
+        }).length;
+        
+        const totalPurchases = b2bOrders.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+        
+        // Calculate real active products
+        const activeProductsList = productsData ? productsData.filter(p => p.status !== 'inactive') : [];
+        const activeProd = activeProductsList.length;
+        
+        // Calculate real average discount
+        let totalDiscountPercent = 0;
+        let discountCount = 0;
+        activeProductsList.forEach(p => {
+          const orig = parseFloat(p.offer_price || p.price || 0);
+          const wholesale = parseFloat(p.wholesale_price || p.wholesalePrice);
+          if (orig > 0) {
+            if (wholesale && wholesale < orig) {
+              totalDiscountPercent += ((orig - wholesale) / orig) * 100;
+              discountCount++;
+            } else if (!wholesale) {
+              totalDiscountPercent += 15; // default fallback 15% discount
+              discountCount++;
+            }
+          }
+        });
+        const avgDiscount = discountCount > 0 ? Math.round(totalDiscountPercent / discountCount) : 15;
+        
+        // Calculate monthly data for the chart
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const monthlyData = {};
+        
+        b2bOrders.forEach(o => {
+          const date = new Date(o.created_at || o.date);
+          const monthYear = `${months[date.getMonth()]} ${date.getFullYear()}`;
+          if (!monthlyData[monthYear]) monthlyData[monthYear] = 0;
+          monthlyData[monthYear] += Number(o.amount) || 0;
+        });
+        
+        const chartData = Object.keys(monthlyData).map(k => ({
+          name: k,
+          revenue: monthlyData[k]
+        })).slice(-6); // last 6 months
+        
+        setMonthlyRevenueData(chartData.length > 0 ? chartData : [{name: "This Month", revenue: 0}]);
+        
+        setStats({
+          totalOrders: b2bOrders.length,
+          monthlyPurchases: totalPurchases,
+          pendingDeliveries: pending,
+          totalEarnings: totalPurchases * 0.15, // Approx margins saved
+          activeProducts: activeProd,
+          currentDiscount: avgDiscount
+        });
+      }
+    };
+    
+    fetchOrdersAndProducts();
+  }, [distributorUser]);
+
+  const statsArray = [
+    { label: "Total Orders", value: stats.totalOrders, icon: "inventory_2", color: "#D4A64A", bg: "rgba(212,166,74,0.15)" },
+    { label: "Total Purchases", value: `₹${stats.monthlyPurchases.toLocaleString("en-IN")}`, icon: "account_balance_wallet", color: "#1F5132", bg: "rgba(31,81,50,0.15)" },
+    { label: "Pending Deliveries", value: stats.pendingDeliveries, icon: "local_shipping", color: "#f59e0b", bg: "#fffbeb" },
+    { label: "Est. Margins Saved", value: `₹${stats.totalEarnings.toLocaleString("en-IN")}`, icon: "trending_up", color: "#10b981", bg: "#ecfdf5" },
+    { label: "Active Products", value: stats.activeProducts, icon: "category", color: "#6366f1", bg: "#e0e7ff" },
+    { label: "Current Discount", value: `${stats.currentDiscount}%`, icon: "sell", color: "#ec4899", bg: "#fce7f3" },
   ];
 
   return (
@@ -20,19 +104,19 @@ export default function DashboardHome() {
       <div style={{ marginBottom: "32px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <h1 style={{ fontFamily: "'Poppins',sans-serif", fontSize: "28px", fontWeight: "700", color: "#111827", marginBottom: "8px" }}>
-            Welcome back, {partnerProfile.ownerName}
+            Welcome back, {distributorUser?.business || "Partner"}
           </h1>
           <p style={{ color: "#6b7280", fontSize: "15px" }}>Here is what's happening with your wholesale business today.</p>
         </div>
         <div style={{ padding: "8px 16px", background: "linear-gradient(135deg, #1F5132, #2d6b45)", color: "white", borderRadius: "100px", fontSize: "13px", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
           <span className="material-symbols-outlined" style={{ fontSize: "16px", color: "#D4A64A" }}>workspace_premium</span>
-          {partnerProfile.tier}
+          {distributorUser?.tier || "Partner"}
         </div>
       </div>
 
       {/* Stats Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px", marginBottom: "40px" }}>
-        {stats.map((stat, i) => (
+        {statsArray.map((stat, i) => (
           <motion.div 
             key={stat.label} 
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -51,7 +135,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Charts Section */}
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px", marginBottom: "40px" }}>
+      <div style={{ marginBottom: "40px" }}>
         
         {/* Revenue Chart */}
         <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e5e7eb", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
@@ -75,22 +159,6 @@ export default function DashboardHome() {
                 <Area type="monotone" dataKey="revenue" stroke="#1F5132" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Quick Action / Notice */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ background: "linear-gradient(135deg, #1F5132, #2d6b45)", borderRadius: "16px", padding: "32px", color: "white", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "20px" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "24px", color: "#D4A64A" }}>campaign</span>
-            </div>
-            <h3 style={{ fontFamily: "'Poppins',sans-serif", fontSize: "20px", fontWeight: "700", marginBottom: "8px" }}>Seasonal Offer Available!</h3>
-            <p style={{ opacity: 0.85, fontSize: "14px", lineHeight: "1.6", marginBottom: "24px" }}>
-              Pre-book your Diwali inventory now and get an additional 5% margin on Premium Maida and Besan bulk orders.
-            </p>
-            <button style={{ padding: "12px 20px", background: "white", color: "#1F5132", borderRadius: "8px", border: "none", fontWeight: "700", cursor: "pointer", transition: "all 0.2s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.02)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}>
-              View Offers
-            </button>
           </div>
         </div>
       </div>

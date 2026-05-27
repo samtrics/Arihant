@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "../../supabaseClient";
 
-export default function BulkOrderPortal({ products, onOrderSuccess }) {
+export default function BulkOrderPortal({ distributorUser, products, onOrderSuccess }) {
   const [cart, setCart] = useState({});
   const [search, setSearch] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const activeProducts = products.filter(p => p.status !== "inactive" && p.name.toLowerCase().includes(search.toLowerCase()));
 
   const handleQtyChange = (id, val) => {
@@ -21,11 +23,50 @@ export default function BulkOrderPortal({ products, onOrderSuccess }) {
     Object.keys(cart).forEach(id => {
       const p = activeProducts.find(prod => prod.id === id);
       if (p) {
-        const price = p.offerPrice ? parseFloat(p.offerPrice) : parseFloat(p.price);
-        total += (price * 0.85) * cart[id];
+        const price = p.wholesale_price || p.offerPrice || p.price;
+        total += parseFloat(price) * cart[id];
       }
     });
     return total;
+  };
+
+  const handleSubmitOrder = async () => {
+    if (Object.keys(cart).length === 0) return;
+    setIsProcessing(true);
+    try {
+      const orderNumber = `B2B-${Date.now().toString().slice(-6)}`;
+      const cartItems = Object.keys(cart).map(id => {
+        const p = activeProducts.find(prod => prod.id === id);
+        const originalPrice = parseFloat(p.offerPrice || p.price);
+        const discountPrice = parseFloat(p.wholesale_price || originalPrice);
+        return {
+          id: p.id,
+          name: p.name,
+          qty: cart[id],
+          price: discountPrice,
+          unit: `${p.weightValue} ${p.weightUnit}`
+        };
+      });
+
+      const { error } = await supabase.from('orders').insert([{
+        order_number: orderNumber,
+        customer_name: distributorUser?.business || "Unknown B2B",
+        amount: calculateTotal(),
+        status: 'Pending',
+        payment_status: 'Pending (B2B Terms)',
+        city: `${distributorUser?.address || "N/A"} | Phone: ${distributorUser?.phone || "N/A"}`,
+        products: JSON.stringify(cartItems)
+      }]);
+
+      if (error) throw error;
+      
+      setCart({});
+      if (onOrderSuccess) onOrderSuccess();
+    } catch (err) {
+      alert("Error placing bulk order: " + err.message);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -57,7 +98,7 @@ export default function BulkOrderPortal({ products, onOrderSuccess }) {
           <tbody>
             {activeProducts.map(p => {
               const originalPrice = parseFloat(p.offerPrice || p.price);
-              const discountPrice = originalPrice * 0.85;
+              const discountPrice = p.wholesale_price || (originalPrice * 0.85);
               return (
                 <tr key={p.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={{ padding: "16px" }}>
@@ -107,18 +148,18 @@ export default function BulkOrderPortal({ products, onOrderSuccess }) {
             <p style={{ fontSize: "28px", fontWeight: "700", color: "#1F5132", fontFamily: "'Poppins',sans-serif", lineHeight: "1" }}>₹{calculateTotal().toLocaleString(undefined, {minimumFractionDigits: 2})}</p>
           </div>
           <button 
-            onClick={() => { onOrderSuccess(); setCart({}); }}
-            disabled={Object.keys(cart).length === 0}
+            onClick={handleSubmitOrder}
+            disabled={Object.keys(cart).length === 0 || isProcessing}
             style={{ 
               padding: "16px 32px", borderRadius: "12px", border: "none", fontWeight: "700", fontSize: "15px",
-              cursor: Object.keys(cart).length > 0 ? "pointer" : "not-allowed",
-              background: Object.keys(cart).length > 0 ? "linear-gradient(135deg, #1F5132, #2d6b45)" : "#e5e7eb",
-              color: Object.keys(cart).length > 0 ? "white" : "#9ca3af",
-              boxShadow: Object.keys(cart).length > 0 ? "0 8px 20px rgba(31,81,50,0.25)" : "none",
+              cursor: Object.keys(cart).length > 0 && !isProcessing ? "pointer" : "not-allowed",
+              background: Object.keys(cart).length > 0 && !isProcessing ? "linear-gradient(135deg, #1F5132, #2d6b45)" : "#e5e7eb",
+              color: Object.keys(cart).length > 0 && !isProcessing ? "white" : "#9ca3af",
+              boxShadow: Object.keys(cart).length > 0 && !isProcessing ? "0 8px 20px rgba(31,81,50,0.25)" : "none",
               transition: "all 0.2s"
             }}
           >
-            Submit Order
+            {isProcessing ? "Processing..." : "Submit Order"}
           </button>
         </div>
       </div>

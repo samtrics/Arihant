@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 
-export default function Header({ currentPage, onNavigate, customerUser }) {
+export default function Header({ currentPage, onNavigate, customerUser, onSearch }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const { cartItems, setIsCartOpen } = useCart();
   const cartCount = cartItems.length;
 
@@ -68,6 +69,9 @@ export default function Header({ currentPage, onNavigate, customerUser }) {
               className="pl-12 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full w-80 text-on-surface placeholder:text-outline/70 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               placeholder="Search for pure flours, grains..."
               type="text"
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && onSearch) { onSearch(searchValue); setIsMobileMenuOpen(false); } }}
             />
           </div>
           <div className="flex items-center gap-4">
@@ -157,6 +161,9 @@ export default function Header({ currentPage, onNavigate, customerUser }) {
               className="pl-10 pr-4 py-3 bg-surface-container-low border-0 outline-none rounded-full w-full text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary transition-all text-body-md"
               placeholder="Search premium staples..."
               type="text"
+              value={searchValue}
+              onChange={e => setSearchValue(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && onSearch) { onSearch(searchValue); setIsMobileMenuOpen(false); } }}
             />
           </div>
           <p className="text-center text-label-sm text-on-surface-variant font-medium">

@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../supabaseClient";
+import emailjs from '@emailjs/browser';
+
+// EmailJS Configuration - Replace these with your actual EmailJS keys
+const EMAILJS_SERVICE_ID = "service_pwbqfou";
+const EMAILJS_TEMPLATE_ID = "template_tc7einn";
+const EMAILJS_PUBLIC_KEY = "OO2YxgTrVC4xIgf3d";
 
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
@@ -55,10 +61,49 @@ export default function DistributorManager({ distributors: propDistributors = []
   });
 
   const updateStatus = async (id, status) => {
-    const { error } = await supabase.from('distributors').update({ status }).eq('id', id);
+    let updates = { status };
+    let newDistributorId = null;
+    let newPassword = null;
+
+    if (status === "approved") {
+      newDistributorId = id; // Use application ID as distributor ID
+      newPassword = Math.random().toString(36).substring(2, 10);
+      updates.distributor_id = newDistributorId;
+      updates.password = newPassword;
+    }
+
+    const { error } = await supabase.from('distributors').update(updates).eq('id', id);
     if (!error) {
-      setDistributors(ds => ds.map(d => d.id === id ? { ...d, status } : d));
-      if (detail?.id === id) setDetail(d => d ? { ...d, status } : d);
+      setDistributors(ds => ds.map(d => d.id === id ? { ...d, ...updates } : d));
+      if (detail?.id === id) setDetail(d => d ? { ...d, ...updates } : d);
+
+      if (status === "approved") {
+        const d = distributors.find(x => x.id === id);
+
+        try {
+          if (EMAILJS_SERVICE_ID !== "YOUR_SERVICE_ID") {
+            await emailjs.send(
+              EMAILJS_SERVICE_ID,
+              EMAILJS_TEMPLATE_ID,
+              {
+                to_email: d?.email || "",
+                to_name: d?.business || "Distributor",
+                distributor_id: newDistributorId,
+                password: newPassword,
+              },
+              EMAILJS_PUBLIC_KEY
+            );
+            alert(`Success! Application approved and credentials securely emailed to ${d?.email || "the distributor"}.`);
+          } else {
+            alert(`Success! Application approved for ${d?.email || "the distributor"}.\n\nDistributor ID: ${newDistributorId}\n\n[EmailJS is not configured. Replace YOUR_SERVICE_ID in the code to actually send emails.]`);
+          }
+        } catch (emailErr) {
+          console.error("EmailJS Error:", emailErr);
+          alert(`Application approved, but failed to send email. Please check your EmailJS configuration.`);
+        }
+      }
+    } else {
+      alert(`Failed to update status: ${error.message || "Unknown error"}`);
     }
   };
 
@@ -72,14 +117,14 @@ export default function DistributorManager({ distributors: propDistributors = []
     }
     const distOrders = b2bOrders.filter(o => o.distributorId === detail.id || o.customer === detail.business);
     distOrders.sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
-    
+
     const formattedOrders = distOrders.map(o => ({
       ...o,
       id: o.order_number || o.id,
       paymentStatus: o.payment || o.payment_status || "pending",
       amountPaid: o.amountPaid ?? o.amount_paid ?? (o.payment === "paid" || o.payment_status === "paid" ? o.amount : 0),
     }));
-    
+
     setModalOrders(formattedOrders);
   }, [detail, b2bOrders]);
 
@@ -193,7 +238,7 @@ export default function DistributorManager({ distributors: propDistributors = []
             onClick={(e) => { if (e.target === e.currentTarget) setDetail(null); }}>
             <motion.div initial={{ scale: 0.92 }} animate={{ scale: 1 }} exit={{ scale: 0.92 }}
               style={{ background: "white", borderRadius: "20px", width: "100%", maxWidth: "900px", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-              
+
               {/* Header */}
               <div style={{ padding: "24px", background: `linear-gradient(135deg, ${GOLD}, #b38836)`, display: "flex", alignItems: "center", gap: "16px", flexShrink: 0 }}>
                 <div style={{ width: "56px", height: "56px", borderRadius: "14px", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontWeight: "700", fontSize: "20px" }}>{detail.business[0]}</div>
@@ -204,7 +249,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                   </h3>
                   <p style={{ color: "rgba(255,255,255,0.8)", fontSize: "12.5px", margin: "3px 0 0" }}>{detail.id} · Applied {detail.applied}</p>
                 </div>
-                <button onClick={() => setDetail(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.8)" }} onMouseEnter={e=>e.currentTarget.style.color="white"} onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.8)"}>
+                <button onClick={() => setDetail(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.8)" }} onMouseEnter={e => e.currentTarget.style.color = "white"} onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.8)"}>
                   <span className="material-symbols-outlined" style={{ fontSize: "26px" }}>close</span>
                 </button>
               </div>
@@ -226,7 +271,7 @@ export default function DistributorManager({ distributors: propDistributors = []
 
               {/* Content Area */}
               <div style={{ padding: "24px", flex: 1, overflowY: "auto" }}>
-                
+
                 {/* ── OVERVIEW TAB ── */}
                 {detailTab === "overview" && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -243,7 +288,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                         </div>
                       ))}
                     </div>
-                    
+
                     {detail.status === "approved" && (
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
                         <div style={{ padding: "16px", background: "#faf8f5", borderRadius: "12px", textAlign: "center", border: "1px solid #f0ede8" }}>
@@ -285,7 +330,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                 {/* ── ORDERS & FINANCIALS TABS ── */}
                 {(detailTab === "orders" || detailTab === "financials") && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    
+
                     {detail.status !== "approved" ? (
                       <div style={{ padding: "60px 40px", textAlign: "center", color: "#9ca3af", border: "1px dashed #d1d5db", borderRadius: "12px" }}>
                         <span className="material-symbols-outlined" style={{ fontSize: "40px", marginBottom: "12px", color: "#d1d5db" }}>block</span>
@@ -332,7 +377,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                               style={{ width: "100%", padding: "7px 12px 7px 32px", borderRadius: "8px", border: "1.5px solid #e5e7eb", fontSize: "12px", outline: "none", background: "white", color: "#1C1C1C", boxSizing: "border-box" }} />
                           </div>
                         </div>
-                        
+
                         {modalOrders.filter(o => o.id.toLowerCase().includes(orderSearch.toLowerCase()) || o.date.includes(orderSearch)).length > 0 ? (
                           <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
@@ -353,28 +398,28 @@ export default function DistributorManager({ distributors: propDistributors = []
                                   const isExpanded = selectedOrder === o.id;
                                   return (
                                     <React.Fragment key={o.id}>
-                                      <tr onClick={() => setSelectedOrder(isExpanded ? null : o.id)} style={{ borderBottom: isExpanded ? "none" : (i === arr.length - 1 ? "none" : "1px solid #e5e7eb"), background: isExpanded ? "#f9fafb" : "white", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e=>!isExpanded && (e.currentTarget.style.background="#faf8f5")} onMouseLeave={e=>!isExpanded && (e.currentTarget.style.background="white")}>
+                                      <tr onClick={() => setSelectedOrder(isExpanded ? null : o.id)} style={{ borderBottom: isExpanded ? "none" : (i === arr.length - 1 ? "none" : "1px solid #e5e7eb"), background: isExpanded ? "#f9fafb" : "white", cursor: "pointer", transition: "background 0.2s" }} onMouseEnter={e => !isExpanded && (e.currentTarget.style.background = "#faf8f5")} onMouseLeave={e => !isExpanded && (e.currentTarget.style.background = "white")}>
                                         <td style={{ padding: "12px 14px", fontWeight: "700", color: GOLD }}>{o.id}</td>
                                         {detailTab === "orders" && <td style={{ padding: "12px 14px", color: "#6b7280" }}>{o.date || "N/A"}</td>}
                                         <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>₹{Number(o.amount || 0).toLocaleString("en-IN")}</td>
-                                        
+
                                         {/* Read-only Payment Status */}
                                         <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                          <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", background: o.paymentStatus==="paid"?"#ecfdf5":o.paymentStatus==="partial"?"#fffbeb":"#fef2f2", color: o.paymentStatus==="paid"?"#10b981":o.paymentStatus==="partial"?"#f59e0b":"#ef4444" }}>
+                                          <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "600", textTransform: "capitalize", background: o.paymentStatus === "paid" ? "#ecfdf5" : o.paymentStatus === "partial" ? "#fffbeb" : "#fef2f2", color: o.paymentStatus === "paid" ? "#10b981" : o.paymentStatus === "partial" ? "#f59e0b" : "#ef4444" }}>
                                             {o.paymentStatus || "pending"}
                                           </span>
                                         </td>
-                                        
+
                                         {/* Read-only Amount Paid */}
                                         <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "600", color: "#1C1C1C" }}>
                                           ₹{Number(o.amountPaid || 0).toLocaleString("en-IN")}
                                         </td>
 
                                         <td style={{ padding: "12px 14px", textAlign: "right", fontWeight: "700", color: bal > 0 ? "#ef4444" : "#10b981" }}>₹{bal.toLocaleString("en-IN")}</td>
-                                        
+
                                         {detailTab === "orders" && (
                                           <td style={{ padding: "12px 14px", textAlign: "center" }}>
-                                            <button onClick={(e) => { e.stopPropagation(); alert(`Downloading invoice for Order ID: ${o.id}`); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e=>e.currentTarget.style.color=GOLD} onMouseLeave={e=>e.currentTarget.style.color="#9ca3af"} title="Download Invoice">
+                                            <button onClick={(e) => { e.stopPropagation(); alert(`Downloading invoice for Order ID: ${o.id}`); }} style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto" }} onMouseEnter={e => e.currentTarget.style.color = GOLD} onMouseLeave={e => e.currentTarget.style.color = "#9ca3af"} title="Download Invoice">
                                               <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>download</span>
                                             </button>
                                           </td>

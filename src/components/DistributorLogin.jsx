@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../supabaseClient";
 
-const DEMO_CODE = "DIS-001";
-const DEMO_PASSWORD = "password123";
+// Demo credentials removed. Now using Supabase DB for authentication.
 
-export default function DistributorLogin({ onNavigate }) {
-  const [email, setEmail] = useState("");
+export default function DistributorLogin({ onNavigate, onLogin }) {
+  const [distributorId, setDistributorId] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,23 +15,40 @@ export default function DistributorLogin({ onNavigate }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-    if (!email.trim()) { setError("Email is required."); return; }
+    if (!distributorId.trim()) { setError("Distributor ID is required."); return; }
     if (!password) { setError("Password is required."); return; }
 
     setIsLoading(true);
 
     try {
-      const { data, err } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
+      const queryId = distributorId.trim();
+      const queryPass = password.trim();
+      console.log(`Attempting login with ID: "${queryId}" and Pass: "${queryPass}"`);
+      
+      const { data, error: dbError } = await supabase
+        .from('distributors')
+        .select('*')
+        .eq('distributor_id', queryId)
+        .eq('password', queryPass)
+        .eq('status', 'approved')
+        .maybeSingle();
 
-      if (err) throw err;
+      console.log("Login Query Result:", { data, dbError });
+
+      if (dbError) {
+        throw new Error(`Database Error: ${dbError.message}`);
+      }
+      if (!data) {
+        throw new Error("Invalid Distributor ID or Password, or account not approved.");
+      }
 
       setSuccess(true);
-      setTimeout(() => onNavigate("distributor-dashboard"), 1000);
+      setTimeout(() => {
+        if (onLogin) onLogin(data);
+        else onNavigate("distributor-dashboard");
+      }, 1000);
     } catch (err) {
-      setError(`Invalid credentials. (${err.message})`);
+      setError(`Login failed. (${err.message})`);
     } finally {
       setIsLoading(false);
     }
@@ -108,16 +124,16 @@ export default function DistributorLogin({ onNavigate }) {
                 <div style={{ padding: "12px 14px", background: "rgba(212,166,74,0.1)", border: "1px solid rgba(212,166,74,0.3)", borderRadius: "12px", marginBottom: "22px", display: "flex", gap: "10px", alignItems: "flex-start" }}>
                   <span className="material-symbols-outlined" style={{ color: "#D4A64A", fontSize: "17px", flexShrink: 0, marginTop: "2px" }}>info</span>
                   <div style={{ fontSize: "12px", color: "#785600", lineHeight: "1.55" }}>
-                    Sign in with your approved partner email address.
+                    Sign in with your Distributor ID (e.g., DIS-001) and password.
                   </div>
                 </div>
 
                 <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Registered Email</label>
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Distributor ID</label>
                     <div style={{ position: "relative" }}>
-                      <span className="material-symbols-outlined" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: "19px" }}>mail</span>
-                      <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} placeholder="partner@domain.com" style={inp}
+                      <span className="material-symbols-outlined" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: "19px" }}>badge</span>
+                      <input type="text" value={distributorId} onChange={e => { setDistributorId(e.target.value); setError(""); }} placeholder="DIS-001" style={inp}
                         onFocus={e => e.target.style.borderColor = "#1F5132"} onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
                     </div>
                   </div>

@@ -115,7 +115,18 @@ export default function ProductDetailsModal({ product, onClose }) {
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg"
                 >-</button>
-                <span className="px-4 font-bold text-on-surface w-10 text-center">{quantity}</span>
+                <input 
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    if (!isNaN(val) && val > 0) {
+                      setQuantity(val);
+                    }
+                  }}
+                  className="px-2 font-bold text-on-surface w-16 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded hide-number-arrows"
+                />
                 <button 
                   onClick={() => setQuantity(quantity + 1)}
                   className="px-4 py-2 hover:bg-surface-container text-primary transition-colors font-bold text-lg"

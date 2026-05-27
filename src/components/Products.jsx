@@ -1,112 +1,6 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 
-const productsData = [
-  {
-    id: 1,
-    name: "Sharbati Atta",
-    category: "Flours (Atta)",
-    tag: "PREMIUM WHEAT",
-    desc: "Stone-ground, 100% Whole Wheat from Sehore",
-    price: 549.00,
-    unit: "5kg",
-    brandTag: "HERITAGE GOLD",
-    featured: true,
-    overlayTitle: "Purely Sourced, Freshly Packed",
-    hasDetails: true,
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuCFlXi6HM0fZPoImdBCxmwfUUVxmyOoErebMN2pWSCYkW2pIHEV9qt56AjLKYXHO3Ax8ygC-ilWK-tSgH14n1oynPDSQce4kWfiUp3glpd8bC5JrMKL6KSXq_SGh8Mj91fV781JMSxKiuMSkd3AuZ3YlrPlYeJG4Lm_2x-C86VFoinEL1-zrhvHjxVAusT3XomBbaNCjwlnamTf-u3mey3mKibDGMJwGWsQdakDt5qF155N-MSgf7xXAgrCkQqwrQph5QCZAiuY1DI",
-    imgAlt: "Sharbati Atta",
-    dataAlt: "A high-end editorial product shot of a premium Sharbati Atta flour sack, placed on a rustic wooden surface with a handful of golden wheat grains scattered around. The background is a soft, warm cream white with artistic soft-focus studio lighting. The aesthetic is clean, professional, and evocative of traditional Indian agricultural purity, utilizing a palette of deep greens and wheat gold.",
-    organic: false,
-    heritage: true,
-    bulk: false
-  },
-  {
-    id: 2,
-    name: "Chana Besan",
-    category: "Flours (Atta)",
-    tag: "GRAM FLOUR",
-    desc: "Triple-sieved for extra fine texture",
-    price: 125.00,
-    unit: "1kg",
-    featured: true,
-    overlayTitle: "The Secret to Perfect Snacks",
-    hasDetails: false,
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuDYlrFsgmD9lQFPpq2FUTquel45pepN70m1HPPr43zJzRObELoBCjVT21oVVSUaLOyr2-YVz_zI4qOkqJsHXoNwt8PGsLbyd6q4L3v7vGGDMrqC4O306dfSwKe5M_TjX9wSeFdhDvc6VaA2bMghFtnPkLvW1siGN29uRBZlM90jtiqOQJhSVjLdX2qfJWZRKsbjd5pf0V84srH5CKlmcV3FttTzF_HPIsno0HzSXwNZZ6ITfc6q7mmwdQfD3pjFoEWGWBUo__DLXOk",
-    imgAlt: "Chana Besan",
-    dataAlt: "A macro studio photograph of fine, yellow Chana Besan flour spilling from a ceramic bowl. Beside it are whole roasted chickpeas, all set against a minimalist cream background. The lighting is soft and bright, emphasizing the smooth texture of the flour and the earthy tones of the pulses. The design style is modern corporate FMCG, highlighting quality and nutritional density.",
-    organic: false,
-    heritage: true,
-    bulk: false
-  },
-  {
-    id: 3,
-    name: "Roasted Daliya",
-    category: "Roasted Daliya",
-    tag: "HEALTH STAPLE",
-    desc: "Slow-roasted broken wheat for wellness",
-    price: 85.00,
-    unit: "500g",
-    featured: true,
-    overlayTitle: "Nutritious Daily Breakfast",
-    hasDetails: false,
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuD7YHG5xGwLVNRidsIt-0Rac2nDzpCrSiPW6uXVGdN7SxEpj_DBPTZva00-U6UWq1TKaGW5Rahjigy6Q_vQO-WFVsHbW2SMgunKsHDFO3zieUzbxJwB2Qa4QINXYSfTns61K695ntnUiwCJH9SFpIrQL7fijv1-uXaoKkVIxrszM_zfU6ftE78p0WQg8c5sHwYJcmtP6QVgqcRIjreTOfaRIeQz7989v69f1HM1XIB2rv6Kw86_kCpXKqYrdOG4vVUcwsJKJnrCEUo",
-    imgAlt: "Roasted Daliya",
-    dataAlt: "A top-down editorial shot of golden roasted wheat daliya in a handcrafted wooden bowl. Natural daylight streams from the side, creating soft shadows that emphasize the granular texture of the daliya. The surrounding space is clean and minimalist, decorated with a small branch of wheat. The image has a calm, organic feeling, reinforcing the brand's message of modern Indian purity.",
-    organic: false,
-    heritage: true,
-    bulk: false
-  },
-  {
-    id: 4,
-    name: "Premium Maida",
-    category: "Flours (Atta)",
-    tag: "REFINED FLOUR",
-    desc: "Baking-grade, super-refined white flour",
-    price: 65.00,
-    unit: "1kg",
-    featured: false,
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUQlZgUtRPY21eJe44pA_jRVtSlm9DSGA199y3f8Dlrx-96iZcxqDPHrAFakPgFQQCntsp1Mn9uvTlYPRy3sw6IaOPHS5k5lO_OkjJLd241KWQmW3FBk3s2PAF0vbpZK2mhCbg2iYEMFp73zom3AjprWfsk-yJX_Y1kMzA0C79IIl6B2eml11EKWwzTaFgBxrwSgDatSisi-iv7jfSLW8uYDzfJAgAKFWVWtoWVElKuLLCV1yeJcqJYHRedkUtjAn4Igz3FcbxpNs",
-    imgAlt: "Premium Maida",
-    dataAlt: "An elegant presentation of pure white maida flour on a marble surface. Sifting tools are placed artistically in the background. The lighting is crisp and bright, creating a clean light-mode aesthetic. The focus is on the incredible fine texture and snowy whiteness of the flour, symbolizing purity and premium quality in high-end baking staples.",
-    organic: false,
-    heritage: true,
-    bulk: false
-  },
-  {
-    id: 5,
-    name: "Multigrain Atta",
-    category: "Flours (Atta)",
-    tag: "HEALTH BLEND",
-    desc: "9-Grain power blend for high fiber",
-    price: 420.00,
-    unit: "5kg",
-    featured: false,
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuCkYx8ICd9lnc23xJC6wHeeRUj4AZGOaz6GIWTjdlxox5LWaEkGkwR6ZfCzdkc53OA9wjER8H0uBWK7naWWk1hXFrlDz95HOYD1sk5vedfWkS5qFUAQY4dj6WFHmAL7CCWhcFPO0jLTFUcoWAdzdyTsE1wbviSgC9foVk0dIxCkmAgthWEtLqI9vDyPuvL3BHodI_zL00IcU2Lofw_AYzZfiLX5x3jiu0Mbx4x4JJNFZFyaVpI2io_i6TSxixosVWIAbVI5mVA6bnQ",
-    imgAlt: "Multigrain Atta",
-    dataAlt: "A diverse arrangement of different grains—oats, barley, corn, and soy—blending into a rich, textured multigrain flour. The composition is artistic and editorial, featuring a clean cream-white background with professional studio lighting. The color palette is earthy and wholesome, emphasizing the health benefits and varied nutritional sources of the product.",
-    organic: true,
-    heritage: true,
-    bulk: false
-  },
-  {
-    id: 6,
-    name: "Missi Atta",
-    category: "Flours (Atta)",
-    tag: "TRADITIONAL",
-    desc: "Gram & Wheat blend with aromatic spices",
-    price: 180.00,
-    unit: "1kg",
-    featured: false,
-    imgSrc: "https://lh3.googleusercontent.com/aida-public/AB6AXuA9qcenzscxdgorF5458DN07v1c4dG5glxe24ngRVIzNmVwlQp-iwf9hOHeMNrDUeGUY8vdyp5hlpNE4ZLLkr1J5rSKEYTtMslVmEYIGh4s-ceqy3vl8xgw6TtMmUzXXkR8rQ3WUAjmaDBq2dnO8NxcFK0SUM9s5sZiDIneHkWq2TwJA9otXlD5dyKTXy-dGeCtebWKUkf44hU1u45N4T0V8lrl8fecsib-pY9bgxYES7Yye40emSBnAyWs-hdSi2i4Vwk_LZ0jNBg",
-    imgAlt: "Missi Atta",
-    dataAlt: "A warm, inviting studio photograph showcasing Missi Atta—a traditional blend of gram flour and wheat. The flour is presented in an earthen pot with fresh green chilies and spices nearby to suggest its culinary use. The lighting is soft and golden, creating a sense of heritage and authentic Indian flavor. The background remains a sophisticated, clean cream white.",
-    organic: false,
-    heritage: true,
-    bulk: false
-  }
-];
-
 const categories = [
   "All",
   "Flours (Atta)",
@@ -116,7 +10,7 @@ const categories = [
   "Rice Varieties"
 ];
 
-export default function Products({ products, onNavigate, onProductClick }) {
+export default function Products({ products, onNavigate, onProductClick, initialSearchQuery }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filters, setFilters] = useState({
     organic: false,
@@ -126,7 +20,14 @@ export default function Products({ products, onNavigate, onProductClick }) {
   const [sortBy, setSortBy] = useState("Featured First");
   const [dummyPage, setDummyPage] = useState(1);
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery || "");
   const { addToCart } = useCart();
+
+  React.useEffect(() => {
+    if (initialSearchQuery !== undefined) {
+      setSearchQuery(initialSearchQuery);
+    }
+  }, [initialSearchQuery]);
 
   const handleFilterToggle = (key) => {
     setFilters((prev) => ({
@@ -138,6 +39,20 @@ export default function Products({ products, onNavigate, onProductClick }) {
   // Filter products based on search bar, category, and checkboxes
   const filteredProducts = products.filter((product) => {
     if (product.status === "inactive") return false;
+
+    // 0. Search Query Matching
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const matchName = product.name?.toLowerCase().includes(q);
+      const matchDesc = product.desc?.toLowerCase().includes(q);
+      const matchTags = Array.isArray(product.tags) ? product.tags.some(t => t.toLowerCase().includes(q)) : false;
+      const matchTag = product.tag?.toLowerCase().includes(q);
+      const matchPrice = product.price?.toString().includes(q);
+      
+      if (!matchName && !matchDesc && !matchTags && !matchTag && !matchPrice) {
+        return false;
+      }
+    }
 
     // 1. Category Matching
     if (selectedCategory !== "All") {
@@ -278,6 +193,18 @@ export default function Products({ products, onNavigate, onProductClick }) {
                 )}
               </button>
 
+              {/* Local Search Input */}
+              <div className="relative hidden md:block">
+                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline/70 text-sm">search</span>
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Search products..."
+                  className="pl-9 pr-3 py-1.5 bg-surface-container-low border border-outline-variant rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary w-48"
+                />
+              </div>
+
               {/* Sorting Select Dropdown */}
               <div className="flex items-center gap-2">
                 <span className="text-outline">Sort by:</span>
@@ -320,6 +247,16 @@ export default function Products({ products, onNavigate, onProductClick }) {
           {isMobileFiltersOpen && (
             <div className="lg:hidden mb-6 p-6 bg-surface-container-low/95 backdrop-blur-md rounded-2xl border border-outline-variant space-y-6 animate-slide-in">
               <div>
+                <div className="mb-4 relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline/70 text-sm">search</span>
+                  <input 
+                    type="text" 
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full pl-9 pr-3 py-2 bg-surface-container-low border border-outline-variant rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
                 <h3 className="font-headline-md text-headline-sm text-primary mb-4">Filter Products</h3>
                 <div className="flex flex-wrap gap-3">
                   <button

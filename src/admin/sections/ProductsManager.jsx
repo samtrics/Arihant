@@ -8,7 +8,7 @@ const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 const CATS = ["All", "Flours (Atta)", "Grains & Pulses", "Spices (Masala)", "Roasted Daliya", "Rice Varieties", "Cooking Oils", "Ready to Cook", "Organic Staples"];
 
-const emptyForm = { name: "", sku: "", category: "Flours (Atta)", price: "", offerPrice: "", stock: "", weightValue: "", weightUnit: "kg", desc: "", tags: "", status: "active", imgSrc: "" };
+const emptyForm = { name: "", sku: "", category: "Flours (Atta)", price: "", offerPrice: "", wholesalePrice: "", stock: "", weightValue: "", weightUnit: "kg", desc: "", tags: "", status: "active", imgSrc: "" };
 
 export default function ProductsManager({ products, setProducts }) {
   const [search, setSearch] = useState("");
@@ -36,7 +36,7 @@ export default function ProductsManager({ products, setProducts }) {
     const match = p.weight ? String(p.weight).match(/^([\d.]+)(.*)$/) : null;
     const wv = match ? match[1] : p.weight || "";
     const wu = match ? match[2].trim() || "kg" : "kg";
-    setForm({ ...p, tags: p.tags.join(", "), offerPrice: p.offerPrice ?? "", weightValue: wv, weightUnit: wu }); 
+    setForm({ ...p, tags: p.tags.join(", "), offerPrice: p.offerPrice ?? "", wholesalePrice: p.wholesalePrice ?? "", weightValue: wv, weightUnit: wu }); 
     setEditId(p.id); 
     setModal("edit"); 
   };
@@ -70,7 +70,10 @@ export default function ProductsManager({ products, setProducts }) {
   };
 
   const handleSave = async () => {
-    if (isSaving) return;
+    if (isSaving || uploading) {
+      if (uploading) alert("Please wait for the image to finish uploading!");
+      return;
+    }
     setIsSaving(true);
     try {
       const newWeight = form.weightValue ? `${form.weightValue}${form.weightUnit}` : "";
@@ -80,6 +83,7 @@ export default function ProductsManager({ products, setProducts }) {
         category: form.category,
         price: +form.price,
         offer_price: form.offerPrice ? +form.offerPrice : null,
+        wholesale_price: form.wholesalePrice ? +form.wholesalePrice : null,
         stock: +form.stock,
         weight: newWeight,
         status: form.status,
@@ -109,6 +113,7 @@ export default function ProductsManager({ products, setProducts }) {
           ...payload,
           id: newId,
           offerPrice: payload.offer_price,
+          wholesalePrice: payload.wholesale_price,
           imgSrc: payload.img_src,
           desc: payload.description,
         }, ...prev]);
@@ -126,6 +131,7 @@ export default function ProductsManager({ products, setProducts }) {
           ...p,
           ...payload,
           offerPrice: payload.offer_price,
+          wholesalePrice: payload.wholesale_price,
           imgSrc: payload.img_src,
           desc: payload.description,
         } : p));
@@ -211,6 +217,9 @@ export default function ProductsManager({ products, setProducts }) {
                     <td style={{ padding: "14px" }}>
                       <div style={{ fontWeight: "700", color: "#1C1C1C" }}>₹{p.price}</div>
                       {p.offerPrice && <div style={{ fontSize: "11px", color: "#10b981" }}>Offer: ₹{p.offerPrice}</div>}
+                      <div style={{ fontSize: "11px", color: "#1F5132", fontWeight: "600", marginTop: "4px", display: "inline-block", background: "rgba(31,81,50,0.1)", padding: "2px 6px", borderRadius: "4px" }}>
+                        B2B: ₹{p.wholesale_price || p.wholesalePrice || p.price}
+                      </div>
                     </td>
                     <td style={{ padding: "14px" }}>
                       <div style={{ fontWeight: "700", color: isOut ? "#ef4444" : isLow ? "#f59e0b" : "#1C1C1C" }}>{p.stock}</div>
@@ -277,7 +286,7 @@ export default function ProductsManager({ products, setProducts }) {
               </div>
               <div style={{ overflowY: "auto", padding: "20px 24px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                  {[["name", "Product Name", "text"], ["sku", "SKU Code", "text"], ["price", "Price (₹)", "number"], ["offerPrice", "Offer Price (₹)", "number"], ["stock", "Stock Quantity", "number"]].map(([field, label, type]) => (
+                  {[["name", "Product Name", "text"], ["sku", "SKU Code", "text"], ["price", "Price (₹)", "number"], ["offerPrice", "Offer Price (₹)", "number"], ["wholesalePrice", "Wholesale Price (₹)", "number"], ["stock", "Stock Quantity", "number"]].map(([field, label, type]) => (
                     <div key={field}>
                       <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>{label}</label>
                       <input type={type} value={form[field] || ""} onChange={e => setForm({ ...form, [field]: e.target.value })} placeholder={label}

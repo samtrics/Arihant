@@ -19,11 +19,6 @@ const TIMELINE = [
   { status: "delivered", label: "Delivered", icon: "check_circle" },
 ];
 
-const MOCK_DISTRIBUTORS = [
-  { id: "DIS-001", name: "Patel Provision Store", city: "Surat" },
-  { id: "DIS-002", name: "Sharma Wholesale", city: "Ahmedabad" },
-  { id: "DIS-003", name: "Gupta Traders", city: "Jaipur" },
-];
 
 export default function OrdersManager({ products = [], retailOrders = [], setRetailOrders, b2bOrders = [], setB2bOrders, distributors = [] }) {
   const [activeTab, setActiveTab] = useState("retail");
@@ -126,7 +121,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
     
     // We use the passed distributors prop, filtered for approved.
     const activeDistributors = distributors.filter(d => d.status === "approved");
-    const dist = activeDistributors.find(d => d.id === newB2BOrder.distributorId) || MOCK_DISTRIBUTORS.find(d => d.id === newB2BOrder.distributorId);
+    const dist = activeDistributors.find(d => d.id === newB2BOrder.distributorId);
     
     let totalAmt = 0;
     const finalProducts = [];
@@ -136,8 +131,8 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
       if (p) {
         const qty = newB2BOrder.cart[pid];
         const price = p.offerPrice ? parseFloat(p.offerPrice) : parseFloat(p.price);
-        // Apply 15% wholesale discount
-        const b2bPrice = price * 0.85;
+        // Apply wholesale_price or fallback to main price
+        const b2bPrice = p.wholesale_price || p.wholesalePrice || price;
         totalAmt += b2bPrice * qty;
         finalProducts.push({ name: p.name, qty, price: b2bPrice, total: b2bPrice * qty });
       }
@@ -149,6 +144,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
       amount: totalAmt,
       status: "pending",
       payment_status: "pending",
+      city: `${[dist.address, dist.city, dist.state].filter(Boolean).join(", ") || "N/A"} | Phone: ${dist.phone || "N/A"}`,
       products: finalProducts
     };
 
@@ -163,7 +159,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
         customer: data[0].customer_name,
         city: dist.city, // Extracted locally since it's not in DB
         distributorId: dist.id,
-        date: new Date().toISOString().split('T')[0],
+        date: new Date().toISOString(),
         items: finalProducts.length,
         amount: data[0].amount,
         status: data[0].status,
@@ -291,7 +287,9 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     <div style={{ fontWeight: "600", color: "#1C1C1C" }}>{o.customer}</div>
                     <div style={{ fontSize: "11px", color: "#9ca3af" }}>{activeTab === "b2b" ? `Code: ${dCode} | ${dCity}` : dCity}</div>
                   </td>
-                  <td style={{ padding: "13px", color: "#6b7280", fontSize: "12px" }}>{o.date || "N/A"}</td>
+                  <td style={{ padding: "13px", color: "#6b7280", fontSize: "12px" }}>
+                    {o.created_at || o.date ? new Date(o.created_at || o.date).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : "N/A"}
+                  </td>
                   <td style={{ padding: "13px", fontWeight: "600" }}>{o.items || parseProducts(o.products).length} {activeTab === "b2b" ? "SKUs" : "Items"}</td>
                   <td style={{ padding: "13px", fontWeight: "700", color: "#1C1C1C" }}>₹{Number(o.amount || 0).toLocaleString("en-IN")}</td>
                   <td style={{ padding: "13px" }}>
@@ -564,10 +562,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                     onChange={e => setNewB2BOrder({ ...newB2BOrder, distributorId: e.target.value })}
                     style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1.5px solid #e5e7eb", fontSize: "13px", outline: "none", background: "white" }}>
                     <option value="">-- Choose a Distributor --</option>
-                    {(distributors.filter(d => d.status === "approved").length > 0 
-                      ? distributors.filter(d => d.status === "approved") 
-                      : MOCK_DISTRIBUTORS
-                    ).map(d => (
+                    {distributors.filter(d => d.status === "approved").map(d => (
                       <option key={d.id} value={d.id}>{d.business || d.name} ({d.id}) - {d.city}</option>
                     ))}
                   </select>

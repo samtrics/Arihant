@@ -76,7 +76,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           customer: o.customer_name,
           payment: o.payment_status,
           amountPaid: o.amount_paid || 0,
-          date: o.date || (o.created_at ? o.created_at.split('T')[0] : null),
+          date: o.created_at || o.date,
         }));
         const b2cOrders = mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B')));
         setOrders(b2cOrders);
@@ -135,7 +135,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
               customer: o.customer_name,
               payment: o.payment_status,
               amountPaid: o.amount_paid || 0,
-              date: o.date || (o.created_at ? o.created_at.split('T')[0] : null),
+              date: o.created_at || o.date,
             }));
             const b2cOrders = mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B')));
             setOrders(b2cOrders);
@@ -246,7 +246,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           type: "order", 
           title: `New Order ${o.id}`, 
           message: `A new order was placed by ${o.customer} for ₹${o.amount || o.total_amount || 0}.`, 
-          time: new Date(orderDate).toLocaleDateString('en-IN'), 
+          time: new Date(orderDate).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}), 
           read: false 
         });
       }
@@ -259,7 +259,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           type: "payment", 
           title: `Delayed Payment: ${o.id}`, 
           message: `Order ${o.id} is over 4 days old and payment is still pending. Please review.`, 
-          time: new Date(orderDate).toLocaleDateString('en-IN'), 
+          time: new Date(orderDate).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}), 
           read: false 
         });
       }
@@ -274,7 +274,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           type: "customer",
           title: "New Customer Registration",
           message: `${c.name} (${c.email}) joined recently.`,
-          time: new Date(joinDate).toLocaleDateString('en-IN'),
+          time: new Date(joinDate).toLocaleString('en-IN', {day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}),
           read: false
         });
       }

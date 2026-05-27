@@ -5,13 +5,26 @@ import DashboardHome from "./distributor-dashboard/DashboardHome";
 import MyOrders from "./distributor-dashboard/MyOrders";
 import BulkOrderPortal from "./distributor-dashboard/BulkOrderPortal";
 import InventoryAvailability from "./distributor-dashboard/InventoryAvailability";
+import ProfileSettings from "./distributor-dashboard/ProfileSettings";
 import GenericPlaceholder from "./distributor-dashboard/GenericPlaceholder";
+import WholesalePricing from "./distributor-dashboard/WholesalePricing";
+import DeliveryTracking from "./distributor-dashboard/DeliveryTracking";
+import SupportCenter from "./distributor-dashboard/SupportCenter";
+import NotificationsPanel from "./distributor-dashboard/NotificationsPanel";
+import DocumentsInvoices from "./distributor-dashboard/DocumentsInvoices";
 
-const partnerProfile = { avatar: "A", businessName: "Distributor Profile", tier: "Partner" };
 const mockNotifications = [];
 
-export default function DistributorDashboard({ products = [], onLogout }) {
+export default function DistributorDashboard({ distributorUser, products = [], onLogout }) {
+  console.log("DistributorDashboard Rendered with user:", distributorUser?.business);
   const [activeTab, setActiveTab] = useState("home");
+
+  const partnerProfile = { 
+    avatar: distributorUser?.business ? distributorUser.business[0] : "A", 
+    businessName: distributorUser?.business || "Distributor Profile", 
+    tier: distributorUser?.tier || "Partner" 
+  };
+
   
   const MENU_ITEMS = [
     { id: "home", icon: "dashboard", label: "Dashboard" },
@@ -20,7 +33,6 @@ export default function DistributorDashboard({ products = [], onLogout }) {
     { id: "catalog", icon: "menu_book", label: "Products Catalog" },
     { id: "pricing", icon: "request_quote", label: "Wholesale Pricing" },
     { id: "inventory", icon: "warehouse", label: "Inventory Status" },
-    { id: "earnings", icon: "monitoring", label: "Earnings & Analytics" },
     { id: "tracking", icon: "local_shipping", label: "Delivery Tracking" },
     { id: "support", icon: "support_agent", label: "Support Center" },
     { id: "notifications", icon: "notifications", label: "Notifications" },
@@ -32,19 +44,18 @@ export default function DistributorDashboard({ products = [], onLogout }) {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "home": return <DashboardHome />;
-      case "orders": return <MyOrders />;
-      case "bulk": return <BulkOrderPortal products={products} onOrderSuccess={() => setActiveTab("orders")} />;
-      case "catalog": return <GenericPlaceholder title="Products Catalog" description="Download PDF catalogs and view high-res product specifications." icon="menu_book" />;
-      case "pricing": return <GenericPlaceholder title="Wholesale Pricing" description="View base prices, MOQ requirements, and calculate profit margins." icon="request_quote" />;
-      case "inventory": return <InventoryAvailability />;
-      case "earnings": return <GenericPlaceholder title="Earnings & Analytics" description="Deep dive into your sales growth, profit margins, and performance charts." icon="monitoring" />;
-      case "tracking": return <GenericPlaceholder title="Delivery Tracking" description="Real-time GPS tracking of your active wholesale shipments." icon="local_shipping" />;
-      case "support": return <GenericPlaceholder title="Support Center" description="Raise tickets, access FAQs, or contact your dedicated account manager via WhatsApp." icon="support_agent" />;
-      case "notifications": return <GenericPlaceholder title="Notifications" description="View system alerts, low stock warnings, and promotional offers." icon="notifications" />;
-      case "docs": return <GenericPlaceholder title="Documents & Invoices" description="Download past GST invoices, receipts, and order summaries." icon="description" />;
-      case "profile": return <GenericPlaceholder title="Profile Settings" description="Update your business details, GSTIN, and view your Partner Tier progress." icon="person" />;
-      default: return <DashboardHome />;
+      case "home": return <DashboardHome key="home" distributorUser={distributorUser} />;
+      case "orders": return <MyOrders key="orders" distributorUser={distributorUser} />;
+      case "bulk": return <BulkOrderPortal key="bulk" distributorUser={distributorUser} products={products} onOrderSuccess={() => setActiveTab("orders")} />;
+      case "catalog": return <GenericPlaceholder key="catalog" title="Products Catalog" description="Download PDF catalogs and view high-res product specifications." icon="menu_book" />;
+      case "pricing": return <WholesalePricing key="pricing" distributorUser={distributorUser} />;
+      case "inventory": return <InventoryAvailability key="inventory" distributorUser={distributorUser} />;
+      case "tracking": return <DeliveryTracking key="tracking" distributorUser={distributorUser} />;
+      case "support": return <SupportCenter key="support" distributorUser={distributorUser} />;
+      case "notifications": return <NotificationsPanel key="notifications" distributorUser={distributorUser} />;
+      case "docs": return <DocumentsInvoices key="docs" distributorUser={distributorUser} />;
+      case "profile": return <ProfileSettings key="profile" distributorUser={distributorUser} />;
+      default: return <DashboardHome key="default" distributorUser={distributorUser} />;
     }
   };
 
