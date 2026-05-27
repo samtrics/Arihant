@@ -408,8 +408,8 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
     <div style={{ height: "62px", background: "white", borderBottom: "1px solid #f0ede8", display: "flex", alignItems: "center", padding: "0 20px", gap: "12px", flexShrink: 0, position: "sticky", top: 0, zIndex: 30, boxShadow: "0 1px 8px rgba(0,0,0,0.04)" }}>
       {/* Mobile hamburger */}
       <button onClick={() => setMobileOpen(!mobileOpen)}
-        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "6px", borderRadius: "8px", display: "none" }}
-        className="lg:hidden">
+        className="admin-mobile-hamburger"
+        style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", padding: "6px", borderRadius: "8px" }}>
         <span className="material-symbols-outlined" style={{ fontSize: "24px" }}>menu</span>
       </button>
 
@@ -445,7 +445,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
           <AnimatePresence>
             {notifOpen && (
               <motion.div initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={{ duration: 0.18 }}
-                style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: "340px", background: "white", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: "1px solid #f0ede8", overflow: "hidden", zIndex: 100 }}>
+                style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: "min(340px, calc(100vw - 32px))", background: "white", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: "1px solid #f0ede8", overflow: "hidden", zIndex: 100 }}>
                 <div style={{ padding: "14px 16px", borderBottom: "1px solid #f0ede8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontWeight: "700", fontSize: "14px", fontFamily: "'Poppins',sans-serif" }}>Notifications {unread > 0 && <span style={{ fontSize: "12px", background: "#fef2f2", color: "#ef4444", padding: "1px 6px", borderRadius: "100px" }}>{unread} new</span>}</span>
                   {unread > 0 && <button onClick={markAllRead} style={{ fontSize: "12px", color: GREEN, background: "none", border: "none", cursor: "pointer", fontWeight: "600" }}>Mark all read</button>}
@@ -554,7 +554,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       <div className="lg:ml-[240px]"
         style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh", minWidth: 0, marginLeft: 0 }}>
         <TopNav />
-        <main style={{ flex: 1, padding: "20px", overflowX: "hidden" }}>
+        <main className="admin-main-content" style={{ flex: 1, overflowX: "hidden" }}>
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
               {renderSection()}
@@ -564,10 +564,16 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       </div>
 
       <style>{`
+        .admin-mobile-hamburger { display: block; }
+        .admin-main-content { padding: 12px; }
+        @media (min-width: 768px) {
+          .admin-main-content { padding: 20px; }
+        }
         @media (min-width: 1024px) {
           .lg\\:ml-\\[240px\\] { margin-left: ${SIDEBAR_W}px !important; transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }
           .lg\\:hidden { display: none !important; }
           .lg\\:block { display: block !important; }
+          .admin-mobile-hamburger { display: none !important; }
         }
       `}</style>
     </div>

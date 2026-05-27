@@ -89,7 +89,8 @@ export default function DocumentsInvoices({ distributorUser }) {
       </div>
 
       <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
           <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
             <tr>
               <th style={{ padding: "16px 24px", textAlign: "left", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>Document ID</th>
@@ -152,6 +153,7 @@ export default function DocumentsInvoices({ distributorUser }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </motion.div>
   );

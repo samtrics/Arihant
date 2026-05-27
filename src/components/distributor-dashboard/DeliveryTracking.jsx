@@ -73,7 +73,7 @@ export default function DeliveryTracking({ distributorUser }) {
         <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "4px" }}>Monitor your active wholesale shipments in real-time.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }} className="dist-profile-grid">
         {loading ? (
           <div style={{ gridColumn: "1/-1", padding: "40px", textAlign: "center", color: "#6b7280" }}>Loading active shipments...</div>
         ) : activeDeliveries.length === 0 ? (

@@ -185,8 +185,8 @@ export default function ProductsManager({ products, setProducts }) {
 
       {/* Table */}
       <div style={{ ...card, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "900px" }}>
             <thead>
               <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
                 {["Product", "SKU", "Category", "Price", "Stock", "Status", "Actions"].map((h) => (

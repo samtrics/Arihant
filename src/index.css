@@ -174,3 +174,151 @@
 .hide-number-arrows {
     -moz-appearance: textfield;
 }
+
+/* ── Responsive Dashboard Grids ── */
+.dash-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+.dash-grid-2col-rev {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+@media (min-width: 768px) {
+    .dash-grid-2col {
+        grid-template-columns: 1fr minmax(260px, 34%);
+    }
+    .dash-grid-2col-rev {
+        grid-template-columns: minmax(260px, 38%) 1fr;
+    }
+}
+
+/* ── Distributor Dashboard Mobile ── */
+.dist-dashboard-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f9fafb;
+    font-family: 'Inter', sans-serif;
+}
+.dist-sidebar {
+    display: none;
+}
+.dist-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0 16px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+}
+.dist-mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 39;
+}
+.dist-mobile-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    z-index: 40;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.dist-mobile-drawer.open {
+    transform: translateX(0);
+}
+.dist-desktop-header {
+    display: none;
+}
+.dist-main-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+}
+@media (min-width: 768px) {
+    .dist-main-content {
+        padding: 24px;
+    }
+}
+@media (min-width: 1024px) {
+    .dist-dashboard-layout {
+        flex-direction: row;
+    }
+    .dist-sidebar {
+        display: flex;
+        width: 260px;
+        flex-direction: column;
+        flex-shrink: 0;
+        border-right: 1px solid #e5e7eb;
+        background: white;
+    }
+    .dist-mobile-header {
+        display: none !important;
+    }
+    .dist-desktop-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 72px;
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 0 40px;
+    }
+    .dist-main-content {
+        padding: 40px;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .dist-main-content > main {
+        flex: 1;
+        overflow-y: auto;
+    }
+}
+
+/* ── Admin Section Tables Responsive ── */
+.admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.admin-table-wrap table {
+    min-width: 600px;
+}
+
+/* ── Distributor sub-page grids (1fr on mobile, 2col on desktop) ── */
+.dist-profile-grid {
+    grid-template-columns: 1fr !important;
+}
+@media (min-width: 768px) {
+    .dist-profile-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
+
+/* ── Analytics 2-column grid ── */
+.analytics-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+@media (min-width: 768px) {
+    .analytics-grid-2col {
+        grid-template-columns: 1fr 1fr;
+    }
+}

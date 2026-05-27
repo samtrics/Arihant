@@ -108,8 +108,8 @@ export default function AdminUsersPanel() {
         <div style={{ padding: "16px", borderBottom: "1px solid #f0ede8", background: "#fcfcfc" }}>
           <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", margin: 0, color: "#1C1C1C" }}>Manage Administrators</h3>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "800px" }}>
             <thead>
               <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
                 {["Admin", "Email", "Role", "Permissions", "Last Login", "Status", "Actions"].map((h) => (
@@ -179,8 +179,8 @@ export default function AdminUsersPanel() {
             Clear Logs
           </button>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "600px" }}>
             <thead>
               <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
                 {["Timestamp", "User", "Email", "IP Address", "Status"].map((h) => (

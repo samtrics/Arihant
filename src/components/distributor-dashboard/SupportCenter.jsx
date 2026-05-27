@@ -48,7 +48,7 @@ export default function SupportCenter({ distributorUser }) {
         <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "4px" }}>We're here to help you scale your business.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 400px", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }} className="dist-profile-grid">
         
         {/* Left Column: Create Ticket & FAQs */}
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>

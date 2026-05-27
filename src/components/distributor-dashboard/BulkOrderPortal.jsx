@@ -86,7 +86,8 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
       </div>
 
       <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.02)", marginBottom: "24px" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "500px" }}>
           <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
             <tr>
               <th style={{ padding: "16px", textAlign: "left", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>Product</th>
@@ -135,6 +136,7 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>

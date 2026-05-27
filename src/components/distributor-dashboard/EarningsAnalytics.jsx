@@ -130,7 +130,7 @@ export default function EarningsAnalytics({ distributorUser }) {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }} className="dist-profile-grid">
         {/* Revenue Chart */}
         <div style={{ background: "white", padding: "24px", borderRadius: "16px", border: "1px solid #e5e7eb", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
           <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#111827", marginBottom: "24px" }}>Revenue & Profit Trend</h3>

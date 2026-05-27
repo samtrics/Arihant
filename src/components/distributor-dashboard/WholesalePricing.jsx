@@ -59,14 +59,15 @@ export default function WholesalePricing() {
         <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "4px" }}>View your confidential partner rates, margins, and MOQ requirements.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: "24px", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px", alignItems: "start" }} className="dist-profile-grid">
         
         {/* Pricing Table */}
         <div style={{ background: "white", borderRadius: "16px", border: "1px solid #e5e7eb", overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
           <div style={{ padding: "16px 20px", borderBottom: "1px solid #e5e7eb", background: "#f9fafb" }}>
             <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#374151" }}>Current Rates Catalog</h3>
           </div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "500px" }}>
             <thead style={{ borderBottom: "1px solid #e5e7eb" }}>
               <tr>
                 <th style={{ padding: "12px 20px", textAlign: "left", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>Product</th>
@@ -111,6 +112,7 @@ export default function WholesalePricing() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Profit Calculator */}

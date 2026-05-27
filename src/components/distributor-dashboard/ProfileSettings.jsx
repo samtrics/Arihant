@@ -60,7 +60,7 @@ export default function ProfileSettings({ distributorUser }) {
         <p style={{ color: "#6b7280", fontSize: "14px", marginTop: "4px" }}>Update your business details, contact information, and GSTIN.</p>
       </div>
       
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "24px" }} className="dist-profile-grid">
         {/* Form Section */}
         <div style={{ background: "white", padding: "32px", borderRadius: "16px", border: "1px solid #e5e7eb", boxShadow: "0 2px 10px rgba(0,0,0,0.02)" }}>
           <h3 style={{ fontFamily: "'Poppins',sans-serif", fontSize: "18px", fontWeight: "700", color: "#111827", marginBottom: "24px" }}>Business Information</h3>

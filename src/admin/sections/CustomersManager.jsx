@@ -163,8 +163,8 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
 
       {/* Table */}
       <div style={{ ...card, overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "800px" }}>
             <thead>
               <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
                 {["Customer", "Contact", "Location", "Orders", "Total Spent", "Joined", "Status", "Action"].map((h) => (
@@ -358,7 +358,8 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
                     
                     {modalOrders.filter(o => o.id.toLowerCase().includes(orderSearch.toLowerCase()) || o.date.includes(orderSearch)).length > 0 ? (
                       <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                        <div style={{ overflowX: "auto", WebkitOverflowScrolling: "touch" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "700px" }}>
                           <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                             <tr>
                               <th style={{ padding: "10px 14px", textAlign: "left", color: "#6b7280", fontWeight: "600", fontSize: "11px", textTransform: "uppercase" }}>Order ID</th>
@@ -425,6 +426,7 @@ export default function CustomersManager({ customers = [], setCustomers, distrib
                             })}
                           </tbody>
                         </table>
+                        </div>
                       </div>
                     ) : (
                       <div style={{ padding: "40px", textAlign: "center", color: "#9ca3af", border: "1px dashed #d1d5db", borderRadius: "12px" }}>

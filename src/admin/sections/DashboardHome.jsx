@@ -218,12 +218,12 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
       {/* Section header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
           <h2 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "22px", color: "#1C1C1C", margin: 0 }}>Dashboard Overview</h2>
           <p style={{ color: "#9ca3af", fontSize: "13px", margin: "4px 0 0" }}>Welcome back, Super Admin! Here's what's happening today.</p>
         </div>
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <select value={dateRange} onChange={e => setDateRange(e.target.value)} style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid #f0ede8", background: "white", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", outline: "none" }}>
             <option value="this_month">This Month</option>
             <option value="last_month">Last Month</option>
@@ -265,7 +265,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
       </div>
 
       {/* ── Revenue + Product Sales ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px, 34%)", gap: "16px" }}>
+      <div className="dash-grid-2col">
         {/* Revenue Area Chart */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
@@ -321,7 +321,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
       </div>
 
       {/* ── Orders Bar + Recent Orders Table ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(260px, 38%) 1fr", gap: "16px" }}>
+      <div className="dash-grid-2col-rev">
         {/* Bar Chart: Monthly orders */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} style={card}>
           <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", marginBottom: "4px" }}>Monthly Orders</h3>
