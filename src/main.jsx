@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { CartProvider } from './context/CartContext.jsx'
+import { Analytics } from "@vercel/analytics/react"
 import CryptoJS from 'crypto-js'
 
 const SECRET_KEY = "arihant_secure_key_2026";
@@ -47,6 +48,7 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <CartProvider>
       <App />
+      <Analytics />
     </CartProvider>
   </StrictMode>,
 )
