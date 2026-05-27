@@ -12,7 +12,7 @@ const originalGetItem = localStorage.getItem;
 
 const shouldEncrypt = (key) => {
   const k = key.toLowerCase();
-  return k.includes('arihant') || k.includes('admin') || k.includes('distributor') || k.includes('order') || k.includes('product') || k.includes('cart') || k.includes('customer');
+  return k.includes('arihant') || k.includes('admin') || k.includes('distributor') || k.includes('order') || k.includes('product') || k.includes('cart') || k.includes('customer') || k.includes('dismissed') || k.includes('notif') || k.includes('session') || k.includes('sb-');
 };
 
 localStorage.setItem = function(key, value) {
