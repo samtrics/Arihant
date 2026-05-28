@@ -106,10 +106,11 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
             }
           }
         });
+        
         if (error) throw error;
         
-        // Supabase returns an empty identities array when the email already exists and Enumeration Protection is ON
-        if (data?.user?.identities && data.user.identities.length === 0) {
+        // Supabase returns a null user (or empty identities) when the email already exists and Enumeration Protection is ON
+        if (!data?.user || (data.user.identities && data.user.identities.length === 0)) {
            throw new Error("An account with this email address already exists. Please sign in instead.");
         }
       } else {
