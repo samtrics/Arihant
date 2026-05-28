@@ -109,10 +109,8 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
         
         if (error) throw error;
         
-        // If data.user is null, or if identities is empty, Supabase blocked the signup 
-        // (usually due to the email already existing when enumeration protection is on)
-        if (!data?.user || (data.user.identities && data.user.identities.length === 0)) {
-          throw new Error("An account with this email address already exists. Please sign in instead.");
+        if (!data?.user) {
+          throw new Error("Failed to create account. Please try again.");
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
