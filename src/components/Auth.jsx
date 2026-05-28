@@ -108,11 +108,6 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
         });
         
         if (error) throw error;
-        
-        // Supabase returns a null user, undefined identities, or empty identities when the email already exists and Enumeration Protection is ON
-        if (!data?.user || !data.user.identities || data.user.identities.length === 0) {
-           throw new Error("An account with this email address already exists. Please sign in instead.");
-        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
           email: formData.email.trim().toLowerCase(),
@@ -142,8 +137,19 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
       );
 
     } catch (err) {
-      // Just show the actual error message returned by Supabase or our code
-      const msg = err.message || "An unexpected error occurred.";
+      let msg = err.message || "An unexpected error occurred.";
+      
+      // Customize existing account/email already exists messages
+      const lowerMsg = msg.toLowerCase();
+      if (
+        lowerMsg.includes("already registered") || 
+        lowerMsg.includes("already exists") || 
+        lowerMsg.includes("email_exists") || 
+        lowerMsg.includes("email already")
+      ) {
+        msg = "An account with this email address already exists. Please sign in instead.";
+      }
+      
       setErrors(prev => ({ ...prev, _general: msg }));
     } finally {
       setIsSubmitting(false);
