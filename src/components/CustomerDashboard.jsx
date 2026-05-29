@@ -71,11 +71,14 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
     
     try {
       const { error } = await supabase.from('orders')
-        .update({ payment_status: newStatus })
+        .update({ 
+          payment_status: newStatus,
+          amount_paid: paymentModalOrder.amount
+        })
         .eq('id', paymentModalOrder.id);
         
       if (!error) {
-        setOrders(prev => prev.map(o => o.id === paymentModalOrder.id ? { ...o, payment_status: newStatus } : o));
+        setOrders(prev => prev.map(o => o.id === paymentModalOrder.id ? { ...o, payment_status: newStatus, amount_paid: paymentModalOrder.amount } : o));
         setPaymentModalOrder(null);
         setUpiTxnId("");
       } else {
