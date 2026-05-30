@@ -12,15 +12,15 @@ import Testimonials from "./components/Testimonials";
 
 
 
-import Footer from "./components/Footer";
-
-import ProductDetailsModal from "./components/ProductDetailsModal";
 
 
 
 
 
-import CartDrawer from "./components/CartDrawer";
+
+
+
+
 import { socket } from "./socket";
 import { supabase } from "./supabaseClient";
 
@@ -35,6 +35,9 @@ const DistributorDashboard = React.lazy(() => import("./components/DistributorDa
 const CustomerDashboard = React.lazy(() => import("./components/CustomerDashboard"));
 const AdminLogin = React.lazy(() => import("./admin/AdminLogin"));
 const AdminDashboard = React.lazy(() => import("./admin/AdminDashboard"));
+const Footer = React.lazy(() => import("./components/Footer"));
+const ProductDetailsModal = React.lazy(() => import("./components/ProductDetailsModal"));
+const CartDrawer = React.lazy(() => import("./components/CartDrawer"));
 export default function App() {
   const checkAuthRedirect = () => {
     if (typeof window === 'undefined') return false;
@@ -409,9 +412,9 @@ export default function App() {
       
         </Suspense>
       </main>
-      {!isAdminPage && <Footer currentPage={currentPage} onNavigate={handleNavigate} />}
-      {selectedProduct && <ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
-      <CartDrawer customerUser={customerUser} onNavigate={handleNavigate} />
+      {!isAdminPage && <Suspense fallback={null}><Footer currentPage={currentPage} onNavigate={handleNavigate} /></Suspense>}
+      {selectedProduct && <Suspense fallback={null}><ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} /></Suspense>}
+      <Suspense fallback={null}><CartDrawer customerUser={customerUser} onNavigate={handleNavigate} /></Suspense>
     </>
   );
 }

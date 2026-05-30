@@ -31,7 +31,7 @@ export default function Header({ currentPage, onNavigate, customerUser, onSearch
             className="cursor-pointer block"
             href="#"
           >
-            <img loading="lazy" src="/logo.png" alt="Arihant Logo" className="h-[84px] w-auto object-contain scale-[1.7] origin-left -ml-2" />
+            <img fetchpriority="high" src="/logo.png" alt="Arihant Logo" className="h-[84px] w-auto object-contain scale-[1.7] origin-left -ml-2" />
           </a>
         </div>
 
