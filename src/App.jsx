@@ -47,12 +47,6 @@ export default function App() {
     return hash.includes('access_token=') || hash.includes('type=signup') || hash.includes('type=recovery') || search.includes('error_code=');
   };
 
-  const [shouldRenderDeferred, setShouldRenderDeferred] = useState(false);
-  useEffect(() => {
-    const timer = setTimeout(() => setShouldRenderDeferred(true), 150);
-    return () => clearTimeout(timer);
-  }, []);
-
   const [currentPage, setCurrentPage] = useState(() => {
     if (checkAuthRedirect()) return 'customer-dashboard';
     
@@ -369,14 +363,12 @@ export default function App() {
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
-            {shouldRenderDeferred && (
-              <Suspense fallback={<div className="min-h-[100vh]"></div>}>
-                <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
-                <PromiseSection />
-                <Heritage onNavigate={handleNavigate} />
-                <Testimonials />
-              </Suspense>
-            )}
+            <Suspense fallback={null}>
+              <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
+              <PromiseSection />
+              <Heritage onNavigate={handleNavigate} />
+              <Testimonials />
+            </Suspense>
           </div>
         )}
         {currentPage === "about" && <About onNavigate={handleNavigate} />}
@@ -423,9 +415,9 @@ export default function App() {
       
         </Suspense>
       </main>
-      {!isAdminPage && shouldRenderDeferred && <Suspense fallback={null}><Footer currentPage={currentPage} onNavigate={handleNavigate} /></Suspense>}
+      {!isAdminPage && <Suspense fallback={null}><Footer currentPage={currentPage} onNavigate={handleNavigate} /></Suspense>}
       {selectedProduct && <Suspense fallback={null}><ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} /></Suspense>}
-      {shouldRenderDeferred && <Suspense fallback={null}><CartDrawer customerUser={customerUser} onNavigate={handleNavigate} /></Suspense>}
+      <Suspense fallback={null}><CartDrawer customerUser={customerUser} onNavigate={handleNavigate} /></Suspense>
     </>
   );
 }
