@@ -360,10 +360,12 @@ export default function App() {
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
-            <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
-            <PromiseSection />
-            <Heritage onNavigate={handleNavigate} />
-            <Testimonials />
+            <Suspense fallback={<div className="min-h-[100vh]"></div>}>
+              <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
+              <PromiseSection />
+              <Heritage onNavigate={handleNavigate} />
+              <Testimonials />
+            </Suspense>
           </div>
         )}
         {currentPage === "about" && <About onNavigate={handleNavigate} />}
