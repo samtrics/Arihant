@@ -52,7 +52,7 @@
 
 /* Wheat and Grain textures */
 .wheat-texture {
-    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCm_dYIO5IsFXZaktNfY-tFO7D4TRh5jK_l7y99Y4SAWglfucYBFNoVA8fBm_SiQ0_K4GSZhsmmKh9cJC8eeafHftlMV9nDjqmMZLouSdYpiHoGdf82l40t1tYta4FinZaQqh2IA1clWC626cJMbgcQs4z2JeRTBsbRqj8cLvmNv57A226xHmMOLpxPpU__xN0oW7C2SBn6pYpjP5KxG7XGd8k-D-x4aNHpZihc3Twa3NG_sJzK74JxesUiNuHJWZLHMOvJ4pN2QZg);
+    background-image: url(/assets/images/bg1.webp);
     opacity: 0.04;
     pointer-events: none;
 }
@@ -67,7 +67,7 @@
 }
 
 .texture-overlay {
-    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBXE1Ypx7fe0QnFK4ZbynKz-9MxW_V9x29qTieuMP75j08kI-03HxfWFt0659e60vrhb81vW1uKb4l2GS3GY2jQcB-OsYz3WzGLSK3SudA3Z55674FPOt9nxOx9XvrHXpK-ABvug1LkhXDi4kFqr5xcG2XQhGT4CMEwUhzjwiMqIdx5stYDqptcJCgnlNatjqsd9tDdtpc6VgqwV0iABjb6v9TelIfWRt586XqKs6lE6Vz0lz2DOHPVhtL9EOHgdQXgHCoTF90JAx0);
+    background-image: url(/assets/images/bg2.webp);
     opacity: 0.04;
     pointer-events: none;
 }

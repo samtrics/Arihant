@@ -337,7 +337,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       {/* Logo row */}
       <div style={{ padding: "16px", display: "flex", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.1)", flexShrink: 0 }}>
         <div style={{ width: (!collapsed || mobile) ? "120px" : "40px", height: "40px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", marginLeft: "-8px", flexShrink: 0, transition: "width 0.3s" }}>
-          <img loading="lazy" src="/logo.png" alt="Arihant" style={{ height: "90px", width: "auto", objectFit: "contain", transform: "scale(1.2)", transformOrigin: "center left", marginLeft: "8px" }} />
+          <img loading="lazy" src="/logo-opt.webp" alt="Arihant" style={{ height: "90px", width: "auto", objectFit: "contain", transform: "scale(1.2)", transformOrigin: "center left", marginLeft: "8px" }} />
         </div>
         {(!collapsed || mobile) && (
           <div style={{ overflow: "hidden", marginLeft: "4px" }}>

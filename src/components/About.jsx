@@ -11,7 +11,7 @@ export default function About({ onNavigate }) {
           <img loading="lazy"
             className="w-full h-full object-cover animate-fade-in duration-1000"
             alt="A cinematic, wide-angle landscape shot of lush green wheat fields swaying gently under a golden sunset. The lighting is ethereal and warm, emphasizing the organic and pure origins of Arihant staples."
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwkqp22XvRBrZyQtYr77Xj0qbJmbj5-nxVI1rcd_d16Z6GmCu_dudYeBZLKx-gY4j89O1xaLF2Se6qX4MeOEKWPpMQscbhiT8eCn9I-5d_uWHsIAppweBiTywMut-6bdjooXAcn_ujKWgcZMnaxogpk4bCMxqwG5bvzjD_XSjSh6Silv_nO_qQQ0Iv9AFRt3vRg6J6H5xGkKsYbELkQ0ugFWPtVlDaYemzxjrxy6j2P-Ch-eCQ7Pd4IyCn_dS1Ag-ZrVVSIxpp__4"
+            src="/assets/images/about1.webp"
           />
         </div>
         <div className="relative z-10 px-margin-mobile md:px-margin-desktop w-full text-white">
@@ -105,7 +105,7 @@ export default function About({ onNavigate }) {
             <img loading="lazy"
               className="w-full h-full object-cover"
               alt="Sambhav Jain, visionary founder of Arihant, in a professional suit, set in a modern warmly lit office space reflecting ethical commerce, ancestral heritage, and corporate trust."
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtefbVQ3wZCfEIF026zbZhVfMrKM2fqbCJXx1-jVw8bNk_6mB8szM-NpaXXoG62irz8uWK0RCIGQnsszLZCQhAuu2P-bsoNvOGPpfD8bCRJMHWY-R4L2ci42N-lpnHXRQcbJO1SgTI7cgeRQnPOJslO0b3rdxe0hWAz7bMTxiqu4Lt2l0KBfxYhZInc-ijVr2gY8ExU2cLhHns1oUhiKfSgu7yrj9g0STdnFCPVFX8HBrmIKzPrEYNOXuaPdOFPS7iYO3OMu3nzVo"
+              src="/assets/images/about2.webp"
             />
           </div>
           <div className="w-full lg:w-1/2 p-6 md:p-stack-xl lg:pr-margin-desktop text-white">
@@ -265,7 +265,7 @@ export default function About({ onNavigate }) {
             <img loading="lazy"
               className="w-full h-full object-cover"
               alt="A clean, minimalist aerial view of a modern glass corporate headquarters building reflecting the bright morning sky, embodying professional stability and warm corporate environment."
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNsSIjFwvQoqYS-KI4f-ryVVZ2JqytmR4I1mwhO5y5xbj99t5bPu-P3s26kLyEx_122gPMj3EHkau0V5KTrHrE3T69YKrnZM8nNOCvf0BOR2vNGWDcPyJJxhG4iF5E5hdS7ks4RLi-2B5H1nzr3CmCMIMukwPV7-RRR0mCRwtukPjHbYxQ3-XSu9hp98ygtNNaD40x7R7qola0Y-eHxhh6SJaX_LRjEiOWX8nwlEkJJsupBO4JPSkGYwrhjHllZBe0BGSpMj2wy1g"
+              src="/assets/images/about3.webp"
             />
             {/* Subtle Map Overlay Action */}
             <div className="absolute bottom-6 right-6">
