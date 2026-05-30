@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-const ProductShowcase = React.lazy(() => import("./components/ProductShowcase"));
-const PromiseSection = React.lazy(() => import("./components/Promise"));
-const Heritage = React.lazy(() => import("./components/Heritage"));
-const Testimonials = React.lazy(() => import("./components/Testimonials"));
+import ProductShowcase from "./components/ProductShowcase";
+import PromiseSection from "./components/Promise";
+import Heritage from "./components/Heritage";
+import Testimonials from "./components/Testimonials";
 
 
 
@@ -363,12 +363,10 @@ export default function App() {
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
-            <Suspense fallback={null}>
-              <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
-              <PromiseSection />
-              <Heritage onNavigate={handleNavigate} />
-              <Testimonials />
-            </Suspense>
+            <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
+            <PromiseSection />
+            <Heritage onNavigate={handleNavigate} />
+            <Testimonials />
           </div>
         )}
         {currentPage === "about" && <About onNavigate={handleNavigate} />}
