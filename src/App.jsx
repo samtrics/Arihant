@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import ProductShowcase from "./components/ProductShowcase";
-import PromiseSection from "./components/Promise";
-import Heritage from "./components/Heritage";
-import Testimonials from "./components/Testimonials";
+const ProductShowcase = React.lazy(() => import("./components/ProductShowcase"));
+const PromiseSection = React.lazy(() => import("./components/Promise"));
+const Heritage = React.lazy(() => import("./components/Heritage"));
+const Testimonials = React.lazy(() => import("./components/Testimonials"));
 
 
 
@@ -20,8 +20,6 @@ import Testimonials from "./components/Testimonials";
 
 
 
-
-import { socket } from "./socket";
 import { supabase } from "./supabaseClient";
 
 const About = React.lazy(() => import("./components/About"));
