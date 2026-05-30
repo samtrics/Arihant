@@ -7,7 +7,7 @@ export default function Heritage({ onNavigate }) {
         <div className="relative">
           <div className="absolute -top-10 -left-10 w-40 h-40 bg-secondary-fixed opacity-20 rounded-full blur-2xl"></div>
           <div className="relative rounded-3xl overflow-hidden border-8 border-surface-container shadow-2xl">
-            <img
+            <img loading="lazy"
               className="w-full aspect-[4/5] object-cover"
               alt="Panoramic cinematic shot of a vast golden wheat field in rural India during the golden hour. The sun is setting on the horizon, casting a warm orange glow over the landscape. The photography is professional and evocative, highlighting the natural origins and heritage of Arihant products with a clean, high-end editorial feel."
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuAynP-BAfIiAW7j0nk60QX9YRKOpqmgQgjScojX-paTFXQrBaDsKIsp97MDanHyPiuCmFiZTgpQI-UWoFrxSInRxE7fDZcR6GxYp8L_zyQeA20xFlwrQANX2e-_fQmjJy8rHPXn1KGqmXarU2YMYPghvxoSdp-E61zE4ni_O-reHgMOPn5p7FYXJ2cYAYd-fzarn-0pY-PKuhI7SNbnGd-MXTuV-pPNE7EmTVRUh__78f2WQmevwXVwrdXO9nJKmxqIaOEKmY5N4kg"

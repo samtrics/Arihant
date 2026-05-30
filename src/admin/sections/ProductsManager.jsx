@@ -313,7 +313,7 @@ export default function ProductsManager({ products, setProducts }) {
                     <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Product Image</label>
                     <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
                       {form.imgSrc && (
-                        <img src={form.imgSrc} alt="Preview" style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e5e7eb" }} />
+                        <img loading="lazy" src={form.imgSrc} alt="Preview" style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e5e7eb" }} />
                       )}
                       <div style={{ flex: 1 }}>
                         <input type="text" value={form.imgSrc || ""} onChange={e => setForm({ ...form, imgSrc: e.target.value })} placeholder="Image URL..." style={{ ...inp, marginBottom: "8px" }} />

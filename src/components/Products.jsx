@@ -334,7 +334,7 @@ export default function Products({ products, onNavigate, onProductClick, initial
                   </div>
                 )}
                 <div className="aspect-square bg-surface-container-low overflow-hidden">
-                  <img
+                  <img loading="lazy"
                     alt={product.imgAlt}
                     className="w-full h-full object-cover group-hover:scale-[1.08] transition-transform duration-700"
                     data-alt={product.dataAlt}

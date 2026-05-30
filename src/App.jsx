@@ -1,29 +1,40 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import ProductShowcase from "./components/ProductShowcase";
 import PromiseSection from "./components/Promise";
 import Heritage from "./components/Heritage";
 import Testimonials from "./components/Testimonials";
-import About from "./components/About";
-import Products from "./components/Products";
-import Contact from "./components/Contact";
-import Auth from "./components/Auth";
-import Distributor from "./components/Distributor";
-import AdminLogin from "./admin/AdminLogin";
-import AdminDashboard from "./admin/AdminDashboard";
+
+
+
+
+
+
+
 import Footer from "./components/Footer";
 
 import ProductDetailsModal from "./components/ProductDetailsModal";
-import DistributorLogin from "./components/DistributorLogin";
 
-import ResetPassword from "./components/ResetPassword";
-import DistributorDashboard from "./components/DistributorDashboard";
-import CustomerDashboard from "./components/CustomerDashboard";
+
+
+
+
 import CartDrawer from "./components/CartDrawer";
 import { socket } from "./socket";
 import { supabase } from "./supabaseClient";
 
+const About = React.lazy(() => import("./components/About"));
+const Products = React.lazy(() => import("./components/Products"));
+const Contact = React.lazy(() => import("./components/Contact"));
+const Auth = React.lazy(() => import("./components/Auth"));
+const Distributor = React.lazy(() => import("./components/Distributor"));
+const DistributorLogin = React.lazy(() => import("./components/DistributorLogin"));
+const ResetPassword = React.lazy(() => import("./components/ResetPassword"));
+const DistributorDashboard = React.lazy(() => import("./components/DistributorDashboard"));
+const CustomerDashboard = React.lazy(() => import("./components/CustomerDashboard"));
+const AdminLogin = React.lazy(() => import("./admin/AdminLogin"));
+const AdminDashboard = React.lazy(() => import("./admin/AdminDashboard"));
 export default function App() {
   const checkAuthRedirect = () => {
     if (typeof window === 'undefined') return false;
@@ -344,6 +355,7 @@ export default function App() {
     <>
       {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} customerUser={customerUser} onSearch={(q) => { setGlobalSearchQuery(q); handleNavigate('products'); }} />}
       <main>
+        <Suspense fallback={<div className="flex justify-center items-center min-h-[50vh]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div></div>}>
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
@@ -394,6 +406,8 @@ export default function App() {
             setProducts={handleSetProducts}
           />
         )}
+      
+        </Suspense>
       </main>
       {!isAdminPage && <Footer currentPage={currentPage} onNavigate={handleNavigate} />}
       {selectedProduct && <ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}

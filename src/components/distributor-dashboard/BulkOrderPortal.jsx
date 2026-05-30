@@ -104,7 +104,7 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
                 <tr key={p.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
                   <td style={{ padding: "16px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <img src={p.imgSrc} alt={p.name} style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "8px", border: "1px solid #f3f4f6" }} />
+                      <img loading="lazy" src={p.imgSrc} alt={p.name} style={{ width: "48px", height: "48px", objectFit: "cover", borderRadius: "8px", border: "1px solid #f3f4f6" }} />
                       <div>
                         <p style={{ fontWeight: "600", color: "#111827", fontSize: "14px" }}>{p.name}</p>
                         <span style={{ fontSize: "10px", fontWeight: "600", color: "#1F5132", background: "#ecfdf5", padding: "2px 6px", borderRadius: "4px" }}>{p.category}</span>

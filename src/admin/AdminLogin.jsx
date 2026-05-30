@@ -139,7 +139,7 @@ export default function AdminLogin({ onLogin, onBack }) {
           {/* Logo block */}
           <div style={{ display: "inline-flex", alignItems: "center", padding: "4px 12px 4px 6px", background: "rgba(212,166,74,0.14)", border: "1px solid rgba(212,166,74,0.3)", borderRadius: "12px", marginBottom: "28px" }}>
             <div style={{ width: "110px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
-              <img src="/logo.png" alt="Arihant" style={{ height: "100px", objectFit: "contain" }} />
+              <img loading="lazy" src="/logo.png" alt="Arihant" style={{ height: "100px", objectFit: "contain" }} />
             </div>
             <span style={{ fontSize: "10px", color: "#D4A64A", background: "rgba(212,166,74,0.18)", padding: "2px 8px", borderRadius: "100px", fontWeight: "700", letterSpacing: "1px", marginLeft: "4px" }}>ADMIN</span>
           </div>
@@ -183,7 +183,7 @@ export default function AdminLogin({ onLogin, onBack }) {
           {/* Mobile logo */}
           <div className="lg:hidden" style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "32px" }}>
             <div style={{ width: "110px", height: "44px", display: "flex", alignItems: "center", justifyContent: "flex-start", overflow: "hidden", marginLeft: "-10px" }}>
-              <img src="/logo.png" alt="Arihant" style={{ height: "100px", objectFit: "contain", transform: "scale(1.1)" }} />
+              <img loading="lazy" src="/logo.png" alt="Arihant" style={{ height: "100px", objectFit: "contain", transform: "scale(1.1)" }} />
             </div>
             <span style={{ fontWeight: "700", fontSize: "17px", color: "#1F5132", fontFamily: "'Poppins',sans-serif" }}>ADMIN</span>
           </div>

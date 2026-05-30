@@ -628,7 +628,7 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
             <p className="text-sm text-gray-500 mb-6">Order #{paymentModalOrder.order_number || paymentModalOrder.id}</p>
             
             <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 inline-block mb-4 shadow-inner">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${paymentModalOrder.amount}&cu=INR`)}`} alt="UPI QR Code" className="w-48 h-48" />
+              <img loading="lazy" src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${paymentModalOrder.amount}&cu=INR`)}`} alt="UPI QR Code" className="w-48 h-48" />
             </div>
             <p className="text-2xl font-bold text-[#1F5132] mb-1">₹{Number(paymentModalOrder.amount || 0).toLocaleString('en-IN')}</p>
             <p className="text-xs text-gray-500 mb-6 uppercase tracking-wider font-semibold">Scan to Pay via any UPI app</p>

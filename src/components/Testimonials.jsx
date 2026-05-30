@@ -37,7 +37,7 @@ export default function Testimonials() {
               <p className="italic text-on-surface mb-8">{t.text}</p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-surface-container rounded-full overflow-hidden border-2 border-primary/20">
-                  <img
+                  <img loading="lazy"
                     className="w-full h-full object-cover"
                     alt={t.imgAlt}
                     src={t.imgSrc}

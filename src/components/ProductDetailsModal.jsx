@@ -31,12 +31,12 @@ export default function ProductDetailsModal({ product, onClose }) {
         onClick={e => e.stopPropagation()}
       >
         {/* Close Button */}
-        <button 
+        <button aria-label="close" 
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high/60 hover:bg-surface-container-highest text-on-surface backdrop-blur-md transition-colors"
         >
-          <span className="material-symbols-outlined">close</span>
-        </button>
+                <span className="material-symbols-outlined">close</span>
+              </button>
 
         {/* Image Section */}
         <div className="w-full md:w-1/2 bg-surface-container-low relative flex-shrink-0">
@@ -48,7 +48,7 @@ export default function ProductDetailsModal({ product, onClose }) {
               </span>
             </div>
           )}
-          <img 
+          <img loading="lazy" 
             src={product.imgSrc} 
             alt={product.imgAlt || product.name} 
             className="w-full h-full object-cover min-h-[300px] md:min-h-full"

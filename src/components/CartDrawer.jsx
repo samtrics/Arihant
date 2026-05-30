@@ -189,7 +189,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 {cartItems.map((item) => (
                   <div key={item.id} className="flex gap-4 border-b border-outline-variant pb-6 last:border-0 last:pb-0">
                     <div className="w-20 h-20 bg-surface-container-low rounded-lg overflow-hidden border border-outline-variant/50 flex-shrink-0">
-                      <img src={item.imgSrc} alt={item.name} className="w-full h-full object-cover" />
+                      <img loading="lazy" src={item.imgSrc} alt={item.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
@@ -352,7 +352,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                     <div className="mt-2 p-4 bg-white border border-outline-variant rounded-xl flex flex-col items-center text-center animate-fade-in shadow-inner">
                       <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Scan to Pay ₹{cartTotal.toFixed(2)}</p>
                       <div className="p-2 bg-white rounded-lg shadow-sm border border-gray-100 mb-3">
-                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${cartTotal}&cu=INR`)}`} alt="UPI QR Code" className="w-32 h-32" />
+                        <img loading="lazy" src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${cartTotal}&cu=INR`)}`} alt="UPI QR Code" className="w-32 h-32" />
                       </div>
                       <p className="text-xs text-gray-500 mb-3">Pay using any UPI app (GPay, PhonePe, Paytm)</p>
                       <input 

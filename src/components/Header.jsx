@@ -31,7 +31,7 @@ export default function Header({ currentPage, onNavigate, customerUser, onSearch
             className="cursor-pointer block"
             href="#"
           >
-            <img src="/logo.png" alt="Arihant Logo" className="h-[84px] w-auto object-contain scale-[1.7] origin-left -ml-2" />
+            <img loading="lazy" src="/logo.png" alt="Arihant Logo" className="h-[84px] w-auto object-contain scale-[1.7] origin-left -ml-2" />
           </a>
         </div>
 
@@ -75,11 +75,11 @@ export default function Header({ currentPage, onNavigate, customerUser, onSearch
             />
           </div>
           <div className="flex items-center gap-4">
-            <button className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95">
-              <span className="material-symbols-outlined text-primary" data-icon="notifications">
+            <button aria-label="notifications" className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95">
+                <span className="material-symbols-outlined">
                 notifications
               </span>
-            </button>
+              </button>
             <button 
               onClick={() => setIsCartOpen(true)}
               className="hover:bg-surface-container-low p-2 rounded-full transition-all active:scale-95 relative"
