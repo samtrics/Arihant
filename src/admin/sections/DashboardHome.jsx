@@ -10,7 +10,7 @@ const GOLD = "#D4A64A";
 
 // (Removed AnimCounter component)
 
-const card = { background: "white", borderRadius: "16px", padding: "20px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
+const card = { background: "white", borderRadius: "16px", padding: "20px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)", minWidth: 0 };
 
 const customTooltipRevenue = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
