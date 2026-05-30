@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /?page=admin
+Disallow: /?page=admin-dashboard
+Disallow: /?page=distributor-dashboard
+
+Sitemap: https://arihant.site/sitemap.xml
