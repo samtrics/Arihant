@@ -22,6 +22,9 @@ const Testimonials = React.lazy(() => import("./components/Testimonials"));
 
 import { supabase } from "./supabaseClient";
 
+// KICK OFF CRITICAL FETCH IMMEDIATELY TO BREAK NETWORK CHAIN
+const initialProductsPromise = supabase.from('products').select('*').order('id');
+
 const About = React.lazy(() => import("./components/About"));
 const Products = React.lazy(() => import("./components/Products"));
 const Contact = React.lazy(() => import("./components/Contact"));
@@ -43,6 +46,12 @@ export default function App() {
     const search = window.location.search || '';
     return hash.includes('access_token=') || hash.includes('type=signup') || hash.includes('type=recovery') || search.includes('error_code=');
   };
+
+  const [shouldRenderDeferred, setShouldRenderDeferred] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setShouldRenderDeferred(true), 150);
+    return () => clearTimeout(timer);
+  }, []);
 
   const [currentPage, setCurrentPage] = useState(() => {
     if (checkAuthRedirect()) return 'customer-dashboard';
@@ -210,8 +219,8 @@ export default function App() {
 
   // Load products from Supabase and subscribe to realtime changes
   useEffect(() => {
-    // Initial fetch
-    supabase.from('products').select('*').order('id').then(({ data, error }) => {
+    // Initial fetch from the global promise to save 1000+ ms in the network chain
+    initialProductsPromise.then(({ data, error }) => {
       if (!error && data && data.length > 0) {
         setProducts(data.map(p => ({
           ...p,
@@ -360,12 +369,14 @@ export default function App() {
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
-            <Suspense fallback={<div className="min-h-[100vh]"></div>}>
-              <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
-              <PromiseSection />
-              <Heritage onNavigate={handleNavigate} />
-              <Testimonials />
-            </Suspense>
+            {shouldRenderDeferred && (
+              <Suspense fallback={<div className="min-h-[100vh]"></div>}>
+                <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
+                <PromiseSection />
+                <Heritage onNavigate={handleNavigate} />
+                <Testimonials />
+              </Suspense>
+            )}
           </div>
         )}
         {currentPage === "about" && <About onNavigate={handleNavigate} />}
@@ -412,9 +423,9 @@ export default function App() {
       
         </Suspense>
       </main>
-      {!isAdminPage && <Suspense fallback={null}><Footer currentPage={currentPage} onNavigate={handleNavigate} /></Suspense>}
+      {!isAdminPage && shouldRenderDeferred && <Suspense fallback={null}><Footer currentPage={currentPage} onNavigate={handleNavigate} /></Suspense>}
       {selectedProduct && <Suspense fallback={null}><ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} /></Suspense>}
-      <Suspense fallback={null}><CartDrawer customerUser={customerUser} onNavigate={handleNavigate} /></Suspense>
+      {shouldRenderDeferred && <Suspense fallback={null}><CartDrawer customerUser={customerUser} onNavigate={handleNavigate} /></Suspense>}
     </>
   );
 }
