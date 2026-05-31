@@ -1,6 +1,28 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 export default function About({ onNavigate }) {
+  useEffect(() => {
+    // Re-initialize IntersectionObserver for About.jsx specifically since it's lazy-loaded
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.05, rootMargin: "0px 0px -30px 0px" }
+    );
+
+    const elements = document.querySelectorAll(".scroll-reveal");
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el));
+    };
+  }, []);
+
   return (
     <div className="relative w-full overflow-hidden page-transition">
       <div className="grain-overlay"></div>
