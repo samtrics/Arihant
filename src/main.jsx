@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { CartProvider } from './context/CartContext.jsx'
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import CryptoJS from 'crypto-js'
 
 const SECRET_KEY = "arihant_secure_key_2026";
@@ -49,6 +50,7 @@ createRoot(document.getElementById('root')).render(
     <CartProvider>
       <App />
       <Analytics />
+      <SpeedInsights />
     </CartProvider>
   </StrictMode>,
 )
