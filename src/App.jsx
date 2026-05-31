@@ -5,6 +5,7 @@ import ProductShowcase from "./components/ProductShowcase";
 import PromiseSection from "./components/Promise";
 import Heritage from "./components/Heritage";
 import Testimonials from "./components/Testimonials";
+import About from "./components/About";
 
 
 
@@ -25,7 +26,6 @@ import { supabase } from "./supabaseClient";
 // KICK OFF CRITICAL FETCH IMMEDIATELY TO BREAK NETWORK CHAIN
 const initialProductsPromise = supabase.from('products').select('*').order('id');
 
-const About = React.lazy(() => import("./components/About"));
 const Products = React.lazy(() => import("./components/Products"));
 const Contact = React.lazy(() => import("./components/Contact"));
 const Auth = React.lazy(() => import("./components/Auth"));
