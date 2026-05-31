@@ -59,13 +59,15 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
     // Password Validation (both modes)
     if (!formData.password) {
       tempErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      tempErrors.password = "Password must be at least 8 characters";
-    } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
-      tempErrors.password = "Must contain at least one letter and one number";
     }
 
     if (mode === "signup") {
+      if (formData.password.length < 8) {
+        tempErrors.password = "Password must be at least 8 characters";
+      } else if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(formData.password)) {
+        tempErrors.password = "Must contain at least one letter and one number";
+      }
+
       // Full Name Validation
       if (!formData.name.trim()) {
         tempErrors.name = "Full Name is required";

@@ -178,6 +178,9 @@ export default function App() {
         const isAdminFlow = !!localStorage.getItem('adminSession') || page === 'admin' || page === 'admin-dashboard' || page === 'distributor-login' || page === 'distributor-dashboard';
         if (!isAdminFlow && page !== 'reset-password') {
           setPage('customer-dashboard');
+          const url = new URL(window.location);
+          url.searchParams.set('page', 'customer-dashboard');
+          window.history.replaceState({ page: 'customer-dashboard' }, '', url);
         }
       }
 
