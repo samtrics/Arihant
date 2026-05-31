@@ -36,7 +36,7 @@ import pptxgen from "pptxgenjs";
 export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [] }) {
   const [dateRange, setDateRange] = useState("this_month");
   const [revDateRange, setRevDateRange] = useState("12");
-  
+
   const allOrders = [...orders, ...b2bOrders].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
   const recentOrders = allOrders.slice(0, 6);
 
@@ -45,7 +45,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
     if (dateRange === "all") return true;
     const d = new Date(o.created_at || o.date || Date.now());
     if (isNaN(d.getTime())) return true;
-    
+
     if (dateRange === "this_month") {
       return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     } else if (dateRange === "last_month") {
@@ -70,21 +70,21 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
 
   const handleExport = () => {
     if (filteredOrders.length === 0) return alert("No data to export for this range.");
-    
+
     const pres = new pptxgen();
-    
+
     // Slide 1: Title
     let slide = pres.addSlide();
     slide.background = { color: "1F5132" };
     slide.addText("Arihant Admin Dashboard", { x: 1, y: 1.5, w: "80%", h: 1, fontSize: 36, color: "FFFFFF", bold: true, align: "center" });
     slide.addText(`Performance & Revenue Report`, { x: 1, y: 2.5, w: "80%", h: 0.5, fontSize: 24, color: "D4A64A", align: "center" });
     slide.addText(`Date Range: ${dateRange.replace(/_/g, ' ').toUpperCase()}`, { x: 1, y: 3.2, w: "80%", h: 0.5, fontSize: 16, color: "FFFFFF", align: "center" });
-    
+
     // Slide 2: Summary Metrics
     slide = pres.addSlide();
     slide.background = { color: "F9FAFB" };
     slide.addText("Executive Summary", { x: 0.5, y: 0.5, w: "90%", h: 0.5, fontSize: 24, color: "1C1C1C", bold: true });
-    
+
     const kpiData = [
       [
         { text: "Total Revenue", options: { bold: true, fontSize: 18, color: "1F5132" } },
@@ -96,12 +96,12 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
       ],
       [
         { text: "Avg Order Value", options: { bold: true, fontSize: 18, color: "D4A64A" } },
-        { text: `Rs. ${(totalOrders > 0 ? Math.round(totalRevenue/totalOrders) : 0).toLocaleString("en-IN")}`, options: { bold: true, fontSize: 28, color: "1C1C1C" } }
+        { text: `Rs. ${(totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0).toLocaleString("en-IN")}`, options: { bold: true, fontSize: 28, color: "1C1C1C" } }
       ]
     ];
-    
+
     slide.addTable(kpiData, { x: 0.5, y: 1.5, w: "90%", rowH: 1.2, fill: "FFFFFF", border: { pt: 1, color: "E5E7EB" }, align: "center", valign: "middle" });
-    
+
     // Slide 3: Order Details (Auto-paginating Table)
     const headers = [
       { text: "Order ID", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
@@ -111,7 +111,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
       { text: "Status", options: { bold: true, color: "FFFFFF", fill: "1F5132" } },
       { text: "Payment", options: { bold: true, color: "FFFFFF", fill: "1F5132" } }
     ];
-    
+
     const rows = filteredOrders.map(o => [
       o.id || o.order_number || "N/A",
       o.date || (o.created_at ? o.created_at.split('T')[0] : "N/A"),
@@ -120,15 +120,15 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
       (o.status || "pending").toUpperCase(),
       (o.payment || o.payment_status || "pending").toUpperCase()
     ]);
-    
+
     const tableData = [headers, ...rows];
-    
+
     slide = pres.addSlide();
     slide.background = { color: "FFFFFF" };
     slide.addText("Order Details Breakdown", { x: 0.5, y: 0.3, w: "90%", h: 0.5, fontSize: 20, color: "1C1C1C", bold: true });
-    
-    slide.addTable(tableData, { 
-      x: 0.5, y: 1.0, w: 9.0, 
+
+    slide.addTable(tableData, {
+      x: 0.5, y: 1.0, w: 9.0,
       colW: [1.5, 1.2, 2.5, 1.3, 1.2, 1.3],
       border: { pt: 1, color: "E5E7EB" },
       fill: "FFFFFF",
@@ -137,13 +137,13 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
       autoPage: true,
       autoPageSlideStartY: 1.0
     });
-    
+
     pres.writeFile({ fileName: `Arihant_Report_${dateRange}.pptx` });
   };
   // All unique customers who have placed an order
   const activeCustomers = new Set(allOrders.map(o => o.customer).filter(Boolean)).size;
   const totalDistributors = distributors.filter(d => d.status === "approved").length;
-  
+
   // Calculate this month's sales
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
@@ -156,7 +156,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   const dynamicRevenueData = [];
   const dObj = new Date();
   dObj.setDate(1);
-  for(let i=11; i>=0; i--) {
+  for (let i = 11; i >= 0; i--) {
     const mDate = new Date(dObj);
     mDate.setMonth(dObj.getMonth() - i);
     const mStr = mDate.toLocaleString('default', { month: 'short' }) + " '" + mDate.getFullYear().toString().slice(2);
@@ -164,10 +164,10 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   }
 
   allOrders.forEach(o => {
-    if(o.status === "cancelled") return;
+    if (o.status === "cancelled") return;
     const od = new Date(o.created_at || o.date || Date.now());
     const match = dynamicRevenueData.find(m => m.monthNum === od.getMonth() && m.yearNum === od.getFullYear());
-    if(match) {
+    if (match) {
       match.revenue += (Number(o.amount) || 0);
       match.orders += 1;
     }
@@ -176,7 +176,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
   // Generate dynamic Product Sales Data (Top 5)
   const productMap = {};
   allOrders.forEach(o => {
-    if(o.status === "cancelled") return;
+    if (o.status === "cancelled") return;
     if (Array.isArray(o.products)) {
       o.products.forEach(p => {
         const name = typeof p === "string" ? p : p.name;
@@ -194,15 +194,15 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
             productMap[name] = (productMap[name] || 0) + qty;
           });
         }
-      } catch (e) {}
+      } catch (e) { }
     }
   });
   const topColors = ["#1F5132", "#D4A64A", "#2d6b45", "#c49030", "#417a58"];
-  const sortedProducts = Object.entries(productMap).sort((a,b)=>b[1]-a[1]).slice(0, 5);
+  const sortedProducts = Object.entries(productMap).sort((a, b) => b[1] - a[1]).slice(0, 5);
   const totalPCount = sortedProducts.reduce((acc, curr) => acc + curr[1], 0);
   const dynamicProductSalesData = sortedProducts.map((p, i) => ({
     name: p[0],
-    value: totalPCount > 0 ? Math.round((p[1]/totalPCount)*100) : 0,
+    value: totalPCount > 0 ? Math.round((p[1] / totalPCount) * 100) : 0,
     color: topColors[i % topColors.length]
   }));
 
