@@ -131,12 +131,21 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
         }
       }
 
+      // Clear any conflicting admin or distributor sessions since they are logging in as a customer
+      localStorage.removeItem('adminSession');
+      localStorage.removeItem('distributorSession');
+
       setIsSubmitted(true);
       setSuccessMessage(
         mode === "signin" 
           ? `Welcome back! Taking you to your dashboard...`
           : `Account created! Welcome to Arihant. Please verify your email if required.`
       );
+
+      // Explicitly navigate to the dashboard after a short delay
+      setTimeout(() => {
+        onNavigate("customer-dashboard");
+      }, 1500);
 
     } catch (err) {
       let msg = err.message || "An unexpected error occurred.";
