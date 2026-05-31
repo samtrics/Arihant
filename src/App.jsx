@@ -191,7 +191,7 @@ export default function App() {
     });
 
     // 10 minute auto-logout interval for Admin
-    const interval = setInterval(() => {
+    const checkSessionInterval = setInterval(() => {
       const saved = localStorage.getItem('adminSession');
       if (saved) {
         try {
@@ -199,15 +199,42 @@ export default function App() {
           if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
             setAdminUserAndPersist(null);
             setPage('home');
-            alert("Admin session expired. Please log in again.");
+            alert("Session expired due to inactivity. Please log in again.");
           }
         } catch (e) {}
       }
     }, 60000); // check every minute
 
+    // Throttle function for activity tracking
+    let lastActivityTime = Date.now();
+    const handleActivity = () => {
+      const now = Date.now();
+      // Only update local storage at most once every minute to prevent thrashing
+      if (now - lastActivityTime > 60000) {
+        const saved = localStorage.getItem('adminSession');
+        if (saved) {
+          try {
+            const sessionData = JSON.parse(saved);
+            if (sessionData.expiresAt && now <= sessionData.expiresAt) {
+              sessionData.expiresAt = now + 10 * 60 * 1000; // Extend by 10 mins
+              localStorage.setItem('adminSession', JSON.stringify(sessionData));
+              lastActivityTime = now;
+            }
+          } catch(e) {}
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', handleActivity, { passive: true });
+    window.addEventListener('keydown', handleActivity, { passive: true });
+    window.addEventListener('scroll', handleActivity, { passive: true });
+
     return () => {
       subscription.unsubscribe();
-      clearInterval(interval);
+      clearInterval(checkSessionInterval);
+      window.removeEventListener('mousemove', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
     };
   }, []);
 
