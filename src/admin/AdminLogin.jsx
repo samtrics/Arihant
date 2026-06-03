@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../supabaseClient";
 
-const DEMO_EMAIL = "admin@arihant.in";
-const DEMO_PASSWORD = "Admin@1234";
+const DEMO_EMAIL = "";
+const DEMO_PASSWORD = "";
 
 export default function AdminLogin({ onLogin, onBack }) {
   const [email, setEmail] = useState("");
@@ -258,7 +258,7 @@ export default function AdminLogin({ onLogin, onBack }) {
                     <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>Admin Email</label>
                     <div style={{ position: "relative" }}>
                       <span className="material-symbols-outlined" style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "#9ca3af", fontSize: "19px" }}>mail</span>
-                      <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} placeholder="admin@arihant.in" style={inp}
+                      <input type="email" value={email} onChange={e => { setEmail(e.target.value); setError(""); }} placeholder="Enter Your Admin ID" style={inp}
                         onFocus={e => e.target.style.borderColor = "#1F5132"} onBlur={e => e.target.style.borderColor = "#e5e7eb"} />
                     </div>
                   </div>
