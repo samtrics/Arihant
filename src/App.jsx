@@ -243,16 +243,32 @@ export default function App() {
 
   // Load products from Supabase and subscribe to realtime changes
   useEffect(() => {
+    const mapProduct = (p) => {
+      let images = [];
+      try {
+        images = JSON.parse(p.img_src);
+        if (!Array.isArray(images)) images = [p.img_src];
+      } catch(e) {
+        if (p.img_src && p.img_src.includes(',')) {
+           images = p.img_src.split(',').map(s=>s.trim());
+        } else {
+           images = [p.img_src].filter(Boolean);
+        }
+      }
+      return {
+        ...p,
+        offerPrice: p.offer_price,
+        imgSrc: images[0] || p.img_src,
+        images: images,
+        desc: p.description,
+        tags: p.tags || [],
+      };
+    };
+
     // Initial fetch from the global promise to save 1000+ ms in the network chain
     initialProductsPromise.then(({ data, error }) => {
       if (!error && data && data.length > 0) {
-        setProducts(data.map(p => ({
-          ...p,
-          offerPrice: p.offer_price,
-          imgSrc: p.img_src,
-          desc: p.description,
-          tags: p.tags || [],
-        })));
+        setProducts(data.map(mapProduct));
       }
     });
 
@@ -262,13 +278,7 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
         supabase.from('products').select('*').order('id').then(({ data }) => {
           if (data && data.length > 0) {
-            setProducts(data.map(p => ({
-              ...p,
-              offerPrice: p.offer_price,
-              imgSrc: p.img_src,
-              desc: p.description,
-              tags: p.tags || [],
-            })));
+            setProducts(data.map(mapProduct));
           }
         });
       })

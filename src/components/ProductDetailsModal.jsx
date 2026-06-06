@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ProductDetailsModal({ product, onClose }) {
   // Close on escape key
@@ -21,8 +22,22 @@ export default function ProductDetailsModal({ product, onClose }) {
 
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
 
   const currentPrice = product.offerPrice ? product.offerPrice : product.price;
+  const images = product.images && product.images.length > 0 ? product.images : (product.imgSrc ? [product.imgSrc] : []);
+
+  // Auto slideshow effect like Amazon
+  useEffect(() => {
+    if (images.length <= 1 || isHovering) return;
+    
+    const intervalId = setInterval(() => {
+      setActiveImageIndex((prev) => (prev + 1) % images.length);
+    }, 4000); // Change image every 4 seconds
+    
+    return () => clearInterval(intervalId);
+  }, [images.length, isHovering]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
@@ -35,24 +50,52 @@ export default function ProductDetailsModal({ product, onClose }) {
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-surface-container-high/60 hover:bg-surface-container-highest text-on-surface backdrop-blur-md transition-colors"
         >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+          <span className="material-symbols-outlined">close</span>
+        </button>
 
         {/* Image Section */}
-        <div className="w-full md:w-1/2 bg-surface-container-low relative flex-shrink-0">
-          <div className="texture-overlay absolute inset-0 opacity-20"></div>
-          {product.brandTag && (
-            <div className="absolute top-6 left-6 z-10">
-              <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-label-sm font-bold shadow-sm">
-                {product.brandTag}
-              </span>
+        <div 
+          className="w-full md:w-1/2 bg-surface-container-low relative flex-shrink-0 flex flex-col"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          <div className="flex-1 relative overflow-hidden flex items-center justify-center">
+            <div className="texture-overlay absolute inset-0 opacity-20 pointer-events-none z-10"></div>
+            {product.brandTag && (
+              <div className="absolute top-6 left-6 z-20">
+                <span className="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-label-sm font-bold shadow-sm">
+                  {product.brandTag}
+                </span>
+              </div>
+            )}
+            
+            <AnimatePresence mode="wait">
+              <motion.img 
+                key={activeImageIndex}
+                loading="lazy" 
+                src={images[activeImageIndex] || product.imgSrc} 
+                alt={product.imgAlt || product.name} 
+                className="absolute inset-0 w-full h-full object-cover min-h-[300px] md:min-h-full"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 1.04 }}
+                transition={{ duration: 0.3 }}
+              />
+            </AnimatePresence>
+          </div>
+          {images.length > 1 && (
+            <div className="flex gap-2 p-4 overflow-x-auto bg-surface-container-lowest border-t border-outline-variant/30 scrollbar-none relative z-20">
+              {images.map((img, idx) => (
+                <button 
+                  key={idx} 
+                  onClick={() => setActiveImageIndex(idx)}
+                  className={`relative flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${activeImageIndex === idx ? 'border-primary scale-105 shadow-md' : 'border-transparent opacity-60 hover:opacity-100 hover:scale-100'}`}
+                >
+                  <img src={img} alt={`Thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
+                </button>
+              ))}
             </div>
           )}
-          <img loading="lazy" 
-            src={product.imgSrc} 
-            alt={product.imgAlt || product.name} 
-            className="w-full h-full object-cover min-h-[300px] md:min-h-full"
-          />
         </div>
 
         {/* Details Section */}

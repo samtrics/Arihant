@@ -8,7 +8,7 @@ const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
 const CATS = ["All", "Flours (Atta)", "Grains & Pulses", "Spices (Masala)", "Roasted Daliya", "Rice Varieties", "Cooking Oils", "Ready to Cook", "Organic Staples"];
 
-const emptyForm = { name: "", sku: "", category: "Flours (Atta)", price: "", offerPrice: "", wholesalePrice: "", stock: "", weightValue: "", weightUnit: "kg", desc: "", tags: "", status: "active", imgSrc: "" };
+const emptyForm = { name: "", sku: "", category: "Flours (Atta)", price: "", offerPrice: "", wholesalePrice: "", stock: "", weightValue: "", weightUnit: "kg", desc: "", tags: "", status: "active", imgSrc: "", images: [] };
 
 export default function ProductsManager({ products, setProducts }) {
   const [search, setSearch] = useState("");
@@ -36,7 +36,7 @@ export default function ProductsManager({ products, setProducts }) {
     const match = p.weight ? String(p.weight).match(/^([\d.]+)(.*)$/) : null;
     const wv = match ? match[1] : p.weight || "";
     const wu = match ? match[2].trim() || "kg" : "kg";
-    setForm({ ...p, tags: p.tags.join(", "), offerPrice: p.offerPrice ?? "", wholesalePrice: p.wholesalePrice ?? "", weightValue: wv, weightUnit: wu }); 
+    setForm({ ...p, tags: p.tags.join(", "), offerPrice: p.offerPrice ?? "", wholesalePrice: p.wholesalePrice ?? "", weightValue: wv, weightUnit: wu, images: p.images || [] }); 
     setEditId(p.id); 
     setModal("edit"); 
   };
@@ -45,28 +45,51 @@ export default function ProductsManager({ products, setProducts }) {
   const handleImageUpload = async (e) => {
     try {
       if (!e.target.files || e.target.files.length === 0) return;
-      const file = e.target.files[0];
+      const files = Array.from(e.target.files);
       setUploading(true);
       
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+      const newImages = [];
+      for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('products')
-        .upload(fileName, file);
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('products')
-        .getPublicUrl(fileName);
-        
-      setForm({ ...form, imgSrc: data.publicUrl });
+        const { data } = supabase.storage
+          .from('products')
+          .getPublicUrl(fileName);
+          
+        newImages.push(data.publicUrl);
+      }
+      
+      setForm(prev => {
+        const updatedImages = [...(prev.images || []), ...newImages];
+        return { 
+          ...prev, 
+          images: updatedImages,
+          imgSrc: updatedImages[0] || prev.imgSrc
+        };
+      });
     } catch (error) {
       alert('Error uploading image: ' + error.message);
     } finally {
       setUploading(false);
     }
+  };
+
+  const removeImage = (indexToRemove) => {
+    setForm(prev => {
+      const newImages = prev.images.filter((_, i) => i !== indexToRemove);
+      return {
+        ...prev,
+        images: newImages,
+        imgSrc: newImages[0] || ""
+      };
+    });
   };
 
   const handleSave = async () => {
@@ -77,6 +100,10 @@ export default function ProductsManager({ products, setProducts }) {
     setIsSaving(true);
     try {
       const newWeight = form.weightValue ? `${form.weightValue}${form.weightUnit}` : "";
+      
+      // If no images array but imgSrc exists, use imgSrc
+      let finalImages = form.images && form.images.length > 0 ? form.images : (form.imgSrc ? [form.imgSrc] : []);
+
       const payload = {
         name: form.name,
         sku: form.sku,
@@ -91,7 +118,7 @@ export default function ProductsManager({ products, setProducts }) {
         emoji: form.emoji || "🌾",
         description: form.desc || form.description || "",
         tag: form.tag || "NEW",
-        img_src: form.imgSrc || form.img_src || "",
+        img_src: JSON.stringify(finalImages),
         bestseller: form.bestseller || false,
         featured: form.featured || false,
         organic: form.organic || false,
@@ -114,7 +141,8 @@ export default function ProductsManager({ products, setProducts }) {
           id: newId,
           offerPrice: payload.offer_price,
           wholesalePrice: payload.wholesale_price,
-          imgSrc: payload.img_src,
+          imgSrc: finalImages[0] || "",
+          images: finalImages,
           desc: payload.description,
         }, ...prev]);
       } else {
@@ -132,7 +160,8 @@ export default function ProductsManager({ products, setProducts }) {
           ...payload,
           offerPrice: payload.offer_price,
           wholesalePrice: payload.wholesale_price,
-          imgSrc: payload.img_src,
+          imgSrc: finalImages[0] || "",
+          images: finalImages,
           desc: payload.description,
         } : p));
       }
@@ -310,19 +339,23 @@ export default function ProductsManager({ products, setProducts }) {
                     </div>
                   </div>
                   <div style={{ gridColumn: "1/-1" }}>
-                    <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Product Image</label>
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      {form.imgSrc && (
-                        <img loading="lazy" src={form.imgSrc} alt="Preview" style={{ width: "40px", height: "40px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e5e7eb" }} />
-                      )}
-                      <div style={{ flex: 1 }}>
-                        <input type="text" value={form.imgSrc || ""} onChange={e => setForm({ ...form, imgSrc: e.target.value })} placeholder="Image URL..." style={{ ...inp, marginBottom: "8px" }} />
-                        <div style={{ position: "relative", overflow: "hidden", display: "inline-block" }}>
-                          <button style={{ padding: "6px 12px", borderRadius: "6px", background: "#f3f4f6", border: "1px solid #e5e7eb", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
-                            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>upload</span>
-                            {uploading ? "Uploading..." : "Upload from Computer"}
+                    <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Product Images</label>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                        {(form.images && form.images.length > 0 ? form.images : (form.imgSrc ? [form.imgSrc] : [])).map((img, idx) => (
+                          <div key={idx} style={{ position: "relative" }}>
+                            <img loading="lazy" src={img} alt={`Preview ${idx + 1}`} style={{ width: "60px", height: "60px", objectFit: "cover", borderRadius: "8px", border: "1px solid #e5e7eb" }} />
+                            <button onClick={() => removeImage(idx)} style={{ position: "absolute", top: "-6px", right: "-6px", background: "#ef4444", color: "white", border: "none", borderRadius: "50%", width: "20px", height: "20px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "14px" }}>&times;</button>
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "inline-block" }}>
+                          <button style={{ padding: "8px 16px", borderRadius: "8px", background: "#f3f4f6", border: "1px solid #e5e7eb", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", width: "100%", justifyContent: "center" }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>upload</span>
+                            {uploading ? "Uploading..." : "Upload Images"}
                           </button>
-                          <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ position: "absolute", top: 0, left: 0, opacity: 0, cursor: "pointer", height: "100%", width: "100%" }} />
+                          <input type="file" multiple accept="image/*" onChange={handleImageUpload} disabled={uploading} style={{ position: "absolute", top: 0, left: 0, opacity: 0, cursor: "pointer", height: "100%", width: "100%" }} />
                         </div>
                       </div>
                     </div>
