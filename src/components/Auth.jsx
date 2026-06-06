@@ -99,8 +99,22 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
     
     try {
       if (mode === "signup") {
+        // Step 1: Pre-check if email exists using our backend proxy (bypasses enumeration protection safely)
+        const checkEmail = formData.email.trim().toLowerCase();
+        const { data: emailExists, error: rpcError } = await supabase.rpc('check_email_exists', { 
+          lookup_email: checkEmail 
+        });
+
+        if (rpcError) {
+          console.error("Email check failed:", rpcError);
+          // If the RPC fails (e.g., they haven't run the SQL script yet), we'll fall back to the normal flow
+        } else if (emailExists) {
+          throw new Error("already registered");
+        }
+
+        // Step 2: Proceed with standard signup
         const { data, error } = await supabase.auth.signUp({
-          email: formData.email.trim().toLowerCase(),
+          email: checkEmail,
           password: formData.password,
           options: {
             data: {
