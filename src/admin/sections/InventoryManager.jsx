@@ -126,8 +126,8 @@ export default function InventoryManager({ products = [], setProducts }) {
         name: p.name,
         sku: p.sku || p.id,
         category: p.category || "General",
-        stock: p.stock ?? 0,
-        minStock: p.min_stock ?? 20,
+        stock: Number(p.stock) || 0,
+        minStock: Number(p.min_stock) || 20,
         price: Number(p.wholesale_price || p.wholesalePrice || p.price || 0),
         value: Number(p.wholesale_price || p.wholesalePrice || p.price || 0) * (Number(p.stock) || 0),
         updatedAt: p.updated_at
