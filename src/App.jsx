@@ -23,6 +23,7 @@ import About from "./components/About";
 
 import { supabase } from "./supabaseClient";
 import SEO from "./components/SEO";
+import { Capacitor } from '@capacitor/core';
 
 // KICK OFF CRITICAL FETCH IMMEDIATELY TO BREAK NETWORK CHAIN
 const initialProductsPromise = supabase.from('products').select('*').order('id');
@@ -58,14 +59,14 @@ export default function App() {
         const sessionData = JSON.parse(saved);
         if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
           localStorage.removeItem('adminSession');
-          return 'home';
+          return Capacitor.isNativePlatform() ? 'admin' : 'home';
         }
         return 'admin-dashboard';
       } catch (e) {
         return 'admin-dashboard';
       }
     }
-    return 'home';
+    return Capacitor.isNativePlatform() ? 'admin' : 'home';
   });
 
   const [adminUser, setAdminUser] = useState(() => {
@@ -191,7 +192,7 @@ export default function App() {
         // Only redirect to home if not in admin or distributor flows
         const page = currentPageRef.current;
         if (page !== 'admin-dashboard' && page !== 'admin' && page !== 'distributor-dashboard' && page !== 'distributor-login') {
-          setPage('home');
+          setPage(Capacitor.isNativePlatform() ? 'admin' : 'home');
         }
       }
     });
@@ -204,7 +205,7 @@ export default function App() {
           const sessionData = JSON.parse(saved);
           if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
             setAdminUserAndPersist(null);
-            setPage('home');
+            setPage(Capacitor.isNativePlatform() ? 'admin' : 'home');
             alert("Session expired due to inactivity. Please log in again.");
           }
         } catch (e) {}
@@ -379,7 +380,7 @@ export default function App() {
         }
       } else {
         const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get('page') || (localStorage.getItem('adminSession') ? 'admin-dashboard' : 'home');
+        const page = urlParams.get('page') || (localStorage.getItem('adminSession') ? 'admin-dashboard' : (Capacitor.isNativePlatform() ? 'admin' : 'home'));
         setPage(page);
       }
     };
@@ -503,7 +504,7 @@ export default function App() {
         {currentPage === "admin-dashboard" && adminUser && (
           <AdminDashboard
             adminUser={adminUser}
-            onLogout={() => { setAdminUserAndPersist(null); setPage("home"); }}
+            onLogout={() => { setAdminUserAndPersist(null); setPage(Capacitor.isNativePlatform() ? 'admin' : 'home'); }}
             products={products}
             setProducts={handleSetProducts}
             categories={categories}
