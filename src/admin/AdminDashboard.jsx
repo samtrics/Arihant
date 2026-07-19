@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 import DashboardHome from "./sections/DashboardHome";
 import ProductsManager from "./sections/ProductsManager";
@@ -75,6 +77,56 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
   const [distributors, setDistributors] = useState([]);
 
   useEffect(() => {
+    // Request local notification permissions on Android 13+
+    const requestNotifPermissions = async () => {
+      try {
+        const status = await LocalNotifications.checkPermissions();
+        if (status.display !== 'granted') {
+          await LocalNotifications.requestPermissions();
+        }
+        // Create high-importance channel for Android 8+
+        await LocalNotifications.createChannel({
+          id: 'orders',
+          name: 'Orders',
+          description: 'New orders and alerts',
+          importance: 5,
+          visibility: 1
+        });
+
+        // Initialize Firebase Push Notifications
+        const pushStatus = await PushNotifications.checkPermissions();
+        if (pushStatus.receive !== 'granted') {
+          await PushNotifications.requestPermissions();
+        }
+        await PushNotifications.register();
+
+        PushNotifications.addListener('registration', async (token) => {
+          console.log('Push registration success, token: ' + token.value);
+          // Save the device token to Supabase for the current admin user
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from('admin_devices').upsert({
+              user_id: user.id,
+              fcm_token: token.value,
+              updated_at: new Date().toISOString()
+            });
+          }
+        });
+
+        PushNotifications.addListener('registrationError', (error) => {
+          console.error('Error on push registration: ' + JSON.stringify(error));
+        });
+
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Push received: ' + JSON.stringify(notification));
+          // FCM foreground handler
+        });
+      } catch (e) {
+        console.log("Notifications not available (likely running in web)");
+      }
+    };
+    requestNotifPermissions();
+
     // Initial fetch for dashboard stats
     supabase.from('orders').select('*').order('created_at', { ascending: false }).then(({ data }) => {
       if (data) {
@@ -209,6 +261,35 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
   const handleSetCustomers = wrapSet('customers', setCustomers);
   const handleSetDistributors = wrapSet('distributors', setDistributors);
 
+  // App lifecycle: re-fetch on foreground resume
+  useEffect(() => {
+    const setupAppListener = async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        App.addListener('appStateChange', ({ isActive }) => {
+          if (isActive) {
+            // Re-fetch all critical data when app comes back to foreground
+            supabase.from('orders').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+              if (data) {
+                const mapped = data.map(o => ({
+                  ...o, id: o.order_number, customer: o.customer_name, payment: o.payment_status, amountPaid: o.amount_paid || 0, date: o.created_at || o.date,
+                }));
+                setOrders(mapped.filter(o => !(o.order_number && String(o.order_number).startsWith('B2B'))));
+                setB2bOrders(mapped.filter(o => o.order_number && String(o.order_number).startsWith('B2B')));
+              }
+            });
+            supabase.from('distributors').select('*').then(({ data }) => {
+              if (data) setDistributors(data);
+            });
+          }
+        });
+      } catch (e) {
+        // Not in Capacitor environment
+      }
+    };
+    setupAppListener();
+  }, []);
+
   const SIDEBAR_W = collapsed ? 68 : 240;
   const unread = notifications.filter((n) => !n.read).length;
 
@@ -305,8 +386,23 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
         const prevIds = new Set(prevNotifsRef.current.map(n => n.id));
         const newlyAdded = newNotifsState.filter(n => !prevIds.has(n.id) && !n.read);
         if (newlyAdded.length > 0) {
-          setToastNotif(newlyAdded[0]);
+          const firstNotif = newlyAdded[0];
+          setToastNotif(firstNotif);
           setTimeout(() => setToastNotif(null), 6000);
+
+          // Trigger Mobile Push Notification (Local Notification)
+          try {
+            LocalNotifications.schedule({
+              notifications: [
+                {
+                  title: firstNotif.title,
+                  body: firstNotif.message,
+                  id: Math.floor(Math.random() * 100000), // Android requires integer ID
+                  channelId: 'orders'
+                }
+              ]
+            }).catch(err => console.error('Notif error:', err));
+          } catch(e) {}
         }
       }
       prevNotifsRef.current = newNotifsState;
@@ -317,14 +413,30 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
   const markAllRead = () => setNotifications((n) => n.map((x) => ({ ...x, read: true })));
 
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (e.state && e.state.section) {
+        setActiveSection(e.state.section);
+      } else {
+        setActiveSection("dashboard");
+      }
+    };
+    window.history.replaceState({ section: activeSection }, "");
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const navigate = (id) => {
-    setActiveSection(id);
+    if (activeSection !== id) {
+      window.history.pushState({ section: id }, "");
+      setActiveSection(id);
+    }
     setMobileOpen(false);
   };
 
   const renderSection = () => {
     switch (activeSection) {
-      case "dashboard": return <DashboardHome orders={orders} b2bOrders={b2bOrders} customers={customers} distributors={distributors} navigate={navigate} />;
+      case "dashboard": return <DashboardHome products={products} orders={orders} b2bOrders={b2bOrders} customers={customers} distributors={distributors} navigate={navigate} />;
       case "products": return <ProductsManager products={products} setProducts={setProducts} categories={categories} />;
       case "categories": return <CategoriesManager categories={categories} setCategories={setCategories} />;
       case "orders": return <OrdersManager products={products} retailOrders={orders} setRetailOrders={handleSetOrders} b2bOrders={b2bOrders} setB2bOrders={handleSetB2bOrders} distributors={distributors} />;
@@ -474,7 +586,23 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
                 style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, width: "min(340px, calc(100vw - 32px))", background: "white", borderRadius: "16px", boxShadow: "0 20px 60px rgba(0,0,0,0.12)", border: "1px solid #f0ede8", overflow: "hidden", zIndex: 100 }}>
                 <div style={{ padding: "14px 16px", borderBottom: "1px solid #f0ede8", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span style={{ fontWeight: "700", fontSize: "14px", fontFamily: "'Poppins',sans-serif" }}>Notifications {unread > 0 && <span style={{ fontSize: "12px", background: "#fef2f2", color: "#ef4444", padding: "1px 6px", borderRadius: "100px" }}>{unread} new</span>}</span>
-                  {unread > 0 && <button onClick={markAllRead} style={{ fontSize: "12px", color: GREEN, background: "none", border: "none", cursor: "pointer", fontWeight: "600" }}>Mark all read</button>}
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button onClick={async () => {
+                      const { LocalNotifications } = await import('@capacitor/local-notifications');
+                      await LocalNotifications.schedule({
+                        notifications: [
+                          {
+                            title: "Test Alert",
+                            body: "This is a test mobile push notification!",
+                            id: Math.floor(Math.random() * 100000),
+                            channelId: 'orders'
+                          }
+                        ]
+                      });
+                      alert("Test notification triggered!");
+                    }} style={{ fontSize: "11px", color: "white", background: GREEN, padding: "4px 8px", borderRadius: "6px", border: "none", cursor: "pointer", fontWeight: "600" }}>Test</button>
+                    {unread > 0 && <button onClick={markAllRead} style={{ fontSize: "12px", color: GREEN, background: "none", border: "none", cursor: "pointer", fontWeight: "600" }}>Mark all read</button>}
+                  </div>
                 </div>
                 <div style={{ maxHeight: "340px", overflowY: "auto" }}>
                   {notifications.map((n) => {
@@ -629,10 +757,15 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       </div>
 
       <style>{`
+        .hidden { display: none !important; }
         .admin-mobile-hamburger { display: block; }
         .admin-main-content { padding: 12px; }
+        @media (min-width: 640px) {
+          .sm\\:block { display: block !important; }
+        }
         @media (min-width: 768px) {
           .admin-main-content { padding: 20px; }
+          .md\\:block { display: block !important; }
         }
         @media (min-width: 1024px) {
           .lg\\:ml-\\[240px\\] { margin-left: ${SIDEBAR_W}px !important; transition: margin-left 0.3s cubic-bezier(0.4,0,0.2,1); }

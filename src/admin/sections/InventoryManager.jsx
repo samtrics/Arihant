@@ -612,7 +612,7 @@ export default function InventoryManager({ products = [], setProducts }) {
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}
             onClick={(e) => { if (e.target === e.currentTarget) setAdjustModal(null); }}>
             <motion.div initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 16 }}
-              style={{ background: "white", borderRadius: "22px", padding: "30px", maxWidth: "440px", width: "100%" }}>
+              style={{ background: "white", borderRadius: "22px", padding: "30px", maxWidth: "440px", width: "100%", maxHeight: "90vh", overflowY: "auto" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
                 <div>
                   <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "800", fontSize: "19px", color: "#1C1C1C", margin: "0 0 4px" }}>Adjust Stock</h3>

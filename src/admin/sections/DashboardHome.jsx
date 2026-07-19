@@ -33,7 +33,7 @@ const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbe
 
 import pptxgen from "pptxgenjs";
 
-export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [], navigate }) {
+export default function DashboardHome({ products = [], orders = [], b2bOrders = [], customers = [], distributors = [], navigate }) {
   const [dateRange, setDateRange] = useState("this_month");
   const [revDateRange, setRevDateRange] = useState("12");
 
@@ -206,13 +206,15 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
     color: topColors[i % topColors.length]
   }));
 
+  const lowStockCount = products.filter(p => typeof p.stock === 'number' && p.stock < (p.min_stock ?? 20)).length;
+
   const statCards = [
     { label: `Revenue (${dateRange.replace(/_/g, ' ')})`, value: totalRevenue, prefix: "₹", icon: "payments", color: GREEN, bg: "rgba(31,81,50,0.08)", trend: "Live", trendUp: true },
     { label: `Orders (${dateRange.replace(/_/g, ' ')})`, value: totalOrders, prefix: "", suffix: "", icon: "shopping_bag", color: "#3b82f6", bg: "rgba(59,130,246,0.08)", trend: "Live", trendUp: true },
     { label: "Active Customers", value: activeCustomers, prefix: "", suffix: "", icon: "group", color: "#8b5cf6", bg: "rgba(139,92,246,0.08)", trend: "Live", trendUp: true },
     { label: "Total Distributors", value: totalDistributors, prefix: "", suffix: "", icon: "local_shipping", color: GOLD, bg: "rgba(212,166,74,0.1)", trend: "Live", trendUp: true },
     { label: "Monthly Sales", value: monthlySales, prefix: "₹", icon: "bar_chart", color: "#10b981", bg: "rgba(16,185,129,0.08)", trend: "Live", trendUp: true },
-    { label: "Low Stock Items", value: 3, prefix: "", suffix: " items", icon: "warning", color: "#ef4444", bg: "rgba(239,68,68,0.08)", trend: "Action needed", trendUp: false },
+    { label: "Low Stock Items", value: lowStockCount, prefix: "", suffix: " items", icon: "warning", color: "#ef4444", bg: "rgba(239,68,68,0.08)", trend: "Action needed", trendUp: false },
   ];
 
   return (

@@ -344,7 +344,7 @@ export default function WorkersManager({ products = [], setProducts }) {
           <p className="text-sm text-on-surface-variant mb-6">Submitting this form will calculate the worker's pay and instantly add all packets to your inventory stock.</p>
           
           <form onSubmit={handleLogProduction} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 bg-surface-container p-4 rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-surface-container p-4 rounded-lg">
               <div>
                 <label className="block text-sm font-semibold mb-1">Date *</label>
                 <input required type="date" max={todayStr} value={logMeta.production_date} onChange={e => setLogMeta({...logMeta, production_date: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
@@ -387,7 +387,7 @@ export default function WorkersManager({ products = [], setProducts }) {
                     </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-semibold mb-1">Quantity *</label>
                       <input required type="number" min="0" step="any" value={entry.quantity} onChange={e => updateLogEntry(index, 'quantity', e.target.value)} placeholder="e.g. 500" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
@@ -424,9 +424,9 @@ export default function WorkersManager({ products = [], setProducts }) {
           <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
               <h3 className="font-bold text-xl text-primary">Factory Production Overview</h3>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <div className="flex items-center gap-2 text-sm bg-surface-container p-2 rounded-lg border border-outline-variant/50">
-                  <span className="font-semibold text-on-surface-variant mr-1">Quick Month:</span>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
+                <div className="flex flex-wrap items-center gap-2 text-sm bg-surface-container p-2 rounded-lg border border-outline-variant/50 w-full sm:w-auto">
+                  <span className="font-semibold text-on-surface-variant mr-1 whitespace-nowrap">Quick Month:</span>
                   <input 
                     type="month"
                     max={currentMonthStr}
@@ -442,9 +442,9 @@ export default function WorkersManager({ products = [], setProducts }) {
                     className="p-1 border rounded bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/50" 
                   />
                 </div>
-                <span className="text-on-surface-variant font-bold text-xs uppercase">OR</span>
-                <div className="flex items-center gap-2 text-sm bg-surface-container p-2 rounded-lg border border-outline-variant/50">
-                  <span className="font-semibold text-on-surface-variant mr-1">Custom Range:</span>
+                <span className="text-on-surface-variant font-bold text-xs uppercase self-center sm:self-auto">OR</span>
+                <div className="flex flex-wrap items-center gap-2 text-sm bg-surface-container p-2 rounded-lg border border-outline-variant/50 w-full sm:w-auto">
+                  <span className="font-semibold text-on-surface-variant mr-1 whitespace-nowrap">Custom Range:</span>
                   <input type="date" max={todayStr} value={globalDateFilter.start} onChange={e => setGlobalDateFilter({...globalDateFilter, start: e.target.value})} className="p-1 border rounded bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/50" />
                   <span className="text-on-surface-variant font-medium">to</span>
                   <input type="date" max={todayStr} value={globalDateFilter.end} onChange={e => setGlobalDateFilter({...globalDateFilter, end: e.target.value})} className="p-1 border rounded bg-surface-container-lowest focus:outline-none focus:ring-2 focus:ring-primary/50" />
