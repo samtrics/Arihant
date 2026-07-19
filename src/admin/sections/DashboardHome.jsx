@@ -33,7 +33,7 @@ const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbe
 
 import pptxgen from "pptxgenjs";
 
-export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [] }) {
+export default function DashboardHome({ orders = [], b2bOrders = [], customers = [], distributors = [], navigate }) {
   const [dateRange, setDateRange] = useState("this_month");
   const [revDateRange, setRevDateRange] = useState("12");
 
@@ -341,7 +341,7 @@ export default function DashboardHome({ orders = [], b2bOrders = [], customers =
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} style={card}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", margin: 0 }}>Recent Orders</h3>
-            <span style={{ fontSize: "12px", color: GREEN, fontWeight: "600", cursor: "pointer" }}>View all →</span>
+            <span onClick={() => navigate && navigate("orders")} style={{ fontSize: "12px", color: GREEN, fontWeight: "600", cursor: "pointer" }}>View all →</span>
           </div>
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>

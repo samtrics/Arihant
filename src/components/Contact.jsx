@@ -1,7 +1,19 @@
 import React, { useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export default function Contact({ onNavigate }) {
+export default function Contact({ onNavigate, siteSettings }) {
+  const corp = siteSettings?.corporate_info || {};
+  const phone = corp.phone || "1800-456-7890";
+  const email = corp.email || "hq@arihant-fmcg.com";
+  const hqLine1 = corp.addressLine1 || "Arihant Tower, 12th Floor";
+  const hqLine2 = corp.addressLine2 || "Business District, South Mumbai, MH 400001, India";
+  
+  // Get map URL from the first Global Presence location, or default to Jaipur
+  const googleMapSrc = (corp.locations && corp.locations.length > 0 && corp.locations[0].mapUrl) 
+    ? corp.locations[0].mapUrl 
+    : "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d113911.37877239203!2d75.71350615562723!3d26.88514167923769!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x396c4adf4c57e281%3A0xce1c63a0cf22e09!2sJaipur%2C%20Rajasthan!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin";
+  
+  const addressQuery = `${hqLine1}, ${hqLine2}`;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -113,8 +125,18 @@ export default function Contact({ onNavigate }) {
               </div>
               <div>
                 <h4 className="font-headline-md text-[18px] text-primary mb-1">Corporate Headquarters</h4>
-                <p className="font-label-md text-on-surface font-semibold mb-0.5">Arihant Tower, 12th Floor</p>
-                <p className="text-body-md text-on-surface-variant">Business District, South Mumbai, MH 400001, India</p>
+                <a 
+                  href={`https://maps.google.com/?q=${encodeURIComponent(addressQuery)}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="group block"
+                >
+                  <p className="font-label-md text-on-surface font-semibold mb-0.5 group-hover:text-primary transition-colors flex items-center gap-1">
+                    {hqLine1}
+                    <span className="material-symbols-outlined text-[14px] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
+                  </p>
+                  <p className="text-body-md text-on-surface-variant group-hover:text-primary/80 transition-colors">{hqLine2}</p>
+                </a>
               </div>
             </div>
 
@@ -125,7 +147,9 @@ export default function Contact({ onNavigate }) {
               </div>
               <div>
                 <h4 className="font-headline-md text-[18px] text-secondary mb-1">Toll-Free Helpline</h4>
-                <p className="font-label-md text-on-surface font-semibold mb-0.5">1800-456-7890</p>
+                <p className="font-label-md text-on-surface font-semibold mb-0.5">
+                  <a href={`tel:${phone}`} className="hover:text-primary transition-colors hover:underline">{phone}</a>
+                </p>
                 <p className="text-body-md text-on-surface-variant">Monday to Saturday, 9:00 AM – 6:00 PM IST</p>
               </div>
             </div>
@@ -138,58 +162,32 @@ export default function Contact({ onNavigate }) {
               <div className="space-y-1">
                 <h4 className="font-headline-md text-[18px] text-primary mb-1">Corporate Emails</h4>
                 <p className="text-body-md text-on-surface-variant flex items-center gap-1.5">
-                  <strong className="text-on-surface font-semibold">General Relations:</strong> hq@arihant-fmcg.com
+                  <strong className="text-on-surface font-semibold">General Relations:</strong> 
+                  <a href={`mailto:${email}`} className="hover:text-primary transition-colors hover:underline">{email}</a>
                 </p>
                 <p className="text-body-md text-on-surface-variant flex items-center gap-1.5">
-                  <strong className="text-on-surface font-semibold">Distributor Relations:</strong> sales@arihant-fmcg.com
+                  <strong className="text-on-surface font-semibold">Distributor Relations:</strong> 
+                  <a href={`mailto:sales@${email.split('@')[1] || 'arihant-fmcg.com'}`} className="hover:text-primary transition-colors hover:underline">sales@{email.split('@')[1] || 'arihant-fmcg.com'}</a>
                 </p>
                 <p className="text-body-md text-on-surface-variant flex items-center gap-1.5">
-                  <strong className="text-on-surface font-semibold">Careers:</strong> careers@arihant-fmcg.com
+                  <strong className="text-on-surface font-semibold">Careers:</strong> 
+                  <a href={`mailto:careers@${email.split('@')[1] || 'arihant-fmcg.com'}`} className="hover:text-primary transition-colors hover:underline">careers@{email.split('@')[1] || 'arihant-fmcg.com'}</a>
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Embedded Mock Map */}
-          <div id="mumbai-map" className="bg-surface-container-low rounded-2xl overflow-hidden border border-outline-variant shadow-sm relative h-[280px]">
-            {/* Visual Map Layout */}
-            <div className="absolute inset-0 bg-[#fbf9f4] p-6 flex flex-col justify-between overflow-hidden">
-              <div className="wheat-texture absolute inset-0 opacity-10"></div>
-              {/* Map Graphics representation */}
-              <div className="relative z-10 flex flex-col h-full justify-between">
-                <div>
-                  <div className="flex items-center gap-2 text-primary font-bold text-headline-md">
-                    <span className="material-symbols-outlined">map</span>
-                    <span>Mumbai Office Map</span>
-                  </div>
-                  <p className="text-label-sm text-on-surface-variant max-w-xs mt-1">
-                    Located near the financial district, overlooking Backbay Reclamation.
-                  </p>
-                </div>
-                {/* Visual indicator of office location */}
-                <div className="flex justify-center items-center h-24 relative">
-                  <div className="w-4 h-4 bg-primary rounded-full animate-ping absolute"></div>
-                  <div className="w-4 h-4 bg-primary rounded-full relative z-10 border border-white"></div>
-                  {/* Mock Map Streets */}
-                  <div className="absolute w-full h-[2px] bg-outline-variant/30 rotate-12"></div>
-                  <div className="absolute w-full h-[2px] bg-outline-variant/30 -rotate-45"></div>
-                  <div className="absolute h-full w-[2px] bg-outline-variant/30 left-1/3"></div>
-                  <div className="absolute h-full w-[2px] bg-outline-variant/30 right-1/4"></div>
-                </div>
-                <div className="flex justify-between items-center bg-white/85 backdrop-blur-sm p-3 rounded-lg border border-outline-variant/50">
-                  <span className="text-label-sm text-on-surface font-semibold">18°56'06"N 72°49'32"E</span>
-                  <a
-                    href="https://maps.google.com"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-label-sm text-primary font-bold hover:underline flex items-center gap-0.5"
-                  >
-                    <span>Google Maps</span>
-                    <span className="material-symbols-outlined text-xs">open_in_new</span>
-                  </a>
-                </div>
-              </div>
-            </div>
+          {/* Embedded Real Map */}
+          <div id="contact-map" className="bg-surface-container-low rounded-2xl overflow-hidden border border-outline-variant shadow-sm relative h-[280px]">
+            <iframe 
+              src={googleMapSrc}
+              className="absolute inset-0 w-full h-full transition-all duration-700"
+              style={{ border: 0 }} 
+              allowFullScreen="" 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Arihant HQ Location"
+            ></iframe>
           </div>
         </aside>
 

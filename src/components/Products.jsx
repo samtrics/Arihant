@@ -1,16 +1,7 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 
-const categories = [
-  "All",
-  "Flours (Atta)",
-  "Grains & Pulses",
-  "Spices (Masala)",
-  "Roasted Daliya",
-  "Rice Varieties"
-];
-
-export default function Products({ products, onNavigate, onProductClick, initialSearchQuery }) {
+export default function Products({ products, categories = [], onNavigate, onProductClick, initialSearchQuery }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [filters, setFilters] = useState({
     organic: false,
@@ -100,7 +91,7 @@ export default function Products({ products, onNavigate, onProductClick, initial
             <div>
               <h3 className="font-headline-md text-headline-md text-primary mb-stack-md">Categories</h3>
               <ul className="space-y-stack-sm">
-                {categories.map((cat) => {
+                {["All", ...categories].map((cat) => {
                   const isSelected = selectedCategory === cat;
                   return (
                     <li key={cat}>
@@ -223,7 +214,7 @@ export default function Products({ products, onNavigate, onProductClick, initial
 
           {/* Mobile Categories Swiper (Horizontal Scroll) */}
           <div className="lg:hidden mb-6 overflow-x-auto scrollbar-none flex gap-2 pb-2 border-b border-outline-variant/30">
-            {categories.map((cat) => {
+            {["All", ...categories].map((cat) => {
               const isSelected = selectedCategory === cat;
               return (
                 <button
@@ -345,7 +336,12 @@ export default function Products({ products, onNavigate, onProductClick, initial
                   <div className="texture-overlay absolute inset-0 opacity-10"></div>
                   <p className="text-label-sm text-secondary font-bold tracking-widest mb-1">{product.tag}</p>
                   <h4 className="font-headline-md text-headline-md text-on-surface mb-2">{product.name}</h4>
-                  <p className="text-label-sm text-on-surface-variant mb-4">{product.desc}</p>
+                  <p className="text-label-sm text-on-surface-variant mb-2">{product.desc}</p>
+                  <div className="mb-4">
+                    <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${product.stock > 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'}`}>
+                      {product.stock > 0 ? `${product.stock} Units Available` : 'Out of Stock'}
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <span className="font-display-sm text-2xl text-primary font-bold">
                       ₹{product.price.toFixed(2)}{" "}

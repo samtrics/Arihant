@@ -6,11 +6,10 @@ import { supabase } from "../../supabaseClient";
 const GREEN = "#1F5132";
 const GOLD = "#D4A64A";
 const card = { background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 2px 20px rgba(0,0,0,0.04)" };
-const CATS = ["All", "Flours (Atta)", "Grains & Pulses", "Spices (Masala)", "Roasted Daliya", "Rice Varieties", "Cooking Oils", "Ready to Cook", "Organic Staples"];
 
 const emptyForm = { name: "", sku: "", category: "Flours (Atta)", price: "", offerPrice: "", wholesalePrice: "", stock: "", weightValue: "", weightUnit: "kg", desc: "", tags: "", status: "active", imgSrc: "", images: [] };
 
-export default function ProductsManager({ products, setProducts }) {
+export default function ProductsManager({ products, setProducts, categories = [] }) {
   const [search, setSearch] = useState("");
   const [cat, setCat] = useState("All");
   const [modal, setModal] = useState(null); // null | "add" | "edit" | "delete"
@@ -203,7 +202,8 @@ export default function ProductsManager({ products, setProducts }) {
             style={{ ...inp, paddingLeft: "38px" }} />
         </div>
         <select value={cat} onChange={e => { setCat(e.target.value); setPage(1); }} style={{ ...inp, width: "auto", minWidth: "160px" }}>
-          {CATS.map((c) => <option key={c}>{c}</option>)}
+          <option value="All">All</option>
+          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
         <motion.button style={{ padding: "9px 14px", borderRadius: "10px", border: "1.5px solid #f0ede8", background: "white", fontSize: "12px", fontWeight: "600", color: "#374151", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
           whileHover={{ borderColor: GREEN, color: GREEN }}>
@@ -363,7 +363,7 @@ export default function ProductsManager({ products, setProducts }) {
                   <div style={{ gridColumn: "1/-1" }}>
                     <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>Category</label>
                     <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ ...inp }}>
-                      {CATS.slice(1).map((c) => <option key={c}>{c}</option>)}
+                      {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
                   <div style={{ gridColumn: "1/-1" }}>

@@ -2,43 +2,8 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../supabaseClient";
 
-const fallbackNotifications = [
-  { id: 1, type: "offer", title: "Diwali Wholesale Bonus!", message: "Get an extra 5% margin on all Basmati Rice bulk orders above 500kg. Valid till Oct 30.", time: "2 hours ago", unread: true, icon: "local_offer", color: "#d97706", bg: "#fef3c7" },
-  { id: 2, type: "alert", title: "Low Stock Alert: Organic Toor Dal", message: "Inventory at your primary hub is critically low. Place a replenishment order soon to avoid stockouts.", time: "5 hours ago", unread: true, icon: "warning", color: "#dc2626", bg: "#fef2f2" },
-  { id: 3, type: "delivery", title: "Shipment Dispatched", orderRef: "B2B-109283", message: "Your order B2B-109283 has been dispatched from Mumbai Central Hub. ETA: Today 4:30 PM.", time: "Yesterday", unread: false, icon: "local_shipping", color: "#059669", bg: "#ecfdf5" },
-  { id: 4, type: "system", title: "Credit Limit Upgraded", message: "Congratulations! Your partner credit limit has been increased to ₹15,00,000 based on your quarterly performance.", time: "Oct 22", unread: false, icon: "credit_score", color: "#4338ca", bg: "#e0e7ff" }
-];
-
-export default function NotificationsPanel({ distributorUser }) {
-  const [notifications, setNotifications] = useState([]);
+export default function NotificationsPanel({ distributorUser, notifications = [], setNotifications }) {
   const [filter, setFilter] = useState("all");
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!distributorUser) return;
-    const fetchNotifs = async () => {
-      setLoading(true);
-      const email = distributorUser.email || distributorUser.business;
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('distributor_email', email)
-        .order('created_at', { ascending: false });
-
-      if (error || !data || data.length === 0) {
-        // Fallback to mock data if table missing or empty
-        setNotifications(fallbackNotifications);
-      } else {
-        const mapped = data.map(n => ({
-          ...n,
-          time: new Date(n.created_at).toLocaleDateString()
-        }));
-        setNotifications(mapped);
-      }
-      setLoading(false);
-    };
-    fetchNotifs();
-  }, [distributorUser]);
 
   const handleMarkAllRead = async () => {
     setNotifications(notifications.map(n => ({ ...n, unread: false })));

@@ -1,72 +1,124 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 export default function Heritage({ onNavigate }) {
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.2, delayChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
+  };
+
   return (
-    <section className="py-stack-xl bg-surface scroll-reveal overflow-hidden relative">
-      <div className="w-full px-margin-mobile md:px-margin-desktop grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
-        <div className="relative">
-          <div className="absolute -top-10 -left-10 w-40 h-40 bg-secondary-fixed opacity-20 rounded-full blur-2xl"></div>
-          <div className="relative rounded-3xl overflow-hidden border-8 border-surface-container shadow-2xl">
+    <section className="py-12 md:py-16 bg-surface relative overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-secondary-fixed/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3"></div>
+      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-primary-container/10 rounded-full blur-[80px] translate-y-1/3 -translate-x-1/4"></div>
+
+      <motion.div 
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
+        className="w-full px-margin-mobile md:px-margin-desktop grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center relative z-10 max-w-container-max mx-auto"
+      >
+        {/* Left Side: Images & Graphics */}
+        <motion.div variants={itemVariants} className="relative">
+          <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-[12px] border-surface-container-lowest/80 backdrop-blur-sm transform transition-transform hover:scale-[1.02] duration-700">
             <img loading="lazy"
-              className="w-full aspect-[4/5] object-cover"
-              alt="Panoramic cinematic shot of a vast golden wheat field in rural India during the golden hour. The sun is setting on the horizon, casting a warm orange glow over the landscape. The photography is professional and evocative, highlighting the natural origins and heritage of Arihant products with a clean, high-end editorial feel."
+              className="w-full aspect-[4/3] object-cover"
+              alt="Panoramic cinematic shot of a vast golden wheat field in rural India during the golden hour."
               src="/assets/images/heritage.webp"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex items-end p-8">
-              <div className="text-white">
-                <p className="text-display-lg font-display-lg">30+</p>
-                <p className="text-label-md font-label-md">Years of Agricultural Legacy</p>
-              </div>
+            {/* Elegant Gradient Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/20 to-transparent"></div>
+            
+            {/* Floating Glassmorphism Badge */}
+            <div className="absolute bottom-8 left-8 right-8 bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl flex items-center gap-6 shadow-xl">
+               <div className="w-16 h-16 shrink-0 bg-secondary rounded-full flex items-center justify-center text-on-secondary shadow-lg">
+                  <span className="text-3xl font-bold font-display-lg">30</span>
+               </div>
+               <div className="text-white">
+                 <p className="font-bold text-headline-sm leading-tight">Years of Heritage</p>
+                 <p className="text-white/90 text-label-sm mt-1">Mastering agricultural excellence</p>
+               </div>
             </div>
           </div>
-        </div>
-        <div>
-          <span className="text-secondary font-label-md tracking-widest uppercase mb-4 block">
+          
+          {/* Decorative Leaf Icon */}
+          <motion.div 
+            animate={{ y: [0, -15, 0] }} 
+            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+            className="absolute -top-8 -right-8 w-24 h-24 bg-surface-container-lowest rounded-full shadow-xl flex items-center justify-center border border-outline-variant/30 hidden md:flex"
+          >
+            <span className="material-symbols-outlined text-4xl text-primary">eco</span>
+          </motion.div>
+        </motion.div>
+
+        {/* Right Side: Content */}
+        <div className="lg:pr-8">
+          <motion.span variants={itemVariants} className="inline-block px-5 py-2 rounded-full bg-secondary-container/50 text-secondary font-bold text-label-sm tracking-widest uppercase mb-6 border border-secondary/20 shadow-sm">
             Our Story
-          </span>
-          <h2 className="font-display-lg text-display-lg text-primary mb-6">
-            A Heritage of Pure <br /> Commitment
-          </h2>
-          <p className="font-body-lg text-body-lg text-on-surface-variant mb-8">
+          </motion.span>
+          
+          <motion.h2 variants={itemVariants} className="font-display-lg text-display-md md:text-display-lg text-primary mb-6 leading-tight">
+            A Heritage of <br/> <span className="text-secondary italic">Pure Commitment</span>
+          </motion.h2>
+          
+          <motion.p variants={itemVariants} className="font-body-lg text-body-lg text-on-surface-variant mb-6 leading-relaxed text-lg">
             The Arihant journey began in the fertile plains of India, where we recognized
             the need for staples that didn't just fill stomachs, but nourished souls. We
             believe that the purest food comes from a place of respect—for the farmer,
             the land, and the consumer.
-          </p>
-          <div className="space-y-6 mb-10">
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-sm">check</span>
+          </motion.p>
+          
+          <div className="space-y-6 mb-8">
+            <motion.div variants={itemVariants} className="flex gap-5 group">
+              <div className="flex-shrink-0 w-14 h-14 bg-primary-container rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors duration-300 shadow-sm">
+                <span className="material-symbols-outlined text-[28px]">agriculture</span>
               </div>
               <div>
-                <h4 className="font-headline-md text-body-lg font-bold text-primary">
+                <h4 className="text-headline-sm font-bold text-primary mb-1">
                   Direct Farmer Sourcing
                 </h4>
-                <p className="text-on-surface-variant">
-                  Eliminating middlemen to ensure the freshest crop reach your home.
+                <p className="text-on-surface-variant leading-relaxed">
+                  Eliminating middlemen to ensure the freshest crop reach your home while empowering local communities.
                 </p>
               </div>
-            </div>
-            <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white">
-                <span className="material-symbols-outlined text-sm">check</span>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="flex gap-5 group">
+              <div className="flex-shrink-0 w-14 h-14 bg-secondary-container rounded-2xl flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-on-secondary transition-colors duration-300 shadow-sm">
+                <span className="material-symbols-outlined text-[28px]">factory</span>
               </div>
               <div>
-                <h4 className="font-headline-md text-body-lg font-bold text-primary">
+                <h4 className="text-headline-sm font-bold text-primary mb-1">
                   State-of-the-Art Milling
                 </h4>
-                <p className="text-on-surface-variant">
-                  Cold-press milling technology that retains every bit of natural
-                  goodness.
+                <p className="text-on-surface-variant leading-relaxed">
+                  Cold-press milling technology that retains every bit of natural goodness, fiber, and vital nutrients.
                 </p>
               </div>
-            </div>
+            </motion.div>
           </div>
-          <button onClick={() => onNavigate('about')} className="px-8 py-4 bg-primary text-on-primary rounded-lg font-label-md text-label-md hover:bg-opacity-90 transition-all">
-            Read Full Story
-          </button>
+          
+          <motion.button 
+            variants={itemVariants}
+            onClick={() => onNavigate('about')} 
+            className="group relative inline-flex items-center gap-3 px-8 py-4 bg-primary text-on-primary rounded-xl font-bold hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden"
+          >
+            <span className="absolute inset-0 w-full h-full bg-white/20 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500 ease-out"></span>
+            <span className="relative">Discover Our Roots</span>
+            <span className="material-symbols-outlined relative group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </motion.button>
         </div>
-      </div>
+      </motion.div>
     </section>
   );
 }

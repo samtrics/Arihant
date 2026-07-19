@@ -20,10 +20,10 @@ export default function MyOrders({ distributorUser }) {
         .order('created_at', { ascending: false });
         
       if (!error && data) {
+        // RLS secures the data, so we just filter for B2B order types
         const b2bOrders = data.filter(o => 
           o.order_number && 
-          String(o.order_number).startsWith('B2B') && 
-          o.customer_name?.trim().toLowerCase() === distributorUser.business?.trim().toLowerCase()
+          String(o.order_number).startsWith('B2B')
         );
         setOrders(b2bOrders);
       }

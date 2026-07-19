@@ -22,6 +22,7 @@ import About from "./components/About";
 
 
 import { supabase } from "./supabaseClient";
+import SEO from "./components/SEO";
 
 // KICK OFF CRITICAL FETCH IMMEDIATELY TO BREAK NETWORK CHAIN
 const initialProductsPromise = supabase.from('products').select('*').order('id');
@@ -114,6 +115,8 @@ export default function App() {
   const [customerUser, setCustomerUser] = useState(null);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState(["Flours (Atta)", "Grains & Pulses", "Spices (Masala)", "Roasted Daliya", "Rice Varieties"]); // Default fallback
+  const [siteSettings, setSiteSettings] = useState(null);
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
 
   const currentPageRef = useRef(currentPage);
@@ -272,7 +275,7 @@ export default function App() {
       }
     });
 
-    // Realtime subscription
+    // Realtime subscription for products
     const channel = supabase
       .channel('products-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
@@ -284,7 +287,53 @@ export default function App() {
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    // Fetch dynamic categories
+    supabase.from('product_categories').select('name').order('created_at').then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        setCategories(data.map(c => c.name));
+      }
+    });
+
+    // Realtime subscription for categories
+    const catChannel = supabase
+      .channel('categories-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_categories' }, () => {
+        supabase.from('product_categories').select('name').order('created_at').then(({ data, error }) => {
+          if (!error && data && data.length > 0) {
+            setCategories(data.map(c => c.name));
+          }
+        });
+      })
+      .subscribe();
+
+    // Fetch site settings
+    supabase.from('site_settings').select('*').then(({ data, error }) => {
+      if (!error && data && data.length > 0) {
+        const settingsMap = {};
+        data.forEach(row => { settingsMap[row.key] = row.value; });
+        setSiteSettings(settingsMap);
+      }
+    });
+
+    // Realtime subscription for site settings
+    const settingsChannel = supabase
+      .channel('settings-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'site_settings' }, () => {
+        supabase.from('site_settings').select('*').then(({ data, error }) => {
+          if (!error && data && data.length > 0) {
+            const settingsMap = {};
+            data.forEach(row => { settingsMap[row.key] = row.value; });
+            setSiteSettings(settingsMap);
+          }
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(catChannel);
+      supabase.removeChannel(settingsChannel);
+    };
   }, []);
 
   const handleSetProducts = async (newValOrUpdater) => {
@@ -395,24 +444,33 @@ export default function App() {
 
   const isAdminPage = currentPage === "admin" || currentPage === "admin-dashboard" || currentPage === "distributor-login" || currentPage === "distributor-dashboard";
 
+  // Public products for customers & distributors (shows only 80% of actual stock to create buffer/scarcity)
+  const publicProducts = React.useMemo(() => {
+    return products.map(p => ({
+      ...p,
+      stock: typeof p.stock === 'number' ? Math.floor(p.stock * 0.8) : p.stock
+    }));
+  }, [products]);
+
   return (
     <>
+      <SEO />
       {!isAdminPage && <Header currentPage={currentPage} onNavigate={handleNavigate} customerUser={customerUser} onSearch={(q) => { setGlobalSearchQuery(q); handleNavigate('products'); }} />}
       <main>
         <Suspense fallback={<div className="flex justify-center items-center min-h-[50vh]"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div></div>}>
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
-            <ProductShowcase products={products} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
+            <ProductShowcase products={publicProducts} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
             <PromiseSection />
             <Heritage onNavigate={handleNavigate} />
             <Testimonials />
           </div>
         )}
-        {currentPage === "about" && <About onNavigate={handleNavigate} />}
-        {currentPage === "products" && <Products products={products} onNavigate={handleNavigate} onProductClick={setSelectedProduct} initialSearchQuery={globalSearchQuery} />}
-        {currentPage === "contact" && <Contact onNavigate={handleNavigate} />}
-        {currentPage === "distributors" && <Distributor onNavigate={handleNavigate} />}
+        {currentPage === "about" && <About onNavigate={handleNavigate} siteSettings={siteSettings} />}
+        {currentPage === "products" && <Products products={publicProducts} categories={categories} onNavigate={handleNavigate} onProductClick={setSelectedProduct} initialSearchQuery={globalSearchQuery} />}
+        {currentPage === "contact" && <Contact onNavigate={handleNavigate} siteSettings={siteSettings} />}
+        {currentPage === "distributors" && <Distributor onNavigate={handleNavigate} siteSettings={siteSettings} />}
         {(currentPage === "login" || currentPage === "register") && <Auth onNavigate={handleNavigate} initialMode={currentPage === "login" ? "signin" : "signup"} />}
         {currentPage === "customer-dashboard" && customerUser && <CustomerDashboard user={customerUser} onNavigate={handleNavigate} onLogout={() => handleNavigate("home")} />}
         {currentPage === "customer-dashboard" && !customerUser && <Auth onNavigate={handleNavigate} initialMode="signin" />}
@@ -426,7 +484,7 @@ export default function App() {
         {currentPage === "distributor-dashboard" && distributorUser && (
           <DistributorDashboard 
             distributorUser={distributorUser} 
-            products={products} 
+            products={publicProducts} 
             onLogout={() => { setDistributorUserAndPersist(null); handleNavigate("home"); }} 
           />
         )}
@@ -448,6 +506,9 @@ export default function App() {
             onLogout={() => { setAdminUserAndPersist(null); setPage("home"); }}
             products={products}
             setProducts={handleSetProducts}
+            categories={categories}
+            setCategories={setCategories}
+            siteSettings={siteSettings}
           />
         )}
       

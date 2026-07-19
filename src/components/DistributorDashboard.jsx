@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 // Import Sub-Components
 import DashboardHome from "./distributor-dashboard/DashboardHome";
 import MyOrders from "./distributor-dashboard/MyOrders";
@@ -13,12 +13,55 @@ import SupportCenter from "./distributor-dashboard/SupportCenter";
 import NotificationsPanel from "./distributor-dashboard/NotificationsPanel";
 import DocumentsInvoices from "./distributor-dashboard/DocumentsInvoices";
 
-const mockNotifications = [];
+import { supabase } from "../supabaseClient";
 
 export default function DistributorDashboard({ distributorUser, products = [], onLogout }) {
   console.log("DistributorDashboard Rendered with user:", distributorUser?.business);
   const [activeTab, setActiveTab] = useState("home");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [toastNotif, setToastNotif] = useState(null);
+  const prevNotifsRef = useRef([]);
+
+  React.useEffect(() => {
+    if (prevNotifsRef.current.length > 0 && notifications.length > prevNotifsRef.current.length) {
+      const prevIds = new Set(prevNotifsRef.current.map(n => n.id));
+      const newNotifs = notifications.filter(n => !prevIds.has(n.id) && n.unread);
+      if (newNotifs.length > 0) {
+        setToastNotif(newNotifs[0]);
+        setTimeout(() => setToastNotif(null), 6000);
+      }
+    }
+    prevNotifsRef.current = notifications;
+  }, [notifications]);
+
+  React.useEffect(() => {
+    if (!distributorUser) return;
+    const fetchNotifs = async () => {
+      const email = distributorUser.email || distributorUser.business;
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('distributor_email', email)
+        .order('created_at', { ascending: false });
+
+      if (!error && data) {
+        setNotifications(data.map(n => ({
+          ...n,
+          time: new Date(n.created_at).toLocaleDateString()
+        })));
+      }
+    };
+    fetchNotifs();
+
+    const channel = supabase.channel('distributor-notifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+        fetchNotifs();
+      })
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [distributorUser]);
 
   const partnerProfile = { 
     avatar: distributorUser?.business ? distributorUser.business[0] : "A", 
@@ -41,7 +84,7 @@ export default function DistributorDashboard({ distributorUser, products = [], o
     { id: "profile", icon: "person", label: "Profile Settings" },
   ];
 
-  const unreadNotifs = mockNotifications.filter(n => !n.read).length;
+  const unreadNotifs = notifications.filter(n => n.unread).length;
 
   const navigate = (id) => {
     setActiveTab(id);
@@ -58,7 +101,7 @@ export default function DistributorDashboard({ distributorUser, products = [], o
       case "inventory": return <InventoryAvailability key="inventory" distributorUser={distributorUser} />;
       case "tracking": return <DeliveryTracking key="tracking" distributorUser={distributorUser} />;
       case "support": return <SupportCenter key="support" distributorUser={distributorUser} />;
-      case "notifications": return <NotificationsPanel key="notifications" distributorUser={distributorUser} />;
+      case "notifications": return <NotificationsPanel key="notifications" distributorUser={distributorUser} notifications={notifications} setNotifications={setNotifications} />;
       case "docs": return <DocumentsInvoices key="docs" distributorUser={distributorUser} />;
       case "profile": return <ProfileSettings key="profile" distributorUser={distributorUser} />;
       default: return <DashboardHome key="default" distributorUser={distributorUser} />;
@@ -175,9 +218,48 @@ export default function DistributorDashboard({ distributorUser, products = [], o
         </header>
 
         {/* PAGE CONTENT */}
-        <main style={{ flex: 1, overflowY: "auto" }}>
+        <main style={{ flex: 1, overflowY: "auto", position: "relative" }}>
           <AnimatePresence mode="wait">
             {renderContent()}
+          </AnimatePresence>
+
+          {/* Toast Notification */}
+          <AnimatePresence>
+            {toastNotif && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                style={{
+                  position: "fixed",
+                  bottom: "24px",
+                  right: "24px",
+                  background: "white",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                  border: "1px solid #f0ede8",
+                  zIndex: 9999,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  maxWidth: "340px",
+                  cursor: "pointer"
+                }}
+                onClick={() => { navigate("notifications"); setToastNotif(null); }}
+              >
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: toastNotif.bg || "#f3f4f6", color: toastNotif.color || "#1C1C1C", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>{toastNotif.icon || "notifications"}</span>
+                </div>
+                <div>
+                  <div style={{ fontWeight: "700", fontSize: "14px", color: "#1C1C1C", marginBottom: "4px" }}>{toastNotif.title}</div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: "1.3" }}>{toastNotif.message}</div>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setToastNotif(null); }} style={{ background: "none", border: "none", padding: "4px", cursor: "pointer", alignSelf: "flex-start", marginTop: "-4px", marginRight: "-4px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#9ca3af" }}>close</span>
+                </button>
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
       </div>

@@ -97,35 +97,6 @@ const processSteps = [
   { num: 5, title: "Start Distribution", desc: "Place your first order, receive stock, and start selling Arihant!" },
 ];
 
-const testimonials = [
-  {
-    name: "Rajesh Patel",
-    city: "Surat, Gujarat",
-    initials: "RP",
-    color: "#1F5132",
-    stars: 5,
-    review: "Arihant's support team has been exceptional from day one. The margins are among the best in the packaged flour segment, and stock is always available on time.",
-    years: "4 years distributor",
-  },
-  {
-    name: "Sunita Sharma",
-    city: "Jaipur, Rajasthan",
-    initials: "SS",
-    color: "#D4A64A",
-    stars: 5,
-    review: "We expanded our coverage to 3 districts within 8 months of joining Arihant. The brand recall is incredible — customers specifically ask for Arihant Atta.",
-    years: "2 years distributor",
-  },
-  {
-    name: "Mohammed Iqbal",
-    city: "Bhopal, M.P.",
-    initials: "MI",
-    color: "#7b5800",
-    stars: 5,
-    review: "The wholesale pricing and marketing support is unmatched. Our grocery retail revenue grew by 35% in the first year alone. Strongly recommend to every retailer.",
-    years: "3 years distributor",
-  },
-];
 
 const faqs = [
   { q: "How do I become an Arihant distributor?", a: "Simply fill out our online application form below with your business details, GST number, and preferred territory. Our regional team will contact you within 48 hours to begin the verification process." },
@@ -152,8 +123,43 @@ const indianStates = [
   "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
 ];
 
+const defaultTestimonials = [
+  {
+    name: "Rajesh Patel",
+    city: "Surat, Gujarat",
+    initials: "RP",
+    color: "#1F5132",
+    stars: 5,
+    review: "Arihant's support team has been exceptional from day one. The margins are among the best in the packaged flour segment, and stock is always available on time.",
+    years: "Partner since 2018",
+  },
+  {
+    name: "Sunita Sharma",
+    city: "Jaipur, Rajasthan",
+    initials: "SS",
+    color: "#D4A64A",
+    stars: 5,
+    review: "We expanded our coverage to 3 districts within 8 months of joining Arihant. The brand recall is incredible — customers specifically ask for Arihant Atta.",
+    years: "Partner since 2021",
+  },
+  {
+    name: "Mohammed Iqbal",
+    city: "Bhopal, M.P.",
+    initials: "MI",
+    color: "#7b5800",
+    stars: 5,
+    review: "The wholesale pricing and marketing support is unmatched. Our grocery retail revenue grew by 35% in the first year alone. Strongly recommend to every retailer.",
+    years: "Partner since 2019",
+  },
+];
+
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-export default function Distributor({ onNavigate }) {
+export default function Distributor({ onNavigate, siteSettings }) {
+  const contactPhone = siteSettings?.phone || "1800-456-7890";
+  const contactEmail = siteSettings?.email || "distributors@arihant.in";
+  const waPhone = contactPhone.replace(/\D/g, ''); 
+  const contactLocation = siteSettings?.hq_address ? siteSettings.hq_address.split(',').slice(-3, -1).join(', ') : "Jaipur, Rajasthan";
+
   const [formData, setFormData] = useState({
     businessName: "", ownerName: "", phone: "", email: "",
     address: "", city: "", state: "", gst: "", bizType: "", yearsInBusiness: "", message: "",
@@ -162,11 +168,93 @@ export default function Distributor({ onNavigate }) {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const [testimonials, setTestimonials] = useState(defaultTestimonials);
+  
+  const [reviewFormOpen, setReviewFormOpen] = useState(false);
+  const [reviewSubmitStatus, setReviewSubmitStatus] = useState("idle");
+  const [reviewData, setReviewData] = useState({
+    name: "", city: "", email: "", phone: "", rating: 5, text: "", years: "Partner since 2024"
+  });
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('status', 'approved')
+        .eq('type', 'distributor')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (!error && data && data.length > 0) {
+        setTestimonials(data.map(r => ({
+          name: r.name,
+          city: r.location,
+          initials: r.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase(),
+          color: ['#1F5132', '#D4A64A', '#7b5800'][Math.floor(Math.random() * 3)],
+          stars: r.stars || 5,
+          review: r.text,
+          years: r.years || 'Partner'
+        })));
+      }
+    };
+    
+    fetchTestimonials();
+
+    const channel = supabase
+      .channel('public:reviews')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reviews' }, () => {
+        fetchTestimonials();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((p) => ({ ...p, [name]: value }));
     if (errors[name]) setErrors((p) => ({ ...p, [name]: "" }));
+  };
+
+  const handleReviewChange = (e) => {
+    const { name, value } = e.target;
+    setReviewData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    setReviewSubmitStatus("submitting");
+    
+    try {
+      const newReview = {
+        name: reviewData.name,
+        location: reviewData.city,
+        email: reviewData.email,
+        orderId: reviewData.phone,
+        stars: reviewData.rating,
+        text: reviewData.text,
+        type: 'distributor',
+        years: reviewData.years,
+        status: 'pending'
+      };
+      
+      const { error } = await supabase.from('reviews').insert([newReview]);
+      if (error) throw error;
+      
+      setReviewSubmitStatus("success");
+      
+      setTimeout(() => {
+        setReviewFormOpen(false);
+        setReviewData({ name: "", city: "", email: "", phone: "", rating: 5, text: "", years: "Partner since 2024" });
+        setReviewSubmitStatus("idle");
+      }, 3000);
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      alert("Something went wrong while submitting your review. Please try again.");
+      setReviewSubmitStatus("idle");
+    }
   };
 
   const validate = () => {
@@ -386,7 +474,7 @@ export default function Distributor({ onNavigate }) {
       </section>
 
       {/* ══════════════════════════════════════ 2. WHY PARTNER ══════════════════════════════════════ */}
-      <section className="py-24 px-4 md:px-16 max-w-[1280px] mx-auto">
+      <section id="distributor-benefits" className="py-24 px-4 md:px-16 max-w-[1280px] mx-auto">
         <ScrollReveal>
           <div className="text-center mb-16">
             <span className="text-xs font-bold tracking-widest uppercase px-4 py-1.5 rounded-full" style={{ background: "#fff8ed", color: "#D4A64A" }}>
@@ -816,23 +904,121 @@ export default function Distributor({ onNavigate }) {
       <section className="py-24 px-4 md:px-16" style={{ background: "#F5F0E8" }}>
         <div className="max-w-[1280px] mx-auto">
           <ScrollReveal>
-            <div className="text-center mb-16">
+            <div className="text-center mb-16 relative">
               <span className="text-xs font-bold tracking-widest uppercase px-4 py-1.5 rounded-full" style={{ background: "#fff8ed", color: "#D4A64A" }}>
                 Testimonials
               </span>
-              <h2 className="mt-5 text-[clamp(1.8rem,4vw,2.8rem)] font-bold leading-tight" style={{ fontFamily: "'Poppins',sans-serif", color: "#1F5132" }}>
+              <h2 className="mt-5 text-[clamp(1.8rem,4vw,2.8rem)] font-bold leading-tight mb-4" style={{ fontFamily: "'Poppins',sans-serif", color: "#1F5132" }}>
                 Trusted by Distributors Across India
               </h2>
+              <button 
+                onClick={() => setReviewFormOpen(!reviewFormOpen)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 border shadow-sm hover:-translate-y-0.5"
+                style={{ 
+                  background: reviewFormOpen ? "white" : "rgba(31,81,50,0.05)", 
+                  color: "#1F5132",
+                  borderColor: reviewFormOpen ? "#1F5132" : "rgba(31,81,50,0.2)"
+                }}
+              >
+                <span className="material-symbols-outlined text-[20px]">
+                  {reviewFormOpen ? "close" : "rate_review"}
+                </span>
+                {reviewFormOpen ? "Close Form" : "Share Your Experience"}
+              </button>
             </div>
           </ScrollReveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {testimonials.map((t, i) => (
-              <ScrollReveal key={t.name} delay={i * 0.1}>
-                <motion.div
-                  className="rounded-2xl p-8 h-full flex flex-col justify-between"
+          <AnimatePresence>
+            {reviewFormOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0, overflow: "hidden" }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="max-w-2xl mx-auto mb-16 p-8 rounded-2xl shadow-lg"
+                style={{ background: "white", border: "1px solid #f0ede8" }}
+              >
+                <h3 className="text-xl font-bold mb-2" style={{ fontFamily: "'Poppins',sans-serif", color: "#1F5132" }}>Partner Testimonial</h3>
+                <div className="text-sm mb-6 flex items-start gap-2 p-4 rounded-lg" style={{ background: "#fff8ed", color: "#7b5800", border: "1px solid rgba(212,166,74,0.3)" }}>
+                  <span className="material-symbols-outlined text-[20px]">verified_user</span>
+                  <p>All testimonials are verified by our team before being published. Your private details (Email / Phone) will not be shared publicly.</p>
+                </div>
+                
+                {reviewSubmitStatus === "success" ? (
+                   <motion.div 
+                     initial={{ opacity: 0, scale: 0.9 }} 
+                     animate={{ opacity: 1, scale: 1 }} 
+                     className="text-center py-8"
+                   >
+                     <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(31,81,50,0.1)", color: "#1F5132" }}>
+                       <span className="material-symbols-outlined text-3xl">check_circle</span>
+                     </div>
+                     <h4 className="text-xl font-bold mb-2" style={{ fontFamily: "'Poppins',sans-serif", color: "#1F5132" }}>Testimonial Submitted!</h4>
+                     <p className="text-gray-500">Thank you! Your feedback has been received and is pending verification.</p>
+                   </motion.div>
+                ) : (
+                  <form onSubmit={handleReviewSubmit} className="space-y-5 text-left">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Name (Public)</label>
+                        <input required type="text" name="name" value={reviewData.name} onChange={handleReviewChange} className="w-full bg-gray-50 p-3 rounded-lg border border-gray-200 outline-none focus:border-[#1F5132] transition-colors text-sm" placeholder="e.g. Rajesh Patel" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">City (Public)</label>
+                        <input required type="text" name="city" value={reviewData.city} onChange={handleReviewChange} className="w-full bg-gray-50 p-3 rounded-lg border border-gray-200 outline-none focus:border-[#1F5132] transition-colors text-sm" placeholder="e.g. Surat, Gujarat" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Email (Private)</label>
+                        <input required type="email" name="email" value={reviewData.email} onChange={handleReviewChange} className="w-full bg-gray-50 p-3 rounded-lg border border-gray-200 outline-none focus:border-[#1F5132] transition-colors text-sm" placeholder="partner@business.com" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Phone Number (Private)</label>
+                        <input required type="text" name="phone" value={reviewData.phone} onChange={handleReviewChange} className="w-full bg-gray-50 p-3 rounded-lg border border-gray-200 outline-none focus:border-[#1F5132] transition-colors text-sm" placeholder="e.g. 9876543210" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Association Timeline</label>
+                        <input required type="text" name="years" value={reviewData.years} onChange={handleReviewChange} className="w-full bg-gray-50 p-3 rounded-lg border border-gray-200 outline-none focus:border-[#1F5132] transition-colors text-sm" placeholder="e.g. Partner since 2021" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Rating</label>
+                        <div className="flex gap-2 mt-2">
+                          {[1,2,3,4,5].map(star => (
+                            <button key={star} type="button" onClick={() => setReviewData({...reviewData, rating: star})} className="text-3xl focus:outline-none hover:scale-110 transition-transform">
+                              <span className="material-symbols-outlined" style={{ color: reviewData.rating >= star ? "#D4A64A" : "#e5e7eb", fontVariationSettings: reviewData.rating >= star ? "'FILL' 1" : "'FILL' 0" }}>star</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-600 uppercase mb-1">Testimonial</label>
+                      <textarea required name="text" value={reviewData.text} onChange={handleReviewChange} rows="4" className="w-full bg-gray-50 p-3 rounded-lg border border-gray-200 outline-none focus:border-[#1F5132] transition-colors text-sm resize-none" placeholder="Tell us about your experience partnering with Arihant..." />
+                    </div>
+                    <button type="submit" disabled={reviewSubmitStatus === "submitting"} className="w-full flex justify-center items-center gap-2 py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed" style={{ background: "linear-gradient(135deg, #1F5132, #2d6b45)" }}>
+                      {reviewSubmitStatus === "submitting" ? <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span> : "Submit Testimonial"}
+                    </button>
+                  </form>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="relative w-full overflow-hidden pt-8 pb-4">
+            {/* Fade masks for smooth entry/exit */}
+            <div className="absolute top-0 bottom-0 left-0 w-16 md:w-32 bg-gradient-to-r from-[#F5F0E8] to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute top-0 bottom-0 right-0 w-16 md:w-32 bg-gradient-to-l from-[#F5F0E8] to-transparent z-10 pointer-events-none"></div>
+            
+            <motion.div 
+              animate={{ x: ["0%", "-12.5%"] }}
+              transition={{ ease: "linear", duration: testimonials.length > 0 ? testimonials.length * 5 : 20, repeat: Infinity }}
+              className="flex gap-6 w-max pl-6"
+            >
+              {Array(8).fill(testimonials).flat().map((t, index) => (
+                <div
+                  key={`${t.name}-${index}`}
+                  className="rounded-2xl p-8 flex flex-col justify-between w-[300px] md:w-[350px] shrink-0"
                   style={{ background: "white", border: "1px solid #f0ede8", boxShadow: "0 4px 30px rgba(0,0,0,0.05)" }}
-                  whileHover={{ y: -6, boxShadow: "0 20px 50px rgba(31,81,50,0.1)" }}
                 >
                   {/* Stars */}
                   <div>
@@ -843,26 +1029,26 @@ export default function Distributor({ onNavigate }) {
                     </div>
                     <p className="text-gray-600 text-sm leading-relaxed italic mb-6">"{t.review}"</p>
                   </div>
-                  <div className="flex items-center gap-3 pt-5 border-t border-gray-100">
-                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  <div className="flex items-center gap-3 pt-5 border-t border-gray-100 mt-auto">
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0"
                       style={{ background: t.color }}>
                       {t.initials}
                     </div>
                     <div>
-                      <p className="font-bold text-sm" style={{ fontFamily: "'Poppins',sans-serif" }}>{t.name}</p>
-                      <p className="text-gray-400 text-xs">{t.city}</p>
+                      <p className="font-bold text-sm truncate max-w-[200px]" style={{ fontFamily: "'Poppins',sans-serif" }}>{t.name}</p>
+                      <p className="text-gray-400 text-xs truncate max-w-[200px]">{t.city}</p>
                       <p className="text-xs font-semibold mt-0.5" style={{ color: "#1F5132" }}>{t.years}</p>
                     </div>
                   </div>
-                </motion.div>
-              </ScrollReveal>
-            ))}
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* ══════════════════════════════════════ 8. FAQ ══════════════════════════════════════ */}
-      <section className="py-24 px-4 md:px-16 max-w-[1280px] mx-auto">
+      <section id="distributor-faq" className="py-24 px-4 md:px-16 max-w-[1280px] mx-auto">
         <ScrollReveal>
           <div className="text-center mb-16">
             <span className="text-xs font-bold tracking-widest uppercase px-4 py-1.5 rounded-full" style={{ background: "#fff8ed", color: "#D4A64A" }}>
@@ -936,10 +1122,10 @@ export default function Distributor({ onNavigate }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {[
-              { icon: "chat", label: "WhatsApp", value: "+91 98765 43210", sub: "Chat instantly", href: "https://wa.me/919876543210", color: "#25D366" },
-              { icon: "phone", label: "Phone", value: "1800-456-7890", sub: "Toll-free support", href: "tel:18004567890", color: "#D4A64A" },
-              { icon: "mail", label: "Email", value: "distributors@arihant.in", sub: "24hr response", href: "mailto:distributors@arihant.in", color: "#D4A64A" },
-              { icon: "location_on", label: "Office", value: "Jaipur, Rajasthan", sub: "Head Office, India", href: "#", color: "#D4A64A" },
+              { icon: "chat", label: "WhatsApp", value: contactPhone, sub: "Chat instantly", href: `https://wa.me/91${waPhone.substring(waPhone.length - 10)}`, color: "#25D366" },
+              { icon: "phone", label: "Phone", value: contactPhone, sub: "Toll-free support", href: `tel:${contactPhone}`, color: "#D4A64A" },
+              { icon: "mail", label: "Email", value: contactEmail, sub: "24hr response", href: `mailto:${contactEmail}`, color: "#D4A64A" },
+              { icon: "location_on", label: "Office", value: contactLocation, sub: "Head Office, India", href: "#", color: "#D4A64A" },
             ].map((c, i) => (
               <ScrollReveal key={c.label} delay={i * 0.1}>
                 <motion.a
@@ -1013,7 +1199,11 @@ export default function Distributor({ onNavigate }) {
                 {["Home", "About Us", "Products", "Contact"].map((l) => (
                   <li key={l}>
                     <a href="#"
-                      onClick={(e) => { e.preventDefault(); onNavigate(l.toLowerCase().replace(" us", "").replace(" ", ""), null); }}
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        onNavigate(l.toLowerCase().replace(" us", "").replace(" ", ""), null); 
+                      }}
                       className="text-white/50 text-sm hover:text-white transition-colors cursor-pointer">
                       {l}
                     </a>
@@ -1028,7 +1218,11 @@ export default function Distributor({ onNavigate }) {
               <ul className="space-y-3">
                 {["Sharbati Atta", "Chana Besan", "Roasted Daliya", "Fine Suji", "Premium Maida"].map((p) => (
                   <li key={p}>
-                    <a href="#" className="text-white/50 text-sm hover:text-white transition-colors cursor-pointer">{p}</a>
+                    <a href="#" onClick={(e) => {
+                      e.preventDefault();
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      onNavigate("products");
+                    }} className="text-white/50 text-sm hover:text-white transition-colors cursor-pointer">{p}</a>
                   </li>
                 ))}
               </ul>
@@ -1040,7 +1234,17 @@ export default function Distributor({ onNavigate }) {
               <ul className="space-y-3">
                 {["Apply Now", "Partner Benefits", "Distributor Login", "Support Portal", "Distributor FAQ"].map((l) => (
                   <li key={l}>
-                    <a href="#" onClick={(e) => { e.preventDefault(); if (l === "Apply Now") document.getElementById("distributor-form")?.scrollIntoView({ behavior: "smooth" }); }}
+                    <a href="#" onClick={(e) => { 
+                      e.preventDefault(); 
+                      if (l === "Apply Now") document.getElementById("distributor-form")?.scrollIntoView({ behavior: "smooth" }); 
+                      else if (l === "Partner Benefits") document.getElementById("distributor-benefits")?.scrollIntoView({ behavior: "smooth" });
+                      else if (l === "Distributor FAQ") document.getElementById("distributor-faq")?.scrollIntoView({ behavior: "smooth" });
+                      else if (l === "Support Portal") document.getElementById("dist-contact")?.scrollIntoView({ behavior: "smooth" });
+                      else if (l === "Distributor Login") {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        onNavigate("distributor-login");
+                      }
+                    }}
                       className="text-white/50 text-sm hover:text-white transition-colors cursor-pointer">{l}</a>
                   </li>
                 ))}
@@ -1054,7 +1258,11 @@ export default function Distributor({ onNavigate }) {
             <p className="text-white/40 text-xs">© 2024 Arihant FMCG. All rights reserved. · Crafted for purity.</p>
             <div className="flex gap-6">
               {["Privacy Policy", "Terms of Service", "Return Policy"].map((l) => (
-                <a key={l} href="#" className="text-white/40 text-xs hover:text-white/70 transition-colors">{l}</a>
+                <a key={l} href="#" onClick={(e) => {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  onNavigate("about");
+                }} className="text-white/40 text-xs hover:text-white/70 transition-colors">{l}</a>
               ))}
             </div>
           </div>

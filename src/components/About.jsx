@@ -1,6 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-export default function About({ onNavigate }) {
+export default function About({ onNavigate, siteSettings }) {
+  const [activeMapUrl, setActiveMapUrl] = useState("");
+  const [corpInfo, setCorpInfo] = useState({
+    addressLine1: "Arihant Tower, 12th Floor",
+    addressLine2: "Business District, South Mumbai, MH 400001, India",
+    phone: "1800-456-7890",
+    email: "hq@arihant-fmcg.com",
+    locations: [
+      { name: "MUMBAI", mapUrl: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241317.11609950348!2d72.74109995711681!3d19.08219783958221!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin" }
+    ]
+  });
+
+  useEffect(() => {
+    if (siteSettings && siteSettings.corporate_info) {
+      setCorpInfo(siteSettings.corporate_info);
+      if (siteSettings.corporate_info.locations && siteSettings.corporate_info.locations.length > 0) {
+        setActiveMapUrl(siteSettings.corporate_info.locations[0].mapUrl);
+      }
+    } else {
+      setActiveMapUrl("https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d241317.11609950348!2d72.74109995711681!3d19.08219783958221!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c6306644edc1%3A0x5da4ed8f8d648c69!2sMumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin");
+    }
+  }, [siteSettings]);
+
   return (
     <div className="relative w-full overflow-hidden page-transition">
       <div className="grain-overlay"></div>
@@ -214,30 +236,36 @@ export default function About({ onNavigate }) {
               <div className="flex items-start gap-stack-md">
                 <span className="material-symbols-outlined text-primary mt-1">location_on</span>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface">
-                    Arihant Tower, 12th Floor
-                  </p>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    Business District, South Mumbai, MH 400001, India
-                  </p>
+                  <a href={`https://maps.google.com/?q=${encodeURIComponent(corpInfo.addressLine2)}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors cursor-pointer block">
+                    <p className="font-label-md text-label-md text-on-surface">
+                      {corpInfo.addressLine1}
+                    </p>
+                    <p className="font-body-md text-body-md text-on-surface-variant">
+                      {corpInfo.addressLine2}
+                    </p>
+                  </a>
                 </div>
               </div>
               <div className="flex items-start gap-stack-md">
                 <span className="material-symbols-outlined text-primary mt-1">call</span>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface">Toll-Free Helpline</p>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    1800-456-7890 (Mon-Sat, 9AM-6PM)
-                  </p>
+                  <a href={`tel:${corpInfo.phone.replace(/[^0-9+]/g, '')}`} className="hover:text-primary transition-colors cursor-pointer block">
+                    <p className="font-label-md text-label-md text-on-surface">Toll-Free Helpline</p>
+                    <p className="font-body-md text-body-md text-on-surface-variant">
+                      {corpInfo.phone}
+                    </p>
+                  </a>
                 </div>
               </div>
               <div className="flex items-start gap-stack-md">
                 <span className="material-symbols-outlined text-primary mt-1">mail</span>
                 <div>
-                  <p className="font-label-md text-label-md text-on-surface">Corporate Relations</p>
-                  <p className="font-body-md text-body-md text-on-surface-variant">
-                    hq@arihant-fmcg.com
-                  </p>
+                  <a href={`mailto:${corpInfo.email}`} className="hover:text-primary transition-colors cursor-pointer block">
+                    <p className="font-label-md text-label-md text-on-surface">Corporate Relations</p>
+                    <p className="font-body-md text-body-md text-on-surface-variant">
+                      {corpInfo.email}
+                    </p>
+                  </a>
                 </div>
               </div>
             </div>
@@ -246,37 +274,40 @@ export default function About({ onNavigate }) {
                 Global Presence
               </h4>
               <div className="flex flex-wrap gap-stack-sm">
-                <span className="px-3 py-1 bg-surface rounded-full border border-outline-variant text-[12px] font-semibold text-primary">
-                  INDORE
-                </span>
-                <span className="px-3 py-1 bg-surface rounded-full border border-outline-variant text-[12px] font-semibold text-primary">
-                  MUMBAI
-                </span>
-                <span className="px-3 py-1 bg-surface rounded-full border border-outline-variant text-[12px] font-semibold text-primary">
-                  DUBAI
-                </span>
-                <span className="px-3 py-1 bg-surface rounded-full border border-outline-variant text-[12px] font-semibold text-primary">
-                  LONDON
-                </span>
+                {corpInfo.locations.map((loc, idx) => {
+                  const isActive = loc.mapUrl === activeMapUrl;
+                  return (
+                    <button 
+                      key={idx}
+                      onClick={() => setActiveMapUrl(loc.mapUrl)}
+                      className={`px-3 py-1 rounded-full border text-[12px] font-semibold transition-all ${
+                        isActive 
+                          ? 'bg-primary border-primary text-white' 
+                          : 'bg-surface border-outline-variant text-primary hover:bg-surface-container'
+                      }`}
+                    >
+                      {loc.name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
-          <div className="h-[300px] lg:h-full min-h-[300px] relative">
-            <img loading="lazy"
-              className="w-full h-full object-cover"
-              alt="A clean, minimalist aerial view of a modern glass corporate headquarters building reflecting the bright morning sky, embodying professional stability and warm corporate environment."
-              src="/assets/images/about3.webp"
-            />
-            {/* Subtle Map Overlay Action */}
-            <div className="absolute bottom-6 right-6">
-              <button 
-                onClick={() => onNavigate("contact", "mumbai-map")}
-                className="bg-primary text-white flex items-center gap-2 px-stack-lg py-stack-sm rounded-full shadow-lg hover:bg-opacity-90 active:scale-95 transition-all"
-              >
-                <span className="material-symbols-outlined">map</span>
-                View on Map
-              </button>
-            </div>
+          <div className="h-[300px] lg:h-full min-h-[300px] relative bg-surface-container-highest">
+            {activeMapUrl ? (
+              <iframe 
+                src={activeMapUrl}
+                className="absolute inset-0 w-full h-full border-0 transition-opacity duration-500"
+                allowFullScreen="" 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Arihant Location Map"
+              ></iframe>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-on-surface-variant font-label-md">
+                Select a location to view map
+              </div>
+            )}
           </div>
         </div>
       </section>

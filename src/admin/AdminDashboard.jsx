@@ -12,6 +12,10 @@ import CouponsManager from "./sections/CouponsManager";
 import NotificationsPanel from "./sections/NotificationsPanel";
 import SettingsPanel from "./sections/SettingsPanel";
 import AdminUsersPanel from "./sections/AdminUsersPanel";
+import ReviewsManager from "./sections/ReviewsManager";
+import NewsletterManager from "./sections/NewsletterManager";
+import CategoriesManager from "./sections/CategoriesManager";
+import WorkersManager from "./sections/WorkersManager";
 import { supabase } from "../supabaseClient";
 
 const GREEN = "#1F5132";
@@ -24,13 +28,15 @@ const NAV = [
   { id: "orders", label: "Orders", icon: "shopping_bag" },
   { id: "customers", label: "Customers", icon: "group" },
   { id: "distributors", label: "Distributors", icon: "local_shipping" },
+  { id: "workers", label: "Workers & Production", icon: "engineering" },
   { id: "inventory", label: "Inventory", icon: "warehouse" },
   { type: "divider" },
   { id: "analytics", label: "Analytics", icon: "bar_chart" },
   { id: "revenue", label: "Revenue", icon: "payments" },
   { id: "coupons", label: "Coupons", icon: "loyalty" },
   { id: "reviews", label: "Reviews", icon: "star_rate" },
-  { id: "notifications", label: "Notifications", icon: "notifications", badge: 3 },
+  { id: "newsletter", label: "Newsletter", icon: "mail" },
+  { id: "notifications", label: "Notifications", icon: "notifications" },
   { type: "divider" },
   { id: "settings", label: "Settings", icon: "settings" },
   { id: "admin-users", label: "Admin Users", icon: "admin_panel_settings" },
@@ -50,13 +56,15 @@ function ComingSoon({ section }) {
   );
 }
 
-export default function AdminDashboard({ adminUser, onLogout, products, setProducts }) {
+export default function AdminDashboard({ adminUser, onLogout, products, setProducts, categories, setCategories, siteSettings }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [toastNotif, setToastNotif] = useState(null);
+  const prevNotifsRef = useRef([]);
   const notifRef = useRef(null);
   const profileRef = useRef(null);
 
@@ -290,7 +298,20 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
     setNotifications(prev => {
       const existingReads = new Map(prev.map(n => [n.id, n.read]));
-      return activeNotifs.map(n => ({ ...n, read: existingReads.has(n.id) ? existingReads.get(n.id) : false })).sort((a,b) => (a.read === b.read ? 0 : a.read ? 1 : -1));
+      const newNotifsState = activeNotifs.map(n => ({ ...n, read: existingReads.has(n.id) ? existingReads.get(n.id) : false })).sort((a,b) => (a.read === b.read ? 0 : a.read ? 1 : -1));
+      
+      // Toast check
+      if (prevNotifsRef.current.length > 0 && newNotifsState.length > prevNotifsRef.current.length) {
+        const prevIds = new Set(prevNotifsRef.current.map(n => n.id));
+        const newlyAdded = newNotifsState.filter(n => !prevIds.has(n.id) && !n.read);
+        if (newlyAdded.length > 0) {
+          setToastNotif(newlyAdded[0]);
+          setTimeout(() => setToastNotif(null), 6000);
+        }
+      }
+      prevNotifsRef.current = newNotifsState;
+      
+      return newNotifsState;
     });
   }, [products, orders, b2bOrders, customers]);
 
@@ -303,18 +324,22 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
 
   const renderSection = () => {
     switch (activeSection) {
-      case "dashboard": return <DashboardHome orders={orders} b2bOrders={b2bOrders} customers={customers} distributors={distributors} />;
-      case "products": return <ProductsManager products={products} setProducts={setProducts} />;
+      case "dashboard": return <DashboardHome orders={orders} b2bOrders={b2bOrders} customers={customers} distributors={distributors} navigate={navigate} />;
+      case "products": return <ProductsManager products={products} setProducts={setProducts} categories={categories} />;
+      case "categories": return <CategoriesManager categories={categories} setCategories={setCategories} />;
       case "orders": return <OrdersManager products={products} retailOrders={orders} setRetailOrders={handleSetOrders} b2bOrders={b2bOrders} setB2bOrders={handleSetB2bOrders} distributors={distributors} />;
       case "customers": return <CustomersManager customers={customers} setCustomers={handleSetCustomers} distributors={distributors} setDistributors={handleSetDistributors} orders={orders} b2bOrders={b2bOrders} />;
       case "distributors": return <DistributorManager distributors={distributors} setDistributors={handleSetDistributors} b2bOrders={b2bOrders} />;
+      case "workers": return <WorkersManager products={products} setProducts={setProducts} />;
       case "inventory": return <InventoryManager products={products} setProducts={setProducts} />;
       case "analytics":
       case "revenue": return <AnalyticsView orders={orders} b2bOrders={b2bOrders} />;
       case "coupons": return <CouponsManager />;
       case "notifications": return <NotificationsPanel notifications={notifications} setNotifications={setNotifications} />;
-      case "settings": return <SettingsPanel />;
-      case "admin-users": return <AdminUsersPanel />;
+      case "reviews": return <ReviewsManager />;
+      case "newsletter": return <NewsletterManager />;
+      case "admin-users": return <AdminUsersPanel currentUser={adminUser} />;
+      case "settings": return <SettingsPanel siteSettings={siteSettings} />;
       default: return <ComingSoon section={activeSection} />;
     }
   };
@@ -360,6 +385,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
         {NAV.map((item, i) => {
           if (item.type === "divider") return <div key={i} style={{ height: "1px", background: "rgba(255,255,255,0.08)", margin: "8px 8px" }} />;
           const isActive = activeSection === item.id;
+          const badgeCount = item.id === "notifications" ? unread : item.badge;
           return (
             <motion.button key={item.id} onClick={() => navigate(item.id)}
               style={{
@@ -380,10 +406,10 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
               {(!collapsed || mobile) && (
                 <span style={{ fontSize: "13.5px", fontWeight: isActive ? "600" : "500", flex: 1, textAlign: "left" }}>{item.label}</span>
               )}
-              {(!collapsed || mobile) && item.badge && item.badge > 0 && (
-                <span style={{ background: "#ef4444", color: "white", borderRadius: "100px", fontSize: "10px", fontWeight: "700", padding: "1px 6px", flexShrink: 0 }}>{item.badge}</span>
+              {(!collapsed || mobile) && badgeCount > 0 && (
+                <span style={{ background: "#ef4444", color: "white", borderRadius: "100px", fontSize: "10px", fontWeight: "700", padding: "1px 6px", flexShrink: 0 }}>{badgeCount}</span>
               )}
-              {(collapsed && !mobile) && item.badge && item.badge > 0 && (
+              {(collapsed && !mobile) && badgeCount > 0 && (
                 <div style={{ position: "absolute", top: "6px", right: "6px", width: "8px", height: "8px", borderRadius: "50%", background: "#ef4444" }} />
               )}
             </motion.button>
@@ -554,11 +580,50 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       <div className="lg:ml-[240px]"
         style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh", minWidth: 0, marginLeft: 0 }}>
         <TopNav />
-        <main className="admin-main-content" style={{ flex: 1, overflowX: "hidden" }}>
+        <main className="admin-main-content" style={{ flex: 1, overflowX: "hidden", position: "relative" }}>
           <AnimatePresence mode="wait">
             <motion.div key={activeSection} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.22 }}>
               {renderSection()}
             </motion.div>
+          </AnimatePresence>
+          
+          {/* Toast Notification */}
+          <AnimatePresence>
+            {toastNotif && (
+              <motion.div
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
+                style={{
+                  position: "fixed",
+                  bottom: "24px",
+                  right: "24px",
+                  background: "white",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.15)",
+                  border: "1px solid #f0ede8",
+                  zIndex: 9999,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  maxWidth: "340px",
+                  cursor: "pointer"
+                }}
+                onClick={() => { setActiveSection("notifications"); setToastNotif(null); }}
+              >
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(31,81,50,0.08)", color: GREEN, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>notifications</span>
+                </div>
+                <div>
+                  <div style={{ fontWeight: "700", fontSize: "14px", color: "#1C1C1C", marginBottom: "4px" }}>{toastNotif.title}</div>
+                  <div style={{ fontSize: "12px", color: "#6b7280", lineHeight: "1.3" }}>{toastNotif.message}</div>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); setToastNotif(null); }} style={{ background: "none", border: "none", padding: "4px", cursor: "pointer", alignSelf: "flex-start", marginTop: "-4px", marginRight: "-4px" }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#9ca3af" }}>close</span>
+                </button>
+              </motion.div>
+            )}
           </AnimatePresence>
         </main>
       </div>

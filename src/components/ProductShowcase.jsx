@@ -50,9 +50,14 @@ export default function ProductShowcase({ products, onProductClick, onNavigate }
                 <h3 className="font-headline-md text-headline-md text-on-surface mt-1">
                   {product.name}
                 </h3>
-                <p className="text-label-sm text-on-surface-variant mb-4">
+                <p className="text-label-sm text-on-surface-variant mb-2">
                   {product.desc}
                 </p>
+                <div className="mb-3">
+                  <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${product.stock > 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'}`}>
+                    {product.stock > 0 ? `${product.stock} Units Available` : 'Out of Stock'}
+                  </span>
+                </div>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-primary">
                     ₹{product.price} {product.weight && <span className="text-xs text-outline font-normal">/ {product.weight}</span>}

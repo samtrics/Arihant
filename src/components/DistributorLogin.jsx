@@ -23,24 +23,32 @@ export default function DistributorLogin({ onNavigate, onLogin }) {
     try {
       const queryId = distributorId.trim();
       const queryPass = password.trim();
-      console.log(`Attempting login with ID: "${queryId}" and Pass: "${queryPass}"`);
       
-      const { data, error: dbError } = await supabase
+      // 1. Fetch the distributor's email from their ID
+      const { data: distData, error: dbError } = await supabase
         .from('distributors')
         .select('*')
         .eq('distributor_id', queryId)
-        .eq('password', queryPass)
-        .eq('status', 'approved')
         .maybeSingle();
 
-      console.log("Login Query Result:", { data, dbError });
+      if (dbError || !distData) {
+        throw new Error("Invalid Distributor ID.");
+      }
+      if (distData.status !== 'approved') {
+        throw new Error("Your account has not been approved yet.");
+      }
 
-      if (dbError) {
-        throw new Error(`Database Error: ${dbError.message}`);
+      // 2. Log them in securely via Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: distData.email,
+        password: queryPass
+      });
+
+      if (authError) {
+        throw new Error("Invalid Password. " + authError.message);
       }
-      if (!data) {
-        throw new Error("Invalid Distributor ID or Password, or account not approved.");
-      }
+
+      const data = distData;
 
       setSuccess(true);
       setTimeout(() => {

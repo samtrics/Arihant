@@ -51,6 +51,7 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
       const { error } = await supabase.from('orders').insert([{
         order_number: orderNumber,
         customer_name: distributorUser?.business || "Unknown B2B",
+        distributor_email: distributorUser?.email || "N/A",
         amount: calculateTotal(),
         status: 'Pending',
         payment_status: 'Pending (B2B Terms)',

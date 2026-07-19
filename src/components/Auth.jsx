@@ -493,20 +493,20 @@ export default function Auth({ onNavigate, initialMode = "signin" }) {
             )}
 
             {/* Remember Me / Agree to Terms Checkbox */}
-            <div className="py-1">
-              {mode === "signin" ? (
-                <label className="flex items-center gap-2.5 cursor-pointer text-body-md select-none">
-                  <input
-                    name="rememberMe"
-                    type="checkbox"
-                    checked={formData.rememberMe}
-                    onChange={handleInputChange}
-                    className="w-[18px] h-[18px] accent-primary rounded border-outline-variant bg-surface-container-low cursor-pointer"
-                  />
-                  <span className="text-on-surface-variant font-medium">Keep me signed in on this device</span>
-                </label>
-              ) : (
-                <div className="space-y-1.5">
+            <div className="py-1 space-y-3">
+              <label className="flex items-center gap-2.5 cursor-pointer text-body-md select-none">
+                <input
+                  name="rememberMe"
+                  type="checkbox"
+                  checked={formData.rememberMe}
+                  onChange={handleInputChange}
+                  className="w-[18px] h-[18px] accent-primary rounded border-outline-variant bg-surface-container-low cursor-pointer"
+                />
+                <span className="text-on-surface-variant font-medium">Keep me signed in on this device</span>
+              </label>
+
+              {mode === "signup" && (
+                <div className="space-y-1.5 border-t border-outline-variant/30 pt-3">
                   <label className="flex items-start gap-2.5 cursor-pointer text-body-md select-none">
                     <input
                       name="agreeTerms"
