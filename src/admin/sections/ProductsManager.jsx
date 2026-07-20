@@ -32,7 +32,7 @@ export default function ProductsManager({ products, setProducts, categories = []
   const totalPages = Math.ceil(filtered.length / PER);
   const paged = filtered.slice((page - 1) * PER, page * PER);
 
-  const openAdd = () => { setForm({ ...emptyForm, sku: `ARI-${Math.random().toString(36).substr(2, 6).toUpperCase()}` }); setModal("add"); };
+  const openAdd = () => { setForm({ ...emptyForm, category: categories.length > 0 ? categories[0] : "Flours (Atta)", sku: `ARI-${Math.random().toString(36).substr(2, 6).toUpperCase()}` }); setModal("add"); };
   const openEdit = (p) => { 
     const match = p.weight ? String(p.weight).match(/^([\d.]+)(.*)$/) : null;
     const wv = match ? match[1] : p.weight || "";
