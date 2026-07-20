@@ -127,7 +127,7 @@ export default function ProductDetailsModal({ product, onClose, onCategorySelect
         </div>
 
         {/* Details Section */}
-        <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto">
+        <div className="w-full md:w-1/2 md:absolute md:top-0 md:right-0 md:bottom-0 p-6 md:p-10 flex flex-col overflow-y-auto">
           <div className="mb-6">
             <span 
               className="text-label-sm text-secondary font-bold tracking-widest uppercase mb-2 block cursor-pointer hover:underline w-max"
