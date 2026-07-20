@@ -56,12 +56,7 @@ export default function Products({ products, categories = [], onNavigate, onProd
       const pCat = product.category?.trim().toLowerCase() || "";
       const sCat = selectedCategory?.trim().toLowerCase() || "";
       
-      if (sCat === "flours (atta)") {
-        // Show products of category "Flours (Atta)" and Roasted Daliya
-        if (pCat !== "flours (atta)" && product.name?.trim().toLowerCase() !== "roasted daliya") {
-          return false;
-        }
-      } else if (pCat !== sCat) {
+      if (pCat !== sCat) {
         return false;
       }
     }
@@ -170,10 +165,13 @@ export default function Products({ products, categories = [], onNavigate, onProd
           {/* Header text and responsive sorting dropdown */}
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-stack-lg">
             <div>
-              <h1 className="font-display-lg text-display-lg text-primary">Flours &amp; Staples</h1>
+              <h1 className="font-display-lg text-display-lg text-primary">
+                {selectedCategory === "All" ? "All Premium Staples" : selectedCategory}
+              </h1>
               <p className="text-body-lg text-on-surface-variant max-w-2xl">
-                Sourced directly from the fertile heartlands of India, our flours represent the pinnacle of purity and
-                traditional milling excellence.
+                {selectedCategory === "All" 
+                  ? "Sourced directly from the fertile heartlands of India, our staples represent the pinnacle of purity and traditional excellence."
+                  : `Explore our premium selection of ${selectedCategory}, hygienically packed for your family's health and wellness.`}
               </p>
             </div>
 
