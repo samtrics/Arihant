@@ -110,23 +110,35 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       if (error) throw error;
 
       // Automatically deduct inventory stock without blocking the checkout
-      cartItems.forEach(async (item) => {
-        try {
-          const { data: prod } = await supabase.from('products').select('stock').eq('id', item.id).single();
-          if (prod) {
-            const newStock = Math.max(0, Number(prod.stock || 0) - item.quantity);
-            await supabase.from('products').update({ stock: newStock }).eq('id', item.id);
-            await supabase.from('stock_movements').insert([{
-              product_id: item.id,
-              change_amount: -item.quantity,
-              reason: 'Order Fulfilled',
-              notes: `B2C Order ${orderNumber}`
-            }]);
+      try {
+        const itemIds = cartItems.map(i => i.id);
+        const { data: currentProds } = await supabase.from('products').select('id, stock').in('id', itemIds);
+        
+        if (currentProds && currentProds.length > 0) {
+          const movements = [];
+          
+          for (const item of cartItems) {
+            const prod = currentProds.find(p => p.id === item.id);
+            if (prod) {
+              const newStock = Math.max(0, Number(prod.stock || 0) - item.quantity);
+              await supabase.from('products').update({ stock: newStock }).eq('id', item.id);
+              
+              movements.push({
+                product_id: item.id,
+                change_amount: -item.quantity,
+                reason: 'Order Fulfilled',
+                notes: `B2C Order ${orderNumber}`
+              });
+            }
           }
-        } catch (e) {
-          console.error("Failed to deduct stock:", e);
+          
+          if (movements.length > 0) {
+            await supabase.from('stock_movements').insert(movements);
+          }
         }
-      });
+      } catch (e) {
+        console.error("Failed to deduct stock:", e);
+      }
 
       if (addressSelection === "new" && saveNewAddress) {
         await supabase.auth.updateUser({
