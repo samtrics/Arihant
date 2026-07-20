@@ -134,7 +134,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
         // Apply wholesale_price or fallback to main price
         const b2bPrice = p.wholesale_price || p.wholesalePrice || price;
         totalAmt += b2bPrice * qty;
-        finalProducts.push({ name: p.name, qty, price: b2bPrice, total: b2bPrice * qty });
+        finalProducts.push({ id: p.id, name: p.name, qty, price: b2bPrice, total: b2bPrice * qty });
       }
     });
 

@@ -56,7 +56,7 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
         status: 'Pending',
         payment_status: 'Pending (B2B Terms)',
         city: `${distributorUser?.address || "N/A"} | Phone: ${distributorUser?.phone || "N/A"}`,
-        products: JSON.stringify(cartItems)
+        products: cartItems
       }]);
 
       if (error) throw error;

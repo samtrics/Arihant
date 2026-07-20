@@ -98,13 +98,13 @@ export default function CartDrawer({ customerUser, onNavigate }) {
         status: 'pending',
         payment_status: paymentMethod === 'COD' ? 'Pending (COD)' : `Paid (UPI Txn: ${upiTxnId.trim()})`,
         city: `${fullAddress} | Phone: ${phone.trim()}`,
-        products: JSON.stringify(cartItems.map(item => ({
+        products: cartItems.map(item => ({
           id: item.id,
           name: item.name,
           qty: item.quantity,
           price: item.offerPrice || item.price,
           unit: item.unit
-        })))
+        }))
       }]);
 
       if (error) throw error;
