@@ -179,6 +179,7 @@ export default function InventoryManager({ products = [], setProducts }) {
     .sort((a, b) => a.stock - b.stock)
     .slice(0, 12)
     .map((i) => ({
+      id: i.id,
       name: String(i.name || "Unknown").split(" ").slice(0, 2).join(" "),
       stock: i.stock,
       min: i.minStock,
@@ -345,14 +346,14 @@ export default function InventoryManager({ products = [], setProducts }) {
                 <div style={{ textAlign: "center", color: "#9ca3af", padding: "40px 0" }}>No products found.</div>
               ) : (
                 <ResponsiveContainer width="100%" height={220}>
-                  <BarChart key={chartData.map(d=>d.stock).join(',')} data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barGap={4}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0ede8" vertical={false} />
                     <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid #f0ede8", fontSize: "12px" }} />
                     <Bar dataKey="stock" name="Current Stock" radius={[6, 6, 0, 0]} barSize={20}>
-                      {chartData.map((entry, i) => (
-                        <Cell key={i} fill={entry.isOut ? "#ef4444" : entry.isLow ? "#f59e0b" : GREEN} />
+                      {chartData.map((entry) => (
+                        <Cell key={entry.id} fill={entry.isOut ? "#ef4444" : entry.isLow ? "#f59e0b" : GREEN} />
                       ))}
                     </Bar>
                     <Bar dataKey="min" name="Min. Required" fill="rgba(212,166,74,0.35)" radius={[6, 6, 0, 0]} barSize={20} />
