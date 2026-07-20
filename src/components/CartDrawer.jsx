@@ -109,6 +109,18 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
       if (error) throw error;
 
+      // Automatically deduct inventory stock without blocking the checkout
+      cartItems.forEach(item => {
+        supabase.rpc('adjust_stock_and_log', {
+          p_product_id: item.id,
+          p_change_amount: -item.quantity,
+          p_reason: 'Order Fulfilled',
+          p_notes: `B2C Order ${orderNumber}`
+        }).then(({ error: rpcError }) => {
+          if (rpcError) console.error("Failed to deduct stock:", rpcError);
+        });
+      });
+
       if (addressSelection === "new" && saveNewAddress) {
         await supabase.auth.updateUser({
           data: { address: { flat: address.flat, area: address.area, city: address.city, pincode: address.pincode } }

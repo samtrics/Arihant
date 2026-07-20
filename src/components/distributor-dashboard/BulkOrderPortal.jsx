@@ -60,6 +60,18 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
       }]);
 
       if (error) throw error;
+
+      // Automatically deduct inventory stock without blocking the checkout
+      cartItems.forEach(item => {
+        supabase.rpc('adjust_stock_and_log', {
+          p_product_id: item.id,
+          p_change_amount: -item.qty,
+          p_reason: 'Order Fulfilled',
+          p_notes: `B2B Order ${orderNumber}`
+        }).then(({ error: rpcError }) => {
+          if (rpcError) console.error("Failed to deduct stock:", rpcError);
+        });
+      });
       
       setCart({});
       if (onOrderSuccess) onOrderSuccess();
