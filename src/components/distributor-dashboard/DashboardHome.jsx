@@ -96,7 +96,6 @@ export default function DashboardHome({ distributorUser }) {
     { label: "Pending Deliveries", value: stats.pendingDeliveries, icon: "local_shipping", color: "#f59e0b", bg: "#fffbeb" },
     { label: "Est. Margins Saved", value: `₹${stats.totalEarnings.toLocaleString("en-IN")}`, icon: "trending_up", color: "#10b981", bg: "#ecfdf5" },
     { label: "Active Products", value: stats.activeProducts, icon: "category", color: "#6366f1", bg: "#e0e7ff" },
-    { label: "Current Discount", value: `${stats.currentDiscount}%`, icon: "sell", color: "#ec4899", bg: "#fce7f3" },
   ];
 
   return (
