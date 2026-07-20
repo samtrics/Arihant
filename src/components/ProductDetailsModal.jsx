@@ -87,7 +87,7 @@ export default function ProductDetailsModal({ product, onClose, onCategorySelect
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          <div className="flex-1 relative overflow-hidden flex items-center justify-center">
+          <div className="w-full aspect-[3/4] relative overflow-hidden flex items-center justify-center">
             <div className="texture-overlay absolute inset-0 opacity-20 pointer-events-none z-10"></div>
             {product.brandTag && (
               <div className="absolute top-6 left-6 z-20">
@@ -103,7 +103,7 @@ export default function ProductDetailsModal({ product, onClose, onCategorySelect
                 loading="lazy" 
                 src={images[activeImageIndex] || product.imgSrc} 
                 alt={product.imgAlt || product.name} 
-                className="absolute inset-0 w-full h-full object-cover min-h-[300px] md:min-h-full"
+                className="absolute inset-0 w-full h-full object-cover"
                 initial={{ opacity: 0, scale: 0.96 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.04 }}
