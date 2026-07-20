@@ -160,7 +160,7 @@ export default function ProductDetailsModal({ product, onClose }) {
 
           <div className="mb-8 flex-1">
             <h3 className="font-headline-sm text-headline-sm text-on-surface mb-3">About this product</h3>
-            <p className="text-body-lg text-on-surface-variant leading-relaxed">
+            <p className="text-body-lg text-on-surface-variant leading-relaxed whitespace-pre-wrap">
               {product.desc}
             </p>
             

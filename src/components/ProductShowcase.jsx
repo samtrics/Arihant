@@ -50,9 +50,18 @@ export default function ProductShowcase({ products, onProductClick, onNavigate }
                 <h3 className="font-headline-md text-headline-md text-on-surface mt-1">
                   {product.name}
                 </h3>
-                <p className="text-label-sm text-on-surface-variant mb-2">
+                <p className="text-label-sm text-on-surface-variant mb-2 whitespace-pre-wrap line-clamp-3">
                   {product.desc}
                 </p>
+                <button 
+                  className="text-primary text-[10px] font-bold uppercase tracking-wider mb-2 hover:underline flex items-center gap-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onProductClick && onProductClick(product);
+                  }}
+                >
+                  Details Info <span className="material-symbols-outlined text-[14px]">info</span>
+                </button>
                 <div className="mb-3">
                   <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${product.stock > 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'}`}>
                     {product.stock > 0 ? `${product.stock} Units Available` : 'Out of Stock'}

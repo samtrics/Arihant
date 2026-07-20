@@ -66,7 +66,7 @@ export default function App() {
         return 'admin-dashboard';
       }
     }
-    return Capacitor.isNativePlatform() ? 'admin' : 'home';
+        return Capacitor.isNativePlatform() ? 'home' : 'home';
   });
 
   const [adminUser, setAdminUser] = useState(() => {
@@ -192,7 +192,7 @@ export default function App() {
         // Only redirect to home if not in admin or distributor flows
         const page = currentPageRef.current;
         if (page !== 'admin-dashboard' && page !== 'admin' && page !== 'distributor-dashboard' && page !== 'distributor-login') {
-          setPage(Capacitor.isNativePlatform() ? 'admin' : 'home');
+          setPage(Capacitor.isNativePlatform() ? 'home' : 'home');
         }
       }
     });
@@ -205,7 +205,7 @@ export default function App() {
           const sessionData = JSON.parse(saved);
           if (sessionData.expiresAt && Date.now() > sessionData.expiresAt) {
             setAdminUserAndPersist(null);
-            setPage(Capacitor.isNativePlatform() ? 'admin' : 'home');
+            setPage(Capacitor.isNativePlatform() ? 'home' : 'home');
             alert("Session expired due to inactivity. Please log in again.");
           }
         } catch (e) {}
@@ -380,7 +380,7 @@ export default function App() {
         }
       } else {
         const urlParams = new URLSearchParams(window.location.search);
-        const page = urlParams.get('page') || (localStorage.getItem('adminSession') ? 'admin-dashboard' : (Capacitor.isNativePlatform() ? 'admin' : 'home'));
+        const page = urlParams.get('page') || (localStorage.getItem('adminSession') ? 'admin-dashboard' : (Capacitor.isNativePlatform() ? 'home' : 'home'));
         setPage(page);
       }
     };
@@ -504,7 +504,7 @@ export default function App() {
         {currentPage === "admin-dashboard" && adminUser && (
           <AdminDashboard
             adminUser={adminUser}
-            onLogout={() => { setAdminUserAndPersist(null); setPage(Capacitor.isNativePlatform() ? 'admin' : 'home'); }}
+            onLogout={() => { setAdminUserAndPersist(null); setPage(Capacitor.isNativePlatform() ? 'home' : 'home'); }}
             products={products}
             setProducts={handleSetProducts}
             categories={categories}

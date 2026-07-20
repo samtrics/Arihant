@@ -336,7 +336,16 @@ export default function Products({ products, categories = [], onNavigate, onProd
                   <div className="texture-overlay absolute inset-0 opacity-10"></div>
                   <p className="text-label-sm text-secondary font-bold tracking-widest mb-1">{product.tag}</p>
                   <h4 className="font-headline-md text-headline-md text-on-surface mb-2">{product.name}</h4>
-                  <p className="text-label-sm text-on-surface-variant mb-2">{product.desc}</p>
+                  <p className="text-label-sm text-on-surface-variant mb-2 whitespace-pre-wrap line-clamp-3">{product.desc}</p>
+                  <button 
+                    className="text-primary text-[11px] font-bold uppercase tracking-wider mb-3 hover:underline flex items-center gap-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onProductClick && onProductClick(product);
+                    }}
+                  >
+                    Details Info <span className="material-symbols-outlined text-[14px]">info</span>
+                  </button>
                   <div className="mb-4">
                     <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded-md ${product.stock > 0 ? 'bg-secondary/10 text-secondary' : 'bg-error/10 text-error'}`}>
                       {product.stock > 0 ? `${product.stock} Units Available` : 'Out of Stock'}
