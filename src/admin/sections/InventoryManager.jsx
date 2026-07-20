@@ -206,13 +206,30 @@ export default function InventoryManager({ products = [], setProducts }) {
     }
     setAdjusting(true);
     try {
-      const { error } = await supabase.rpc("adjust_stock_and_log", {
-        p_product_id: adjustModal.id,
-        p_change_amount: change,
-        p_reason: adjustReason,
-        p_notes: adjustNote || null,
-      });
-      if (error) throw error;
+      const { data: currentProduct, error: fetchError } = await supabase
+        .from('products')
+        .select('stock')
+        .eq('id', adjustModal.id)
+        .single();
+      if (fetchError) throw fetchError;
+
+      const newStockVal = Math.max(0, Number(currentProduct.stock || 0) + change);
+
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ stock: newStockVal })
+        .eq('id', adjustModal.id);
+      if (updateError) throw updateError;
+
+      const { error: logError } = await supabase
+        .from('stock_movements')
+        .insert([{
+          product_id: adjustModal.id,
+          change_amount: change,
+          reason: adjustReason,
+          notes: adjustNote || null,
+        }]);
+      if (logError) throw logError;
 
       const newStock = Math.max(0, adjustModal.stock + change);
       if (setProducts) {
