@@ -24,7 +24,9 @@ export default function ProductsManager({ products, setProducts, categories = []
   const filtered = products.filter((p) => {
     const q = search.toLowerCase();
     const matchQ = p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
-    const matchC = cat === "All" || p.category === cat;
+    const pCat = p.category?.trim().toLowerCase() || "";
+    const sCat = cat?.trim().toLowerCase() || "";
+    const matchC = cat === "All" || pCat === sCat;
     return matchQ && matchC;
   });
   const totalPages = Math.ceil(filtered.length / PER);

@@ -47,12 +47,15 @@ export default function Products({ products, categories = [], onNavigate, onProd
 
     // 1. Category Matching
     if (selectedCategory !== "All") {
-      if (selectedCategory === "Flours (Atta)") {
-        // Show products of category "Flours (Atta)" and Roasted Daliya to perfectly match product.html's default 6 flours/staples layout!
-        if (product.category !== "Flours (Atta)" && product.name !== "Roasted Daliya") {
+      const pCat = product.category?.trim().toLowerCase() || "";
+      const sCat = selectedCategory?.trim().toLowerCase() || "";
+      
+      if (sCat === "flours (atta)") {
+        // Show products of category "Flours (Atta)" and Roasted Daliya
+        if (pCat !== "flours (atta)" && product.name?.trim().toLowerCase() !== "roasted daliya") {
           return false;
         }
-      } else if (product.category !== selectedCategory) {
+      } else if (pCat !== sCat) {
         return false;
       }
     }
