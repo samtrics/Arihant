@@ -109,32 +109,17 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
       if (error) throw error;
 
-      // Automatically deduct inventory stock without blocking the checkout
+      // Automatically deduct inventory stock using RPC to bypass RLS for anonymous users
       try {
-        const itemIds = cartItems.map(i => i.id);
-        const { data: currentProds } = await supabase.from('products').select('id, stock').in('id', itemIds);
-        
-        if (currentProds && currentProds.length > 0) {
-          const movements = [];
-          
-          for (const item of cartItems) {
-            const prod = currentProds.find(p => p.id === item.id);
-            if (prod) {
-              const newStock = Math.max(0, Number(prod.stock || 0) - item.quantity);
-              await supabase.from('products').update({ stock: newStock }).eq('id', item.id);
-              
-              movements.push({
-                product_id: item.id,
-                change_amount: -item.quantity,
-                reason: 'Order Fulfilled',
-                notes: `B2C Order ${orderNumber}`
-              });
-            }
-          }
-          
-          if (movements.length > 0) {
-            await supabase.from('stock_movements').insert(movements);
-          }
+        for (const item of cartItems) {
+          await supabase.rpc('adjust_stock_and_log', {
+            p_product_id: item.id,
+            p_change_amount: -item.quantity,
+            p_reason: 'Order Fulfilled',
+            p_notes: `B2C Order ${orderNumber}`
+          });
+          // brief pause to avoid 30 req/10s rate limit if cart is very large
+          if (cartItems.length > 15) await new Promise(r => setTimeout(r, 400));
         }
       } catch (e) {
         console.error("Failed to deduct stock:", e);
