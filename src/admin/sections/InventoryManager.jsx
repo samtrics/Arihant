@@ -180,7 +180,8 @@ export default function InventoryManager({ products = [], setProducts }) {
     .slice(0, 12)
     .map((i) => ({
       id: i.id,
-      name: String(i.name || "Unknown").split(" ").slice(0, 2).join(" "),
+      shortName: String(i.name || "Unknown").split(" ").slice(0, 2).join(" "),
+      fullName: i.name,
       stock: i.stock,
       min: i.minStock,
       isLow: i.stock < i.minStock,
@@ -348,9 +349,9 @@ export default function InventoryManager({ products = [], setProducts }) {
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }} barGap={4}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0ede8" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="id" tickFormatter={(id) => chartData.find(d => d.id === id)?.shortName || id} tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: "10px", border: "1px solid #f0ede8", fontSize: "12px" }} />
+                    <Tooltip labelFormatter={(id) => chartData.find(d => d.id === id)?.fullName || id} contentStyle={{ borderRadius: "10px", border: "1px solid #f0ede8", fontSize: "12px" }} />
                     <Bar dataKey="stock" name="Current Stock" radius={[6, 6, 0, 0]} barSize={20}>
                       {chartData.map((entry) => (
                         <Cell key={entry.id} fill={entry.isOut ? "#ef4444" : entry.isLow ? "#f59e0b" : GREEN} />
