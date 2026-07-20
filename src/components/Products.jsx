@@ -331,7 +331,7 @@ export default function Products({ products, categories = [], onNavigate, onProd
                     </span>
                   </div>
                 )}
-                <div className="aspect-square bg-surface-container-low overflow-hidden">
+                <div className="aspect-[3/4] bg-surface-container-low overflow-hidden">
                   <img loading="lazy"
                     alt={product.imgAlt}
                     className="w-full h-full object-cover group-hover:scale-[1.08] transition-transform duration-700"

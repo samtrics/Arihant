@@ -36,7 +36,7 @@ export default function ProductShowcase({ products, onProductClick, onNavigate, 
                   </div>
                 )}
                 <div className="wheat-texture absolute inset-0"></div>
-                <div className="aspect-square bg-surface-container-low rounded-lg mb-4 overflow-hidden">
+                <div className="aspect-[3/4] bg-surface-container-low rounded-lg mb-4 overflow-hidden">
                   <img loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     alt={product.imgAlt}
