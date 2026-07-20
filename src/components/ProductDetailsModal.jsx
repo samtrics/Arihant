@@ -83,11 +83,11 @@ export default function ProductDetailsModal({ product, onClose, onCategorySelect
 
         {/* Image Section */}
         <div 
-          className="w-full md:w-1/2 bg-surface-container-low relative flex-shrink-0 flex flex-col"
+          className="w-full md:w-1/2 relative flex-shrink-0 flex flex-col"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          <div className="w-full aspect-[3/4] relative overflow-hidden flex items-center justify-center">
+          <div className="w-full aspect-[3/4] bg-surface-container-low relative overflow-hidden flex items-center justify-center">
             <div className="texture-overlay absolute inset-0 opacity-20 pointer-events-none z-10"></div>
             {product.brandTag && (
               <div className="absolute top-6 left-6 z-20">
