@@ -35,7 +35,6 @@ const NAV = [
   { type: "divider" },
   { id: "analytics", label: "Analytics", icon: "bar_chart" },
   { id: "revenue", label: "Revenue", icon: "payments" },
-  { id: "coupons", label: "Coupons", icon: "loyalty" },
   { id: "reviews", label: "Reviews", icon: "star_rate" },
   { id: "newsletter", label: "Newsletter", icon: "mail" },
   { id: "notifications", label: "Notifications", icon: "notifications" },

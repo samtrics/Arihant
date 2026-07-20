@@ -112,6 +112,7 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
             <tr>
               <th style={{ padding: "16px", textAlign: "left", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>Product</th>
               <th style={{ padding: "16px", textAlign: "left", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>SKU & Unit</th>
+              <th style={{ padding: "16px", textAlign: "center", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>Available Stock</th>
               <th style={{ padding: "16px", textAlign: "right", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase" }}>Your Price</th>
               <th style={{ padding: "16px", textAlign: "center", fontSize: "12px", fontWeight: "700", color: "#4b5563", textTransform: "uppercase", width: "150px" }}>Quantity</th>
             </tr>
@@ -134,6 +135,11 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
                   <td style={{ padding: "16px", fontSize: "13px", color: "#4b5563" }}>
                     <p style={{ fontFamily: "monospace", color: "#111827", fontWeight: "600" }}>{p.sku}</p>
                     <p>{p.weightValue} {p.weightUnit}</p>
+                  </td>
+                  <td style={{ padding: "16px", textAlign: "center", fontSize: "13px" }}>
+                    <span style={{ fontWeight: "600", padding: "4px 8px", borderRadius: "6px", background: p.stock > 50 ? "#ecfdf5" : p.stock > 0 ? "#fffbeb" : "#fef2f2", color: p.stock > 50 ? "#10b981" : p.stock > 0 ? "#f59e0b" : "#ef4444" }}>
+                      {p.stock > 0 ? `${p.stock} units` : 'Out of Stock'}
+                    </span>
                   </td>
                   <td style={{ padding: "16px", textAlign: "right" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
