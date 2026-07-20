@@ -38,14 +38,9 @@ export default function DistributorLogin({ onNavigate, onLogin }) {
         throw new Error("Your account has not been approved yet.");
       }
 
-      // 2. Log them in securely via Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: distData.email,
-        password: queryPass
-      });
-
-      if (authError) {
-        throw new Error("Invalid Password. " + authError.message);
+      // 2. Verify password directly against the database
+      if (distData.password !== queryPass) {
+        throw new Error("Invalid login credentials");
       }
 
       const data = distData;
