@@ -119,6 +119,7 @@ export default function App() {
   const [categories, setCategories] = useState(["Flours (Atta)", "Grains & Pulses", "Spices (Masala)", "Roasted Daliya", "Rice Varieties"]); // Default fallback
   const [siteSettings, setSiteSettings] = useState(null);
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+  const [globalCategory, setGlobalCategory] = useState("All");
 
   const currentPageRef = useRef(currentPage);
   const setPage = (page) => {
@@ -462,14 +463,14 @@ export default function App() {
         {currentPage === "home" && (
           <div className="page-transition">
             <Hero onNavigate={handleNavigate} />
-            <ProductShowcase products={publicProducts} onProductClick={setSelectedProduct} onNavigate={handleNavigate} />
+            <ProductShowcase products={publicProducts} onProductClick={setSelectedProduct} onNavigate={handleNavigate} onCategorySelect={(cat) => { setGlobalCategory(cat); handleNavigate('products'); }} />
             <PromiseSection />
             <Heritage onNavigate={handleNavigate} />
             <Testimonials />
           </div>
         )}
         {currentPage === "about" && <About onNavigate={handleNavigate} siteSettings={siteSettings} />}
-        {currentPage === "products" && <Products products={publicProducts} categories={categories} onNavigate={handleNavigate} onProductClick={setSelectedProduct} initialSearchQuery={globalSearchQuery} />}
+        {currentPage === "products" && <Products products={publicProducts} categories={categories} onNavigate={handleNavigate} onProductClick={setSelectedProduct} initialSearchQuery={globalSearchQuery} initialCategory={globalCategory} onCategorySelect={setGlobalCategory} />}
         {currentPage === "contact" && <Contact onNavigate={handleNavigate} siteSettings={siteSettings} />}
         {currentPage === "distributors" && <Distributor onNavigate={handleNavigate} siteSettings={siteSettings} />}
         {(currentPage === "login" || currentPage === "register") && <Auth onNavigate={handleNavigate} initialMode={currentPage === "login" ? "signin" : "signup"} />}
@@ -516,7 +517,7 @@ export default function App() {
         </Suspense>
       </main>
       {!isAdminPage && <Suspense fallback={null}><Footer currentPage={currentPage} onNavigate={handleNavigate} /></Suspense>}
-      {selectedProduct && <Suspense fallback={null}><ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} /></Suspense>}
+      {selectedProduct && <Suspense fallback={null}><ProductDetailsModal product={selectedProduct} onClose={() => setSelectedProduct(null)} onCategorySelect={(cat) => { setGlobalCategory(cat); handleNavigate('products'); setSelectedProduct(null); }} /></Suspense>}
       <Suspense fallback={null}><CartDrawer customerUser={customerUser} onNavigate={handleNavigate} /></Suspense>
     </>
   );

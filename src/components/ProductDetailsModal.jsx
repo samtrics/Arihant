@@ -3,7 +3,7 @@ import { useCart } from "../context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
 import SEO from "./SEO";
 
-export default function ProductDetailsModal({ product, onClose }) {
+export default function ProductDetailsModal({ product, onClose, onCategorySelect }) {
   // Close on escape key
   useEffect(() => {
     const handleEsc = (e) => {
@@ -129,8 +129,13 @@ export default function ProductDetailsModal({ product, onClose }) {
         {/* Details Section */}
         <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto">
           <div className="mb-6">
-            <span className="text-label-sm text-secondary font-bold tracking-widest uppercase mb-2 block">
-              {product.tag || product.category}
+            <span 
+              className="text-label-sm text-secondary font-bold tracking-widest uppercase mb-2 block cursor-pointer hover:underline w-max"
+              onClick={() => {
+                if (onCategorySelect) onCategorySelect(product.category || product.tag || "All");
+              }}
+            >
+              {product.category || product.tag}
             </span>
             <h2 className="font-display-sm text-display-sm text-primary mb-2">
               {product.name}

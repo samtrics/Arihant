@@ -1,8 +1,7 @@
 import React from "react";
 import { useCart } from "../context/CartContext";
 
-export default function ProductShowcase({ products, onProductClick, onNavigate }) {
-  const { addToCart } = useCart();
+export default function ProductShowcase({ products, onProductClick, onNavigate, onCategorySelect }) {
   const showcaseProducts = products.filter((p) => (p.bestseller || p.featured) && p.status !== "inactive").slice(0, 5);
   return (
     <section id="products-showcase" className="py-stack-xl bg-surface relative scroll-reveal">
@@ -44,8 +43,14 @@ export default function ProductShowcase({ products, onProductClick, onNavigate }
                     src={product.imgSrc}
                   />
                 </div>
-                <span className="text-label-sm font-label-sm text-secondary uppercase tracking-widest">
-                  {product.tag}
+                <span 
+                  className="text-label-sm font-label-sm text-secondary uppercase tracking-widest cursor-pointer hover:underline relative z-20"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onCategorySelect) onCategorySelect(product.category || product.tag || "All");
+                  }}
+                >
+                  {product.category || product.tag}
                 </span>
                 <h3 className="font-headline-md text-headline-md text-on-surface mt-1">
                   {product.name}

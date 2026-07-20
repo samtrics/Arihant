@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useCart } from "../context/CartContext";
 
-export default function Products({ products, categories = [], onNavigate, onProductClick, initialSearchQuery }) {
-  const [selectedCategory, setSelectedCategory] = useState("All");
+export default function Products({ products, categories = [], onNavigate, onProductClick, initialSearchQuery, initialCategory = "All", onCategorySelect }) {
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
   const [filters, setFilters] = useState({
     organic: false,
     heritage: false,
@@ -19,6 +19,12 @@ export default function Products({ products, categories = [], onNavigate, onProd
       setSearchQuery(initialSearchQuery);
     }
   }, [initialSearchQuery]);
+
+  React.useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   const handleFilterToggle = (key) => {
     setFilters((prev) => ({
@@ -337,7 +343,16 @@ export default function Products({ products, categories = [], onNavigate, onProd
                 </div>
                 <div className="p-stack-md relative">
                   <div className="texture-overlay absolute inset-0 opacity-10"></div>
-                  <p className="text-label-sm text-secondary font-bold tracking-widest mb-1">{product.tag}</p>
+                  <p 
+                    className="text-label-sm text-secondary font-bold tracking-widest mb-1 cursor-pointer hover:underline relative z-10 w-max"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategory(product.category || "All");
+                      if (onCategorySelect) onCategorySelect(product.category || "All");
+                    }}
+                  >
+                    {product.category || product.tag}
+                  </p>
                   <h4 className="font-headline-md text-headline-md text-on-surface mb-2">{product.name}</h4>
                   <p className="text-label-sm text-on-surface-variant mb-2 whitespace-pre-wrap line-clamp-3">{product.desc}</p>
                   <button 
