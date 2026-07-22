@@ -23,7 +23,7 @@ export default function WorkersManager({ products = [], setProducts }) {
 
   // Forms State
   const [workerForm, setWorkerForm] = useState({ name: "", phone: "", role: "Packer" });
-  const [logMeta, setLogMeta] = useState({ worker_id: "", production_date: new Date().toISOString().split('T')[0], daily_wage: "" });
+  const [logMeta, setLogMeta] = useState({ worker_id: "", production_date: new Date().toISOString().split('T')[0], daily_wage: "", is_per_day: false });
   const [logEntries, setLogEntries] = useState([{ product_id: "", quantity: "", rate_per_packet: "" }]);
 
   useEffect(() => {
@@ -87,29 +87,28 @@ export default function WorkersManager({ products = [], setProducts }) {
     e.preventDefault();
     if (!logMeta.worker_id) return alert("Please select a worker");
     
-    const selectedWorkerObj = workers.find(w => w.id === logMeta.worker_id);
-    const isLabor = selectedWorkerObj?.role === "Labor";
+    const isPerDay = logMeta.is_per_day;
     
     // Validate all entries
     for (const entry of logEntries) {
       if (!entry.product_id || !entry.quantity) {
         return alert("Please fill product and quantity for all entries");
       }
-      if (!isLabor && !entry.rate_per_packet) {
+      if (!isPerDay && !entry.rate_per_packet) {
         return alert("Please fill the rate field for all products");
       }
     }
     
-    if (isLabor && !logMeta.daily_wage) {
-      return alert("Please enter the Daily Wage for the Laborer");
+    if (isPerDay && !logMeta.daily_wage) {
+      return alert("Please enter the Daily Wage amount");
     }
     
     setProcessing(true);
     try {
       const dailyWage = parseFloat(logMeta.daily_wage || 0);
       
-      if (isLabor && logEntries.length === 0) {
-        // Laborer with no products produced today, just logging their daily wage
+      if (isPerDay && logEntries.length === 0) {
+        // Logging daily wage directly without products
         const { error } = await supabase.from('production_logs').insert([{
            worker_id: logMeta.worker_id,
            product_id: null, // Null indicates this is a wage-only entry
@@ -123,7 +122,7 @@ export default function WorkersManager({ products = [], setProducts }) {
         const promises = logEntries.map((entry, index) => {
           let finalRate = parseFloat(entry.rate_per_packet || 0);
           
-          if (isLabor) {
+          if (isPerDay) {
             if (index === 0) {
                const qty = parseInt(entry.quantity, 10);
                finalRate = qty > 0 ? (dailyWage / qty) : 0;
@@ -163,7 +162,7 @@ export default function WorkersManager({ products = [], setProducts }) {
       }
       
       alert(logEntries.length === 0 ? "Daily wage logged successfully!" : `Successfully logged ${logEntries.length} products and updated inventory!`);
-      setLogMeta({ ...logMeta, worker_id: "", daily_wage: "" });
+      setLogMeta({ ...logMeta, worker_id: "", daily_wage: "", is_per_day: false });
       setLogEntries([{ product_id: "", quantity: "", rate_per_packet: "" }]);
       fetchData(); // Refresh logs
     } catch (err) {
@@ -233,14 +232,11 @@ export default function WorkersManager({ products = [], setProducts }) {
   const globalTotalPackets = logs.reduce((sum, log) => sum + Number(log.quantity), 0);
   const globalTotalLaborCost = logs.reduce((sum, log) => sum + Number(log.total_income), 0);
   const globalProductBreakdown = logs.reduce((acc, log) => {
-    const name = log.products?.name || `Product: ${log.product_id}`;
+    const name = log.product_id === null ? "Labor Cost" : (log.products?.name || `Product: ${log.product_id}`);
     if (!acc[name]) acc[name] = 0;
     acc[name] += Number(log.quantity);
     return acc;
   }, {});
-
-  const selectedWorkerObjForLog = workers.find(w => w.id === logMeta.worker_id);
-  const isLaborForm = selectedWorkerObjForLog?.role === "Labor";
 
   return (
     <div className="p-6 md:p-8">
@@ -391,14 +387,24 @@ export default function WorkersManager({ products = [], setProducts }) {
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1">Worker *</label>
-                <select required value={logMeta.worker_id} onChange={e => setLogMeta({...logMeta, worker_id: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                <select required value={logMeta.worker_id} onChange={e => {
+                  const wId = e.target.value;
+                  const selectedW = workers.find(w => w.id === wId);
+                  setLogMeta({...logMeta, worker_id: wId, is_per_day: selectedW?.role === 'Labor'});
+                }} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
                   <option value="">-- Select Worker --</option>
                   {workers.filter(w => w.status === 'active').map(w => (
                     <option key={w.id} value={w.id}>{w.name} ({w.role})</option>
                   ))}
                 </select>
               </div>
-              {isLaborForm && (
+              <div className="sm:col-span-2 pt-2">
+                <label className="flex items-center gap-2 text-sm font-semibold text-primary cursor-pointer w-max">
+                  <input type="checkbox" checked={logMeta.is_per_day} onChange={e => setLogMeta({...logMeta, is_per_day: e.target.checked})} className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" />
+                  Tick to pay per-day fixed wage
+                </label>
+              </div>
+              {logMeta.is_per_day && (
                 <div className="sm:col-span-2 bg-primary/10 p-3 rounded-lg border border-primary/20">
                   <label className="block text-sm font-semibold text-primary mb-1">Total Daily Wage (₹) *</label>
                   <input required type="number" min="0" step="any" value={logMeta.daily_wage} onChange={e => setLogMeta({...logMeta, daily_wage: e.target.value})} placeholder="e.g. 500" className="w-full p-2 border border-primary/30 rounded-lg focus:ring-2 focus:ring-primary outline-none bg-surface" />
@@ -417,7 +423,7 @@ export default function WorkersManager({ products = [], setProducts }) {
 
               {logEntries.map((entry, index) => (
                 <div key={index} className="flex flex-col gap-3 p-4 border border-outline-variant rounded-lg relative">
-                  {(logEntries.length > 1 || isLaborForm) && (
+                  {(logEntries.length > 1 || logMeta.is_per_day) && (
                     <button type="button" onClick={() => removeLogEntry(index)} className="absolute top-2 right-2 text-error hover:text-red-700" title="Remove Product">
                       <span className="material-symbols-outlined text-[20px]">cancel</span>
                     </button>
@@ -434,11 +440,11 @@ export default function WorkersManager({ products = [], setProducts }) {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className={isLaborForm ? "sm:col-span-2" : ""}>
+                    <div className={logMeta.is_per_day ? "sm:col-span-2" : ""}>
                       <label className="block text-sm font-semibold mb-1">Quantity *</label>
                       <input required type="number" min="0" step="any" value={entry.quantity} onChange={e => updateLogEntry(index, 'quantity', e.target.value)} placeholder="e.g. 500" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
                     </div>
-                    {!isLaborForm && (
+                    {!logMeta.is_per_day && (
                       <div>
                         <label className="block text-sm font-semibold mb-1">Rate (₹) *</label>
                         <input required type="number" min="0" step="any" value={entry.rate_per_packet} onChange={e => updateLogEntry(index, 'rate_per_packet', e.target.value)} placeholder="e.g. 2.50" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
@@ -449,7 +455,7 @@ export default function WorkersManager({ products = [], setProducts }) {
               ))}
             </div>
             
-            {(!isLaborForm && logEntries.some(e => e.quantity && e.rate_per_packet)) && (
+            {(!logMeta.is_per_day && logEntries.some(e => e.quantity && e.rate_per_packet)) && (
               <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg flex justify-between items-center">
                 <span className="font-semibold text-primary">Total Calculated Income:</span>
                 <span className="text-xl font-bold text-primary">
@@ -458,7 +464,7 @@ export default function WorkersManager({ products = [], setProducts }) {
               </div>
             )}
 
-            {isLaborForm && logEntries.length === 0 && (
+            {logMeta.is_per_day && logEntries.length === 0 && (
               <div className="bg-surface-container-low p-4 rounded-lg text-sm text-on-surface-variant flex gap-2">
                 <span className="material-symbols-outlined text-primary">info</span>
                 <p>No products selected. The Daily Wage will be logged directly to the worker's payout.</p>
@@ -680,7 +686,7 @@ function WorkerProfile({ worker, onClose }) {
   const filteredPackets = filteredLogs.reduce((sum, log) => sum + Number(log.quantity), 0);
   
   const filteredProductsBreakdown = filteredLogs.reduce((acc, log) => {
-    const name = log.product_id === null ? "Daily Wage Logging" : (log.products?.name || `Product: ${log.product_id}`);
+    const name = log.product_id === null ? "Labor Cost" : (log.products?.name || `Product: ${log.product_id}`);
     if (!acc[name]) acc[name] = 0;
     acc[name] += Number(log.quantity);
     return acc;
@@ -695,7 +701,7 @@ function WorkerProfile({ worker, onClose }) {
     acc[monthKey].income += Number(log.total_income);
     acc[monthKey].packets += Number(log.quantity);
     
-    const name = log.product_id === null ? "Daily Wage Logging" : (log.products?.name || `Product: ${log.product_id}`);
+    const name = log.product_id === null ? "Labor Cost" : (log.products?.name || `Product: ${log.product_id}`);
     if (!acc[monthKey].products[name]) acc[monthKey].products[name] = 0;
     acc[monthKey].products[name] += Number(log.quantity);
     
@@ -715,7 +721,7 @@ function WorkerProfile({ worker, onClose }) {
     }
     acc[key].products.push({
       id: log.id, 
-      name: log.product_id === null ? "Daily Wage Logging" : (log.products?.name || `Product ID: ${log.product_id}`),
+      name: log.product_id === null ? "Labor Cost" : (log.products?.name || `Product ID: ${log.product_id}`),
       quantity: log.quantity, 
       rate: log.rate_per_packet, 
       income: log.total_income
