@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../supabaseClient';
 import { verifyLocationEligibility } from '../utils/locationValidator';
+import { Geolocation } from '@capacitor/geolocation';
 
 export default function CartDrawer({ customerUser, onNavigate }) {
   const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
