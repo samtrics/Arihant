@@ -785,7 +785,9 @@ function WorkerProfile({ worker, onClose }) {
               <div className="text-3xl font-black text-primary">₹{filteredEarned.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
             <div className="bg-surface-container p-4 rounded-lg border border-outline-variant h-full flex flex-col">
-              <div className="text-sm font-semibold text-on-surface-variant mb-1">Filtered Packets</div>
+              <div className="text-sm font-semibold text-on-surface-variant mb-1">
+                {worker.role === 'Labor' ? 'Filtered Days Logged' : 'Filtered Packets'}
+              </div>
               <div className="text-3xl font-black mb-3">{filteredPackets.toLocaleString()}</div>
               
               <div className="mt-auto pt-3 border-t border-outline-variant/50 space-y-1.5 max-h-[100px] overflow-y-auto pr-1 custom-scrollbar">
@@ -795,7 +797,9 @@ function WorkerProfile({ worker, onClose }) {
                   Object.entries(filteredProductsBreakdown).map(([name, qty]) => (
                     <div key={name} className="flex justify-between items-center text-xs">
                       <span className="text-on-surface-variant truncate mr-2" title={name}>{name}</span>
-                      <span className="font-bold text-on-surface whitespace-nowrap">{qty.toLocaleString()} pkts</span>
+                      <span className="font-bold text-on-surface whitespace-nowrap">
+                        {qty.toLocaleString()} {name === 'Labor Cost' ? 'days' : 'pkts'}
+                      </span>
                     </div>
                   ))
                 )}
@@ -813,7 +817,9 @@ function WorkerProfile({ worker, onClose }) {
               <div className="text-xl font-black text-primary">₹{totalAllTimeEarned.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
             <div>
-              <div className="text-sm font-semibold text-on-surface-variant">Total Packets</div>
+              <div className="text-sm font-semibold text-on-surface-variant">
+                {worker.role === 'Labor' ? 'Total Days Logged' : 'Total Packets'}
+              </div>
               <div className="text-xl font-black">{totalAllTimePackets.toLocaleString()}</div>
             </div>
           </div>
