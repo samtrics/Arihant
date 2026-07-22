@@ -220,7 +220,7 @@ export default function WorkersManager({ products = [], setProducts }) {
     }
     acc[key].products.push({
       id: log.id,
-      name: log.products?.name || `Product ID: ${log.product_id}`,
+      name: log.product_id === null ? "Labor Cost" : (log.products?.name || `Product ID: ${log.product_id}`),
       quantity: log.quantity,
       rate: log.rate_per_packet,
       income: log.total_income
@@ -595,7 +595,9 @@ export default function WorkersManager({ products = [], setProducts }) {
                               <div>
                                 <div className="font-bold text-on-surface">{p.name}</div>
                                 <div className="text-[11px] text-on-surface-variant">
-                                  {p.quantity.toLocaleString()} pkts × ₹{Number(p.rate).toFixed(2)}/pkt
+                                  {p.name === 'Labor Cost' 
+                                    ? (p.quantity === 1 ? '1 day' : `${p.quantity} days`) 
+                                    : `${p.quantity.toLocaleString()} pkts × ₹${Number(p.rate).toFixed(2)}/pkt`}
                                 </div>
                               </div>
                               <div className="font-bold text-primary bg-primary/5 px-2 py-0.5 rounded text-xs">
@@ -605,7 +607,9 @@ export default function WorkersManager({ products = [], setProducts }) {
                           ))}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-right font-bold text-secondary align-top pt-5">{group.total_quantity.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-right font-bold text-secondary align-top pt-5">
+                        {group.products.every(p => p.name === 'Labor Cost') ? '-' : group.total_quantity.toLocaleString()}
+                      </td>
                       <td className="py-3 px-4 text-right font-bold text-primary align-top pt-5">₹{Number(group.total_income).toFixed(2)}</td>
                     </tr>
                   ))
