@@ -23,7 +23,7 @@ export default function WorkersManager({ products = [], setProducts }) {
 
   // Forms State
   const [workerForm, setWorkerForm] = useState({ name: "", phone: "", role: "Packer" });
-  const [logMeta, setLogMeta] = useState({ worker_id: "", production_date: new Date().toISOString().split('T')[0] });
+  const [logMeta, setLogMeta] = useState({ worker_id: "", production_date: new Date().toISOString().split('T')[0], daily_wage: "" });
   const [logEntries, setLogEntries] = useState([{ product_id: "", quantity: "", rate_per_packet: "" }]);
 
   useEffect(() => {
@@ -87,24 +87,47 @@ export default function WorkersManager({ products = [], setProducts }) {
     e.preventDefault();
     if (!logMeta.worker_id) return alert("Please select a worker");
     
+    const selectedWorkerObj = workers.find(w => w.id === logMeta.worker_id);
+    const isLabor = selectedWorkerObj?.role === "Labor";
+    
     // Validate all entries
     for (const entry of logEntries) {
-      if (!entry.product_id || !entry.quantity || !entry.rate_per_packet) {
-        return alert("Please fill all fields for all products");
+      if (!entry.product_id || !entry.quantity) {
+        return alert("Please fill product and quantity for all entries");
       }
+      if (!isLabor && !entry.rate_per_packet) {
+        return alert("Please fill the rate field for all products");
+      }
+    }
+    
+    if (isLabor && !logMeta.daily_wage) {
+      return alert("Please enter the Daily Wage for the Laborer");
     }
     
     setProcessing(true);
     try {
-      const promises = logEntries.map(entry => 
-        supabase.rpc('log_production_and_update_stock', {
+      const dailyWage = parseFloat(logMeta.daily_wage || 0);
+      
+      const promises = logEntries.map((entry, index) => {
+        let finalRate = parseFloat(entry.rate_per_packet || 0);
+        
+        if (isLabor) {
+          if (index === 0) {
+             const qty = parseInt(entry.quantity, 10);
+             finalRate = qty > 0 ? (dailyWage / qty) : 0;
+          } else {
+             finalRate = 0;
+          }
+        }
+        
+        return supabase.rpc('log_production_and_update_stock', {
           p_worker_id: logMeta.worker_id,
           p_product_id: entry.product_id,
           p_quantity: parseInt(entry.quantity, 10),
-          p_rate: parseFloat(entry.rate_per_packet),
+          p_rate: finalRate,
           p_date: logMeta.production_date
-        })
-      );
+        });
+      });
       
       const results = await Promise.all(promises);
       const errors = results.filter(r => r.error);
@@ -127,7 +150,7 @@ export default function WorkersManager({ products = [], setProducts }) {
       }
       
       alert(`Successfully logged ${logEntries.length} products and updated inventory!`);
-      setLogMeta({ ...logMeta, worker_id: "" });
+      setLogMeta({ ...logMeta, worker_id: "", daily_wage: "" });
       setLogEntries([{ product_id: "", quantity: "", rate_per_packet: "" }]);
       fetchData(); // Refresh logs
     } catch (err) {
@@ -203,6 +226,9 @@ export default function WorkersManager({ products = [], setProducts }) {
     return acc;
   }, {});
 
+  const selectedWorkerObjForLog = workers.find(w => w.id === logMeta.worker_id);
+  const isLaborForm = selectedWorkerObjForLog?.role === "Labor";
+
   return (
     <div className="p-6 md:p-8">
       <div className="mb-8">
@@ -235,6 +261,7 @@ export default function WorkersManager({ products = [], setProducts }) {
               <div>
                 <label className="block text-sm font-semibold mb-1">Role</label>
                 <select value={workerForm.role} onChange={e => setWorkerForm({...workerForm, role: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none">
+                  <option value="Labor">Labor</option>
                   <option value="Packer">Packer</option>
                   <option value="Miller">Miller</option>
                   <option value="Loader">Loader</option>
@@ -358,6 +385,12 @@ export default function WorkersManager({ products = [], setProducts }) {
                   ))}
                 </select>
               </div>
+              {isLaborForm && (
+                <div className="sm:col-span-2 bg-primary/10 p-3 rounded-lg border border-primary/20">
+                  <label className="block text-sm font-semibold text-primary mb-1">Total Daily Wage (₹) *</label>
+                  <input required type="number" min="0" step="any" value={logMeta.daily_wage} onChange={e => setLogMeta({...logMeta, daily_wage: e.target.value})} placeholder="e.g. 500" className="w-full p-2 border border-primary/30 rounded-lg focus:ring-2 focus:ring-primary outline-none bg-surface" />
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -388,20 +421,22 @@ export default function WorkersManager({ products = [], setProducts }) {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
+                    <div className={isLaborForm ? "sm:col-span-2" : ""}>
                       <label className="block text-sm font-semibold mb-1">Quantity *</label>
                       <input required type="number" min="0" step="any" value={entry.quantity} onChange={e => updateLogEntry(index, 'quantity', e.target.value)} placeholder="e.g. 500" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold mb-1">Rate (₹) *</label>
-                      <input required type="number" min="0" step="any" value={entry.rate_per_packet} onChange={e => updateLogEntry(index, 'rate_per_packet', e.target.value)} placeholder="e.g. 2.50" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
-                    </div>
+                    {!isLaborForm && (
+                      <div>
+                        <label className="block text-sm font-semibold mb-1">Rate (₹) *</label>
+                        <input required type="number" min="0" step="any" value={entry.rate_per_packet} onChange={e => updateLogEntry(index, 'rate_per_packet', e.target.value)} placeholder="e.g. 2.50" className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none" />
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
             
-            {logEntries.some(e => e.quantity && e.rate_per_packet) && (
+            {(!isLaborForm && logEntries.some(e => e.quantity && e.rate_per_packet)) && (
               <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg flex justify-between items-center">
                 <span className="font-semibold text-primary">Total Calculated Income:</span>
                 <span className="text-xl font-bold text-primary">
@@ -410,8 +445,8 @@ export default function WorkersManager({ products = [], setProducts }) {
               </div>
             )}
 
-            <button disabled={processing} type="submit" className="w-full bg-primary text-white py-3 rounded-lg font-bold text-lg hover:bg-opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 mt-4">
-              <span className="material-symbols-outlined">add_task</span>
+            <button disabled={processing} type="submit" className="w-full bg-primary text-white py-3 px-4 rounded-lg font-bold text-lg hover:bg-opacity-90 disabled:opacity-50 flex items-center justify-center gap-2 mt-4 whitespace-normal text-center leading-tight">
+              <span className="material-symbols-outlined shrink-0">add_task</span>
               {processing ? "Saving..." : "Submit Production & Update Inventory"}
             </button>
           </form>
@@ -686,19 +721,19 @@ function WorkerProfile({ worker, onClose }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm gap-4">
         <div className="flex items-center gap-4">
-          <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(worker.name)}&background=e8f5e9&color=1F5132&bold=true`} alt={worker.name} className="w-16 h-16 rounded-full border border-outline-variant object-cover shadow-sm" />
-          <div>
-            <h2 className="text-2xl font-black text-primary leading-tight">{worker.name}</h2>
-            <div className="flex gap-3 text-sm text-on-surface-variant font-medium mt-1">
-              <span className="bg-surface-container px-2 py-0.5 rounded text-xs">{worker.role}</span>
-              <span>Joined: {new Date(worker.created_at).toLocaleDateString()}</span>
-              {worker.phone && <span>• {worker.phone}</span>}
+          <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(worker.name)}&background=e8f5e9&color=1F5132&bold=true`} alt={worker.name} className="w-16 h-16 rounded-full border border-outline-variant object-cover shadow-sm shrink-0" />
+          <div className="min-w-0">
+            <h2 className="text-2xl font-black text-primary leading-tight truncate">{worker.name}</h2>
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-on-surface-variant font-medium mt-1">
+              <span className="bg-surface-container px-2 py-0.5 rounded text-xs shrink-0">{worker.role}</span>
+              <span className="shrink-0">Joined: {new Date(worker.created_at).toLocaleDateString()}</span>
+              {worker.phone && <span className="shrink-0">• {worker.phone}</span>}
             </div>
           </div>
         </div>
-        <button onClick={onClose} className="bg-surface-container hover:bg-surface-container-high transition-colors text-primary font-bold px-4 py-2 rounded-lg flex items-center gap-2">
+        <button onClick={onClose} className="bg-surface-container hover:bg-surface-container-high transition-colors text-primary font-bold px-4 py-2 rounded-lg flex items-center gap-2 shrink-0 self-stretch sm:self-auto justify-center">
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Back to Directory
         </button>
@@ -707,12 +742,12 @@ function WorkerProfile({ worker, onClose }) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Date Filter & Results */}
         <div className="md:col-span-2 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
             <h3 className="font-bold text-lg">Payout Calculator</h3>
-            <div className="flex items-center gap-2 text-sm">
-              <input type="date" max={todayStr} value={dateFilter.start} onChange={e => setDateFilter({...dateFilter, start: e.target.value})} className="p-1 border rounded" />
-              <span>to</span>
-              <input type="date" max={todayStr} value={dateFilter.end} onChange={e => setDateFilter({...dateFilter, end: e.target.value})} className="p-1 border rounded" />
+            <div className="flex flex-wrap items-center gap-2 text-sm w-full sm:w-auto">
+              <input type="date" max={todayStr} value={dateFilter.start} onChange={e => setDateFilter({...dateFilter, start: e.target.value})} className="p-1 border rounded min-w-[120px] flex-1 sm:flex-none" />
+              <span className="text-on-surface-variant font-medium">to</span>
+              <input type="date" max={todayStr} value={dateFilter.end} onChange={e => setDateFilter({...dateFilter, end: e.target.value})} className="p-1 border rounded min-w-[120px] flex-1 sm:flex-none" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
