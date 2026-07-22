@@ -179,16 +179,80 @@ export const calculateMAPE = (actuals, predictions) => {
 // ─── Master Forecasting Engine ──────────────────────────────────────────────
 
 /**
- * Generates an Explainable Forecast using the new component formula
+ * Generates an Explainable Forecast using the new component formula, dynamically optimized 
+ * across different historical windows to find maximum prediction certainty.
  */
 export const generateExplainableForecast = (salesHistory, currentInventory, targetDayOfWeek, customerDemand = 0) => {
   const values = salesHistory.map(s => s.amount);
   
+  const testWindows = [7, 14, 30, 60];
+  let bestConfig = null;
+  let highestConfidence = -1;
+  
+  // Test multiple historical trend windows to find the one with the lowest error
+  for (const tw of testWindows) {
+      if (values.length < tw) continue; // Skip if we don't have enough history for this window
+      
+      let sumErr = 0;
+      let count = 0;
+      const backtestDays = Math.min(14, values.length - tw);
+      
+      if (backtestDays > 0) {
+          for (let i = 1; i <= backtestDays; i++) {
+              const targetIdx = values.length - i;
+              const actualThatDay = values[targetIdx];
+              const historicalSeries = values.slice(0, targetIdx);
+              
+              const histBase = calculateEWMA(historicalSeries, 0.4);
+              const histTrend = calculateTrend(historicalSeries, tw);
+              
+              const d = salesHistory[targetIdx]?.date ? new Date(salesHistory[targetIdx].date) : new Date();
+              const histWF = getWeekdayFactor(salesHistory.slice(0, targetIdx), d.getDay());
+              
+              let histForecast = (histBase + histTrend) * histWF;
+              histForecast = Math.max(0, Math.round(histForecast));
+              
+              if (actualThatDay > 0) {
+                 sumErr += Math.abs((actualThatDay - histForecast) / actualThatDay);
+                 count++;
+              } else if (histForecast > 0) {
+                 sumErr += 1;
+                 count++;
+              }
+          }
+      }
+      
+      let calculatedMAPE;
+      if (count > 0) {
+          calculatedMAPE = Math.min(100, (sumErr / count) * 100);
+      } else {
+          const std = calculateStdDev(values);
+          const mean = calculateMean(values);
+          if (mean === 0) calculatedMAPE = 100;
+          else {
+             const cv = std / mean;
+             calculatedMAPE = Math.min(100, cv * 50); 
+          }
+      }
+      
+      const confidence = Math.max(0, 100 - calculatedMAPE);
+      
+      if (confidence > highestConfidence) {
+          highestConfidence = confidence;
+          bestConfig = { tw, confidence, mape: calculatedMAPE };
+      }
+  }
+  
+  // Fallback if no config matched
+  if (!bestConfig) {
+      bestConfig = { tw: 14, confidence: 50, mape: 50 };
+  }
+
   // 1. Base Demand (EWMA, alpha = 0.4)
   const baseDemand = calculateEWMA(values, 0.4);
   
-  // 2. Trend (Linear regression over last 14 days)
-  const trendSlope = calculateTrend(values, 14);
+  // 2. Trend (Linear regression over best optimized window)
+  const trendSlope = calculateTrend(values, bestConfig.tw);
   
   // 3. Seasonality (Weekday Factor)
   const WF = typeof targetDayOfWeek === 'number' 
@@ -199,76 +263,25 @@ export const generateExplainableForecast = (salesHistory, currentInventory, targ
   const festivalEffect = 0;
   
   // ─── Core Forecast Equation ───
-  // Forecast = (B + Trend) * SeasonFactor + CustomerDemand + FestivalEffect
   let rawForecast = (baseDemand + trendSlope) * WF + customerDemand + festivalEffect;
-  rawForecast = Math.max(0, rawForecast); // Demand cannot be negative
+  rawForecast = Math.max(0, rawForecast);
   
   // ─── Safety Stock & Production ───
   const safetyStock = calculateSafetyStock(values, 2, 1.65);
   const recommendedProduction = calculateProduction(rawForecast, safetyStock, currentInventory);
   
-  // ─── Real Confidence Score (MAPE Backtesting) ───
-  // We backtest the model against the last 7 days of actual sales to see how accurate it *would* have been
-  let sumErr = 0;
-  let count = 0;
-  
-  const backtestDays = Math.min(7, values.length - 14); // Need at least 14 days of history to calculate trend properly
-  
-  if (backtestDays > 0) {
-      for (let i = 1; i <= backtestDays; i++) {
-          const targetIdx = values.length - i;
-          const actualThatDay = values[targetIdx];
-          const historicalSeries = values.slice(0, targetIdx);
-          
-          const histBase = calculateEWMA(historicalSeries, 0.4);
-          const histTrend = calculateTrend(historicalSeries, 14);
-          
-          const d = salesHistory[targetIdx]?.date ? new Date(salesHistory[targetIdx].date) : new Date();
-          const histWF = getWeekdayFactor(salesHistory.slice(0, targetIdx), d.getDay());
-          
-          let histForecast = (histBase + histTrend) * histWF;
-          histForecast = Math.max(0, Math.round(histForecast));
-          
-          if (actualThatDay > 0) {
-             sumErr += Math.abs((actualThatDay - histForecast) / actualThatDay);
-             count++;
-          } else if (histForecast > 0) {
-             sumErr += 1; // 100% error if we predicted demand but got 0 sales
-             count++;
-          }
-      }
-  }
-  
-  let calculatedMAPE;
-  if (count > 0) {
-      calculatedMAPE = Math.min(100, (sumErr / count) * 100);
-  } else {
-      // Fallback to estimated volatility if not enough history
-      const std = calculateStdDev(values);
-      const mean = calculateMean(values);
-      
-      if (mean === 0) {
-         // If there is literally zero historical data, the model's error is conceptually 100% (Confidence 0%)
-         calculatedMAPE = 100;
-      } else {
-         const cv = std / mean;
-         calculatedMAPE = Math.min(100, cv * 50); 
-      }
-  }
-  
-  const confidence = Math.max(0, 100 - calculatedMAPE);
-  
   return {
     forecast: Math.round(rawForecast),
     recommendedProduction,
     safetyStock: Math.round(safetyStock),
-    confidenceScore: Math.round(confidence * 10) / 10,
+    confidenceScore: Math.round(bestConfig.confidence * 10) / 10,
     explanation: {
       BaseDemand: Math.round(baseDemand * 10) / 10,
+      OptimizedTrendWindow: `${bestConfig.tw} Days`,
       TrendSlope: Math.round(trendSlope * 1000) / 1000,
       WeekdayFactor: Math.round(WF * 100) / 100,
       CustomerDemand: Math.round(customerDemand * 10) / 10,
-      MAPE: Math.round(calculatedMAPE * 10) / 10
+      MAPE: Math.round(bestConfig.mape * 10) / 10
     }
   };
 };

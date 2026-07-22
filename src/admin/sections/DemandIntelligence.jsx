@@ -150,9 +150,9 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
     
     const salesMap = {};
     filteredProducts.forEach(p => {
-       salesMap[p.name] = new Array(30).fill(0).map((_, i) => {
+       salesMap[p.name] = new Array(90).fill(0).map((_, i) => {
          const d = new Date();
-         d.setDate(d.getDate() - (29 - i));
+         d.setDate(d.getDate() - (89 - i));
          return { date: d.toISOString().split('T')[0], amount: 0 };
        });
     });
@@ -162,7 +162,7 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
        const d = new Date(o.created_at || o.date);
        if(isNaN(d.getTime())) return;
        const diff = Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24));
-       if (diff >= 0 && diff < 30) {
+       if (diff >= 0 && diff < 90) {
           let prods = [];
           if (Array.isArray(o.products)) prods = o.products;
           else if (typeof o.products === 'string') {
@@ -176,14 +176,14 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
              // Robust case-insensitive matching for product names
              const matchKey = Object.keys(salesMap).find(k => k.toLowerCase() === (name || "").toLowerCase());
              
-             if (matchKey && salesMap[matchKey][29 - diff]) {
-               salesMap[matchKey][29 - diff].amount += qty;
+             if (matchKey && salesMap[matchKey][89 - diff]) {
+               salesMap[matchKey][89 - diff].amount += qty;
              }
           });
        }
     });
 
-    const results = filteredProducts.map(p => {
+       const results = filteredProducts.map(p => {
        const history = salesMap[p.name] || [];
        const customerDemand = demandMath.computeProductCustomerDemand(orders, p.name);
        
@@ -199,7 +199,7 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
        return {
          id: p.id,
          name: p.name,
-         today: (history[29]?.amount || 0) * mult,
+         today: (history[89]?.amount || 0) * mult,
          tomorrow: tomorrowForecast * mult,
          nextWeek: multiDayForecast * mult,
          nextMonth: forecastData.forecast * 30 * mult, // keep if needed
@@ -690,9 +690,10 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
                   <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                     {[
                       { label: "Base Demand (EWMA)", val: selectedProduct.explanation?.BaseDemand || "0.0", w: 35, c: "#3b82f6" },
-                      { label: "Linear Trend Slope", val: selectedProduct.explanation?.TrendSlope || "0.0", w: 25, c: "#8b5cf6" },
+                      { label: "Linear Trend Slope", val: selectedProduct.explanation?.TrendSlope || "0.0", w: 20, c: "#8b5cf6" },
+                      { label: "Optimized Window", val: selectedProduct.explanation?.OptimizedTrendWindow || "14 Days", w: 10, c: GOLD },
                       { label: "Weekday Seasonality (WF)", val: selectedProduct.explanation?.WeekdayFactor || 1, w: 15, c: "#f59e0b" },
-                      { label: "Probabilistic Cust. Demand", val: "+" + (selectedProduct.explanation?.CustomerDemand || "0.0"), w: 15, c: "#10b981" },
+                      { label: "Probabilistic Cust. Demand", val: "+" + (selectedProduct.explanation?.CustomerDemand || "0.0"), w: 10, c: "#10b981" },
                       { label: "Mean Abs. % Error (MAPE)", val: (selectedProduct.explanation?.MAPE || "0.0") + "%", w: 10, c: "#9ca3af" }
                     ].map(f => (
                       <div key={f.label} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -710,7 +711,7 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
                 <div style={{ background: "#faf8f5", padding: "20px", borderRadius: "16px", border: "1px solid #f0ede8" }}>
                   <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", margin: "0 0 8px 0" }}>Mathematical Reasoning</h3>
                   <p style={{ fontSize: "13.5px", color: "#4b5563", lineHeight: 1.6, margin: 0 }}>
-                    The advanced component model predicts a demand of <strong>{selectedProduct.tomorrow} units</strong>. It establishes a Base Demand of <strong>{selectedProduct.explanation?.BaseDemand}</strong> using EWMA, and adjusts it by the Linear Trend slope (<strong>{selectedProduct.explanation?.TrendSlope}</strong>). This is multiplied by the Day-of-Week Seasonality factor (<strong>{selectedProduct.explanation?.WeekdayFactor}</strong>). Finally, we add <strong>+{selectedProduct.explanation?.CustomerDemand} units</strong> of Probabilistic Customer Demand. With a calculated Safety Stock of {selectedProduct.safetyStock || 0}, and subtracting the current inventory ({selectedProduct.inv}), the required production is <strong>{selectedProduct.recProd} units</strong>.
+                    The advanced component model predicts a demand of <strong>{selectedProduct.tomorrow} units</strong>. It establishes a Base Demand of <strong>{selectedProduct.explanation?.BaseDemand}</strong> using EWMA, and adjusts it by a Linear Trend slope (<strong>{selectedProduct.explanation?.TrendSlope}</strong>) optimized over a historical window of <strong>{selectedProduct.explanation?.OptimizedTrendWindow}</strong>. This is multiplied by the Day-of-Week Seasonality factor (<strong>{selectedProduct.explanation?.WeekdayFactor}</strong>). Finally, we add <strong>+{selectedProduct.explanation?.CustomerDemand} units</strong> of Probabilistic Customer Demand. With a calculated Safety Stock of {selectedProduct.safetyStock || 0}, and subtracting the current inventory ({selectedProduct.inv}), the required production is <strong>{selectedProduct.recProd} units</strong>.
                   </p>
                 </div>
 
