@@ -36,7 +36,7 @@ export default function WorkersManager({ products = [], setProducts }) {
       const [workersRes, logsRes] = await Promise.all([
         supabase.from("workers").select("*").order("created_at", { ascending: false }),
         supabase.from("production_logs")
-          .select("*, workers(name), products(name)")
+          .select("*, workers(name, role), products(name)")
           .gte("production_date", globalDateFilter.start || '2000-01-01')
           .lte("production_date", globalDateFilter.end || '2100-01-01')
           .order("production_date", { ascending: false })
