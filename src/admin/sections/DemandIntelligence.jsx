@@ -136,7 +136,6 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
   
   const engineCustomers = useMemo(() => processCustomers(customers, orders), [customers, orders]);
   const salesData = useMemo(() => processOverallSales(orders, products, dateRange, productFilter, metric), [orders, products, dateRange, productFilter, metric]);
-  
 
   const engineProducts = useMemo(() => {
     if (!products || !orders || products.length === 0) return [];
@@ -187,7 +186,9 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
        const history = salesMap[p.name] || [];
        const customerDemand = demandMath.computeProductCustomerDemand(orders, p.name);
        
-       const forecastData = demandMath.generateExplainableForecast(history, p.stock || 0, new Date().getDay() + 1, customerDemand);
+       const targetDateObj = new Date();
+       targetDateObj.setDate(targetDateObj.getDate() + 1); // Tomorrow
+       const forecastData = demandMath.generateExplainableForecast(history, p.stock || 0, targetDateObj.getDay(), customerDemand, orders, p.name, targetDateObj);
        
        const price = p.price || 100;
        const mult = metric === "revenue" ? price : 1;
@@ -694,7 +695,7 @@ export default function DemandIntelligence({ products, orders, b2bOrders, custom
                       { label: "Optimized Window", val: selectedProduct.explanation?.OptimizedTrendWindow || "14 Days", w: 10, c: GOLD },
                       { label: "Weekday Seasonality (WF)", val: selectedProduct.explanation?.WeekdayFactor || 1, w: 15, c: "#f59e0b" },
                       { label: "Probabilistic Cust. Demand", val: "+" + (selectedProduct.explanation?.CustomerDemand || "0.0"), w: 10, c: "#10b981" },
-                      { label: "Mean Abs. % Error (MAPE)", val: (selectedProduct.explanation?.MAPE || "0.0") + "%", w: 10, c: "#9ca3af" }
+                      { label: "Weighted Abs. Error (WMAPE)", val: (selectedProduct.explanation?.WMAPE || "0.0") + "%", w: 10, c: "#9ca3af" }
                     ].map(f => (
                       <div key={f.label} style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                         <div style={{ width: "220px", fontSize: "13px", color: "#374151", fontWeight: "500" }}>{f.label}</div>

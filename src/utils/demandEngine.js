@@ -79,7 +79,7 @@ export const getWeekdayFactor = (salesHistoryWithDates, targetDayOfWeek) => {
 
 // ─── Component 4: Probabilistic Customer Demand ─────────────────────────────
 
-export const analyzeCustomer = (dates, qtys) => {
+export const analyzeCustomer = (dates, qtys, targetDateObj = null) => {
   if (!dates || dates.length < 2) return null;
   
   const sortedDates = dates.map(d => new Date(d).getTime()).sort((a,b)=>a-b);
@@ -93,12 +93,18 @@ export const analyzeCustomer = (dates, qtys) => {
   const avgQty = calculateMean(qtys);
   
   const lastPurchase = sortedDates[sortedDates.length - 1];
-  const daysSinceLast = (Date.now() - lastPurchase) / (1000 * 60 * 60 * 24);
+  const targetTime = targetDateObj ? targetDateObj.getTime() : Date.now();
+  const daysSinceLast = (targetTime - lastPurchase) / (1000 * 60 * 60 * 24);
   
-  // Probability Pi = e ^ (- |t - PIi| / PIi)
+  // Periodic Probability Wave
+  // We use modulo to see how close they are to their NEXT multiple of the interval
   let probability = 0;
   if (avgInterval > 0) {
-    const exponent = -Math.abs(daysSinceLast - avgInterval) / avgInterval;
+    const dist = daysSinceLast % avgInterval;
+    const closestDistance = Math.min(dist, avgInterval - dist);
+    
+    // Sharpen the curve so it only spikes precisely on the interval day
+    const exponent = -closestDistance / (avgInterval * 0.05);
     probability = Math.exp(exponent);
   }
   
@@ -114,7 +120,7 @@ export const analyzeCustomer = (dates, qtys) => {
   };
 };
 
-export const computeProductCustomerDemand = (orders, productName) => {
+export const computeProductCustomerDemand = (orders, productName, targetDateObj = null) => {
   if (!orders || orders.length === 0) return 0;
   
   const customerMap = {}; // { customer_id: { dates: [], qtys: [] } }
@@ -138,7 +144,7 @@ export const computeProductCustomerDemand = (orders, productName) => {
   let totalExpectedDemand = 0;
   Object.values(customerMap).forEach(cust => {
     if (cust.dates.length >= 2) {
-      const profile = analyzeCustomer(cust.dates, cust.qtys);
+      const profile = analyzeCustomer(cust.dates, cust.qtys, targetDateObj);
       if (profile) totalExpectedDemand += profile.expectedDemand;
     }
   });
@@ -182,9 +188,10 @@ export const calculateMAPE = (actuals, predictions) => {
  * Generates an Explainable Forecast using the new component formula, dynamically optimized 
  * across different historical windows to find maximum prediction certainty.
  */
-export const generateExplainableForecast = (salesHistory, currentInventory, targetDayOfWeek, customerDemand = 0) => {
+export const generateExplainableForecast = (salesHistory, currentInventory, targetDayOfWeek, baseCustomerDemand = 0, fullOrders = null, productName = null, targetDateObj = null) => {
   const values = salesHistory.map(s => s.amount);
   
+  const festivalEffect = 0; // Default to 0 for MVP
   const testWindows = [7, 14, 30, 60];
   let bestConfig = null;
   let highestConfidence = -1;
@@ -193,8 +200,8 @@ export const generateExplainableForecast = (salesHistory, currentInventory, targ
   for (const tw of testWindows) {
       if (values.length < tw) continue; // Skip if we don't have enough history for this window
       
-      let sumErr = 0;
-      let count = 0;
+      let sumAbsErr = 0;
+      let sumActuals = 0;
       const backtestDays = Math.min(14, values.length - tw);
       
       if (backtestDays > 0) {
@@ -209,43 +216,49 @@ export const generateExplainableForecast = (salesHistory, currentInventory, targ
               const d = salesHistory[targetIdx]?.date ? new Date(salesHistory[targetIdx].date) : new Date();
               const histWF = getWeekdayFactor(salesHistory.slice(0, targetIdx), d.getDay());
               
-              let histForecast = (histBase + histTrend) * histWF;
+              let histCustomerDemand = baseCustomerDemand;
+              if (fullOrders && productName) {
+                  // Simulate what Customer Demand mathematically predicted on that exact past day
+                  const pastOrders = fullOrders.filter(o => new Date(o.created_at || o.date).getTime() < d.getTime());
+                  histCustomerDemand = computeProductCustomerDemand(pastOrders, productName, d);
+              }
+              
+              let histForecast = Math.max((histBase + histTrend) * histWF, histCustomerDemand) + festivalEffect;
               histForecast = Math.max(0, Math.round(histForecast));
               
-              if (actualThatDay > 0) {
-                 sumErr += Math.abs((actualThatDay - histForecast) / actualThatDay);
-                 count++;
-              } else if (histForecast > 0) {
-                 sumErr += 1;
-                 count++;
+              if (actualThatDay > 0 || histForecast > 0) {
+                 sumAbsErr += Math.abs(actualThatDay - histForecast);
+                 sumActuals += actualThatDay;
               }
           }
       }
       
-      let calculatedMAPE;
-      if (count > 0) {
-          calculatedMAPE = Math.min(100, (sumErr / count) * 100);
+      let calculatedWMAPE;
+      if (sumActuals > 0) {
+          calculatedWMAPE = Math.min(100, (sumAbsErr / sumActuals) * 100);
+      } else if (sumAbsErr > 0) {
+          calculatedWMAPE = 100;
       } else {
           const std = calculateStdDev(values);
           const mean = calculateMean(values);
-          if (mean === 0) calculatedMAPE = 100;
+          if (mean === 0) calculatedWMAPE = 100;
           else {
              const cv = std / mean;
-             calculatedMAPE = Math.min(100, cv * 50); 
+             calculatedWMAPE = Math.min(100, cv * 50); 
           }
       }
       
-      const confidence = Math.max(0, 100 - calculatedMAPE);
+      const confidence = Math.max(0, 100 - calculatedWMAPE);
       
       if (confidence > highestConfidence) {
           highestConfidence = confidence;
-          bestConfig = { tw, confidence, mape: calculatedMAPE };
+          bestConfig = { tw, confidence, wmape: calculatedWMAPE };
       }
   }
   
   // Fallback if no config matched
   if (!bestConfig) {
-      bestConfig = { tw: 14, confidence: 50, mape: 50 };
+      bestConfig = { tw: 14, confidence: 50, wmape: 50 };
   }
 
   // 1. Base Demand (EWMA, alpha = 0.4)
@@ -259,11 +272,15 @@ export const generateExplainableForecast = (salesHistory, currentInventory, targ
              ? getWeekdayFactor(salesHistory, targetDayOfWeek) 
              : 1;
              
-  // 4. External Events (Default to 0 for MVP)
-  const festivalEffect = 0;
+  // 4. Exact Target-Date Customer Demand
+  let finalCustomerDemand = baseCustomerDemand;
+  if (fullOrders && productName && targetDateObj) {
+      finalCustomerDemand = computeProductCustomerDemand(fullOrders, productName, targetDateObj);
+  }
   
   // ─── Core Forecast Equation ───
-  let rawForecast = (baseDemand + trendSlope) * WF + customerDemand + festivalEffect;
+  // We use Math.max to prevent double-counting customer demand which is already baked into historical EWMA
+  let rawForecast = Math.max((baseDemand + trendSlope) * WF, finalCustomerDemand) + festivalEffect;
   rawForecast = Math.max(0, rawForecast);
   
   // ─── Safety Stock & Production ───
@@ -280,8 +297,8 @@ export const generateExplainableForecast = (salesHistory, currentInventory, targ
       OptimizedTrendWindow: `${bestConfig.tw} Days`,
       TrendSlope: Math.round(trendSlope * 1000) / 1000,
       WeekdayFactor: Math.round(WF * 100) / 100,
-      CustomerDemand: Math.round(customerDemand * 10) / 10,
-      MAPE: Math.round(bestConfig.mape * 10) / 10
+      CustomerDemand: Math.round(finalCustomerDemand * 10) / 10,
+      WMAPE: Math.round(bestConfig.wmape * 10) / 10
     }
   };
 };
