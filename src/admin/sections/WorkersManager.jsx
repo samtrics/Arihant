@@ -923,7 +923,7 @@ function WorkerProfile({ worker, onClose }) {
               <thead>
                 <tr className="border-b border-outline-variant text-sm text-on-surface-variant">
                   <th className="pb-3 pr-2">Month</th>
-                  <th className="pb-3 px-2 text-right">Packets</th>
+                  <th className="pb-3 px-2 text-right">{worker.role === 'Labor' ? 'Days' : 'Packets'}</th>
                   <th className="pb-3 pl-2 text-right">Income</th>
                 </tr>
               </thead>
