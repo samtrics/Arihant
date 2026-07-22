@@ -108,48 +108,61 @@ export default function WorkersManager({ products = [], setProducts }) {
     try {
       const dailyWage = parseFloat(logMeta.daily_wage || 0);
       
-      const promises = logEntries.map((entry, index) => {
-        let finalRate = parseFloat(entry.rate_per_packet || 0);
-        
-        if (isLabor) {
-          if (index === 0) {
-             const qty = parseInt(entry.quantity, 10);
-             finalRate = qty > 0 ? (dailyWage / qty) : 0;
-          } else {
-             finalRate = 0;
+      if (isLabor && logEntries.length === 0) {
+        // Laborer with no products produced today, just logging their daily wage
+        const { error } = await supabase.from('production_logs').insert([{
+           worker_id: logMeta.worker_id,
+           product_id: products.length > 0 ? products[0].id : null, // Use dummy product ID to satisfy foreign key just in case
+           quantity: 0,
+           rate_per_packet: 0,
+           total_income: dailyWage,
+           production_date: logMeta.production_date
+        }]);
+        if (error) throw error;
+      } else {
+        const promises = logEntries.map((entry, index) => {
+          let finalRate = parseFloat(entry.rate_per_packet || 0);
+          
+          if (isLabor) {
+            if (index === 0) {
+               const qty = parseInt(entry.quantity, 10);
+               finalRate = qty > 0 ? (dailyWage / qty) : 0;
+            } else {
+               finalRate = 0;
+            }
           }
+          
+          return supabase.rpc('log_production_and_update_stock', {
+            p_worker_id: logMeta.worker_id,
+            p_product_id: entry.product_id,
+            p_quantity: parseInt(entry.quantity, 10),
+            p_rate: finalRate,
+            p_date: logMeta.production_date
+          });
+        });
+        
+        const results = await Promise.all(promises);
+        const errors = results.filter(r => r.error);
+        
+        if (errors.length > 0) {
+          throw errors[0].error;
         }
         
-        return supabase.rpc('log_production_and_update_stock', {
-          p_worker_id: logMeta.worker_id,
-          p_product_id: entry.product_id,
-          p_quantity: parseInt(entry.quantity, 10),
-          p_rate: finalRate,
-          p_date: logMeta.production_date
-        });
-      });
-      
-      const results = await Promise.all(promises);
-      const errors = results.filter(r => r.error);
-      
-      if (errors.length > 0) {
-        throw errors[0].error;
+        if (setProducts) {
+          setProducts(prev => {
+            let newProducts = [...prev];
+            for (const entry of logEntries) {
+              const qty = parseInt(entry.quantity, 10);
+              newProducts = newProducts.map(p => 
+                p.id === entry.product_id ? { ...p, stock: (p.stock || 0) + qty, updated_at: new Date().toISOString() } : p
+              );
+            }
+            return newProducts;
+          });
+        }
       }
       
-      if (setProducts) {
-        setProducts(prev => {
-          let newProducts = [...prev];
-          for (const entry of logEntries) {
-            const qty = parseInt(entry.quantity, 10);
-            newProducts = newProducts.map(p => 
-              p.id === entry.product_id ? { ...p, stock: (p.stock || 0) + qty, updated_at: new Date().toISOString() } : p
-            );
-          }
-          return newProducts;
-        });
-      }
-      
-      alert(`Successfully logged ${logEntries.length} products and updated inventory!`);
+      alert(logEntries.length === 0 ? "Daily wage logged successfully!" : `Successfully logged ${logEntries.length} products and updated inventory!`);
       setLogMeta({ ...logMeta, worker_id: "", daily_wage: "" });
       setLogEntries([{ product_id: "", quantity: "", rate_per_packet: "" }]);
       fetchData(); // Refresh logs
@@ -404,8 +417,8 @@ export default function WorkersManager({ products = [], setProducts }) {
 
               {logEntries.map((entry, index) => (
                 <div key={index} className="flex flex-col gap-3 p-4 border border-outline-variant rounded-lg relative">
-                  {logEntries.length > 1 && (
-                    <button type="button" onClick={() => removeLogEntry(index)} className="absolute top-2 right-2 text-error hover:text-red-700">
+                  {(logEntries.length > 1 || isLaborForm) && (
+                    <button type="button" onClick={() => removeLogEntry(index)} className="absolute top-2 right-2 text-error hover:text-red-700" title="Remove Product">
                       <span className="material-symbols-outlined text-[20px]">cancel</span>
                     </button>
                   )}
@@ -442,6 +455,13 @@ export default function WorkersManager({ products = [], setProducts }) {
                 <span className="text-xl font-bold text-primary">
                   ₹{logEntries.reduce((sum, e) => sum + ((parseFloat(e.quantity) || 0) * (parseFloat(e.rate_per_packet) || 0)), 0).toFixed(2)}
                 </span>
+              </div>
+            )}
+
+            {isLaborForm && logEntries.length === 0 && (
+              <div className="bg-surface-container-low p-4 rounded-lg text-sm text-on-surface-variant flex gap-2">
+                <span className="material-symbols-outlined text-primary">info</span>
+                <p>No products selected. The Daily Wage will be logged directly to the worker's payout.</p>
               </div>
             )}
 
