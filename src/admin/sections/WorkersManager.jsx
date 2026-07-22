@@ -752,13 +752,24 @@ function WorkerProfile({ worker, onClose }) {
   }, {});
   const groupedLogsArray = Object.values(groupedLogs).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-  const searchedGroupedLogsArray = groupedLogsArray.filter(group => {
-    if (!shiftSearchQuery) return true;
+  const searchedGroupedLogsArray = groupedLogsArray.map(group => {
+    if (!shiftSearchQuery) return group;
     const q = shiftSearchQuery.toLowerCase();
     const dateStr = new Date(group.date).toLocaleDateString().toLowerCase();
-    if (group.date.includes(q) || dateStr.includes(q)) return true;
-    return group.products.some(p => p.name.toLowerCase().includes(q));
-  });
+    
+    if (group.date.includes(q) || dateStr.includes(q)) return group;
+    
+    const filteredProducts = group.products.filter(p => 
+      p.name.toLowerCase().includes(q) ||
+      (p.payment_status || 'paid').toLowerCase().includes(q)
+    );
+    
+    if (filteredProducts.length > 0) {
+      const filteredIncome = filteredProducts.reduce((sum, p) => sum + Number(p.income), 0);
+      return { ...group, products: filteredProducts, total_income: filteredIncome };
+    }
+    return null;
+  }).filter(Boolean);
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center p-24 gap-4">
