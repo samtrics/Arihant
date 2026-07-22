@@ -11,7 +11,12 @@ export async function verifyLocationEligibility() {
       }
     }
 
-    const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+    let position;
+    try {
+      position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+    } catch (e) {
+      position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000 });
+    }
     const { latitude, longitude } = position.coords;
     
     // 1. Get user's city via Nominatim

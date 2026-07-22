@@ -24,6 +24,7 @@ import About from "./components/About";
 import { supabase } from "./supabaseClient";
 import SEO from "./components/SEO";
 import { Capacitor } from '@capacitor/core';
+import { Geolocation } from '@capacitor/geolocation';
 
 // KICK OFF CRITICAL FETCH IMMEDIATELY TO BREAK NETWORK CHAIN
 const initialProductsPromise = supabase.from('products').select('*').order('id');
@@ -159,6 +160,15 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Request Location Permissions on App Start for Native Android/iOS
+    if (Capacitor.isNativePlatform()) {
+      Geolocation.checkPermissions().then((status) => {
+        if (status.location !== 'granted') {
+          Geolocation.requestPermissions().catch(console.error);
+        }
+      }).catch(console.error);
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       const isAdmin = !!localStorage.getItem('adminSession');

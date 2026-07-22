@@ -44,7 +44,12 @@ export default function CartDrawer({ customerUser, onNavigate }) {
         }
       }
 
-      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      let position;
+      try {
+        position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+      } catch (e) {
+        position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000 });
+      }
       const { latitude, longitude } = position.coords;
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
       const data = await res.json();

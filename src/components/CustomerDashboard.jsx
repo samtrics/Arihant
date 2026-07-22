@@ -130,7 +130,12 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
         }
       }
 
-      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      let position;
+      try {
+        position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+      } catch (e) {
+        position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000 });
+      }
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
       const data = await res.json();
       if (data && data.address) {
@@ -167,7 +172,12 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
         }
       }
 
-      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      let position;
+      try {
+        position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
+      } catch (e) {
+        position = await Geolocation.getCurrentPosition({ enableHighAccuracy: false, timeout: 10000 });
+      }
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
       const data = await res.json();
       if (data && data.address) {
