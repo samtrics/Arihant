@@ -120,13 +120,21 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const handleGetLocation = async () => {
     setIsLocating(true);
     try {
-      const permissions = await Geolocation.checkPermissions();
-      if (permissions.location !== 'granted') {
-        const request = await Geolocation.requestPermissions();
-        if (request.location !== 'granted') {
-          alert("Location access denied.");
-          setIsLocating(false);
-          return;
+      try {
+        const permissions = await Geolocation.checkPermissions();
+        if (permissions.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            alert("Location access denied.");
+            setIsLocating(false);
+            return;
+          }
+        }
+      } catch (permError) {
+        try {
+          await Geolocation.requestPermissions();
+        } catch (e) {
+          console.error("Permission request failed", e);
         }
       }
 
@@ -152,8 +160,8 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
           }
         }));
       }
-    } catch (err) {
-      alert("Failed to get location. Please ensure location permissions are granted.");
+    } catch (error) {
+      alert("Unable to get location. Error: " + (error.message || JSON.stringify(error)));
     } finally {
       setIsLocating(false);
     }
@@ -162,13 +170,21 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
   const handleGetShopLocation = async () => {
     setIsLocatingShop(true);
     try {
-      const permissions = await Geolocation.checkPermissions();
-      if (permissions.location !== 'granted') {
-        const request = await Geolocation.requestPermissions();
-        if (request.location !== 'granted') {
-          alert("Location access denied.");
-          setIsLocatingShop(false);
-          return;
+      try {
+        const permissions = await Geolocation.checkPermissions();
+        if (permissions.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            alert("Location access denied.");
+            setIsLocatingShop(false);
+            return;
+          }
+        }
+      } catch (permError) {
+        try {
+          await Geolocation.requestPermissions();
+        } catch (e) {
+          console.error("Permission request failed", e);
         }
       }
 
@@ -194,8 +210,8 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
           }
         }));
       }
-    } catch (err) {
-      alert("Failed to get location.");
+    } catch (error) {
+      alert("Unable to get shop location. Error: " + (error.message || JSON.stringify(error)));
     } finally {
       setIsLocatingShop(false);
     }

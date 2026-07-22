@@ -34,13 +34,22 @@ export default function CartDrawer({ customerUser, onNavigate }) {
   const handleGetLocation = async () => {
     setIsLocating(true);
     try {
-      const permissions = await Geolocation.checkPermissions();
-      if (permissions.location !== 'granted') {
-        const request = await Geolocation.requestPermissions();
-        if (request.location !== 'granted') {
-          alert("Unable to retrieve your location. Please ensure location permissions are granted.");
-          setIsLocating(false);
-          return;
+      try {
+        const permissions = await Geolocation.checkPermissions();
+        if (permissions.location !== 'granted') {
+          const request = await Geolocation.requestPermissions();
+          if (request.location !== 'granted') {
+            alert("Location access denied by user.");
+            setIsLocating(false);
+            return;
+          }
+        }
+      } catch (permError) {
+        // If checkPermissions fails, try request directly
+        try {
+          await Geolocation.requestPermissions();
+        } catch (e) {
+          console.error("Permission request failed", e);
         }
       }
 
@@ -64,7 +73,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       }
     } catch (error) {
       console.error("Geolocation error:", error);
-      alert("Unable to retrieve your location. Please ensure location permissions are granted.");
+      alert("Unable to retrieve your location. Error: " + (error.message || JSON.stringify(error)));
     } finally {
       setIsLocating(false);
     }

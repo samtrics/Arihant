@@ -3,11 +3,19 @@ import { Geolocation } from '@capacitor/geolocation';
 
 export async function verifyLocationEligibility() {
   try {
-    const permissions = await Geolocation.checkPermissions();
-    if (permissions.location !== 'granted') {
-      const request = await Geolocation.requestPermissions();
-      if (request.location !== 'granted') {
-        return { isEligible: false, error: "Location access denied. We require location verification to ensure we can deliver to your area." };
+    try {
+      const permissions = await Geolocation.checkPermissions();
+      if (permissions.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          return { isEligible: false, error: "Location access denied. We require location verification to ensure we can deliver to your area." };
+        }
+      }
+    } catch (permError) {
+      try {
+        await Geolocation.requestPermissions();
+      } catch (e) {
+        console.error("Permission request failed", e);
       }
     }
 
