@@ -23,7 +23,7 @@ export default function WorkersManager({ products = [], setProducts }) {
 
   // Forms State
   const [workerForm, setWorkerForm] = useState({ name: "", phone: "", role: "Packer" });
-  const [logMeta, setLogMeta] = useState({ worker_id: "", production_date: new Date().toISOString().split('T')[0], daily_wage: "", is_per_day: false });
+  const [logMeta, setLogMeta] = useState({ worker_id: "", production_date: new Date().toISOString().split('T')[0], daily_wage: "", is_per_day: false, payment_status: 'paid' });
   const [logEntries, setLogEntries] = useState([{ product_id: "", quantity: "", rate_per_packet: "" }]);
 
   useEffect(() => {
@@ -115,7 +115,8 @@ export default function WorkersManager({ products = [], setProducts }) {
            quantity: 1, // Must be > 0 to pass the production_logs_quantity_check constraint
            rate_per_packet: 0,
            total_income: dailyWage,
-           production_date: logMeta.production_date
+           production_date: logMeta.production_date,
+           payment_status: logMeta.payment_status
         }]);
         if (error) throw error;
       } else {
@@ -136,7 +137,8 @@ export default function WorkersManager({ products = [], setProducts }) {
             p_product_id: entry.product_id,
             p_quantity: parseInt(entry.quantity, 10),
             p_rate: finalRate,
-            p_date: logMeta.production_date
+            p_date: logMeta.production_date,
+            p_payment_status: logMeta.payment_status
           });
         });
         
@@ -162,13 +164,23 @@ export default function WorkersManager({ products = [], setProducts }) {
       }
       
       alert(logEntries.length === 0 ? "Daily wage logged successfully!" : `Successfully logged ${logEntries.length} products and updated inventory!`);
-      setLogMeta({ ...logMeta, worker_id: "", daily_wage: "", is_per_day: false });
+      setLogMeta({ ...logMeta, worker_id: "", daily_wage: "", is_per_day: false, payment_status: 'paid' });
       setLogEntries([{ product_id: "", quantity: "", rate_per_packet: "" }]);
       fetchData(); // Refresh logs
     } catch (err) {
       alert("Error logging production: " + err.message);
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const handleMarkAsPaid = async (logId) => {
+    try {
+      const { error } = await supabase.from('production_logs').update({ payment_status: 'paid' }).eq('id', logId);
+      if (error) throw error;
+      fetchData();
+    } catch (err) {
+      alert("Error marking as paid: " + err.message);
     }
   };
 
@@ -398,11 +410,16 @@ export default function WorkersManager({ products = [], setProducts }) {
                   ))}
                 </select>
               </div>
-              <div className="sm:col-span-2 pt-2">
-                <label className="flex items-center gap-2 text-sm font-semibold text-primary cursor-pointer w-max">
-                  <input type="checkbox" checked={logMeta.is_per_day} onChange={e => setLogMeta({...logMeta, is_per_day: e.target.checked})} className="w-4 h-4 rounded text-primary focus:ring-primary accent-primary" />
+              <div className="sm:col-span-2 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <label className="flex items-center gap-2 text-sm font-semibold text-primary cursor-pointer w-max bg-surface-container-low p-3 rounded-lg border border-outline-variant hover:border-primary/50 transition-colors">
+                  <input type="checkbox" checked={logMeta.is_per_day} onChange={e => setLogMeta({...logMeta, is_per_day: e.target.checked})} className="w-5 h-5 rounded text-primary focus:ring-primary accent-primary" />
                   Tick to pay per-day fixed wage
                 </label>
+
+                <div className="flex gap-2 w-full p-1 bg-surface-container-low rounded-lg border border-outline-variant">
+                  <button type="button" onClick={() => setLogMeta({...logMeta, payment_status: 'paid'})} className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${logMeta.payment_status === 'paid' ? 'bg-primary text-white shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>Pay Now</button>
+                  <button type="button" onClick={() => setLogMeta({...logMeta, payment_status: 'unpaid'})} className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${logMeta.payment_status === 'unpaid' ? 'bg-error text-white shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>Pay Later (Unpaid)</button>
+                </div>
               </div>
               {logMeta.is_per_day && (
                 <div className="sm:col-span-2 bg-primary/10 p-3 rounded-lg border border-primary/20">
@@ -672,6 +689,7 @@ function WorkerProfile({ worker, onClose }) {
   };
 
   const totalAllTimeEarned = logs.reduce((sum, log) => sum + Number(log.total_income), 0);
+  const totalAllTimeUnpaid = logs.filter(l => l.payment_status === 'unpaid').reduce((sum, log) => sum + Number(log.total_income), 0);
   const totalAllTimePackets = logs.reduce((sum, log) => sum + Number(log.quantity), 0);
 
   const filteredLogs = logs.filter(log => {
@@ -724,7 +742,8 @@ function WorkerProfile({ worker, onClose }) {
       name: log.product_id === null ? "Labor Cost" : (log.products?.name || `Product ID: ${log.product_id}`),
       quantity: log.quantity, 
       rate: log.rate_per_packet, 
-      income: log.total_income
+      income: log.total_income,
+      payment_status: log.payment_status || 'paid'
     });
     acc[key].total_income += Number(log.total_income);
     acc[key].total_quantity += Number(log.quantity);
@@ -813,7 +832,11 @@ function WorkerProfile({ worker, onClose }) {
           <h3 className="font-bold text-lg mb-4">All-Time Totals</h3>
           <div className="space-y-4">
             <div>
-              <div className="text-sm font-semibold text-on-surface-variant">Total Income</div>
+              <div className="text-sm font-semibold text-error">Outstanding Unpaid</div>
+              <div className="text-xl font-black text-error">₹{totalAllTimeUnpaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-on-surface-variant">Total Income Logged</div>
               <div className="text-xl font-black text-primary">₹{totalAllTimeEarned.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
             <div>
@@ -863,12 +886,22 @@ function WorkerProfile({ worker, onClose }) {
                       <td className="py-3 px-4 align-top">
                         <div className="flex flex-col gap-2 min-w-[300px]">
                           {group.products.map(p => (
-                            <div key={p.id} className="text-sm bg-surface-container py-2 px-3 rounded-lg flex justify-between items-center gap-4">
+                            <div key={p.id} className={`text-sm bg-surface-container py-2 px-3 rounded-lg flex justify-between items-center gap-4 ${p.payment_status === 'unpaid' ? 'border-l-4 border-l-error' : 'border-l-4 border-l-primary'}`}>
                               <div>
-                                <div className="font-bold">{p.name}</div>
+                                <div className="font-bold flex items-center gap-2">
+                                  {p.name}
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${p.payment_status === 'unpaid' ? 'bg-error/10 text-error' : 'bg-primary/10 text-primary'}`}>
+                                    {p.payment_status || 'paid'}
+                                  </span>
+                                </div>
                                 <div className="text-xs text-on-surface-variant">{p.quantity.toLocaleString()} x ₹{Number(p.rate).toFixed(2)}</div>
                               </div>
-                              <div className="font-bold text-primary">₹{Number(p.income).toFixed(2)}</div>
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="font-bold text-primary">₹{Number(p.income).toFixed(2)}</div>
+                                {p.payment_status === 'unpaid' && (
+                                  <button onClick={() => handleMarkAsPaid(p.id)} className="text-[10px] bg-error hover:bg-red-600 text-white px-2 py-0.5 rounded transition-colors shadow-sm">Mark Paid</button>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
