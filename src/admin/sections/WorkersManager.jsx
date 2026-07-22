@@ -704,7 +704,8 @@ function WorkerProfile({ worker, onClose }) {
   const filteredPackets = filteredLogs.reduce((sum, log) => sum + Number(log.quantity), 0);
   
   const filteredProductsBreakdown = filteredLogs.reduce((acc, log) => {
-    const name = log.product_id === null ? "Labor Cost" : (log.products?.name || `Product: ${log.product_id}`);
+    if (log.product_id === null) return acc;
+    const name = log.products?.name || `Product: ${log.product_id}`;
     if (!acc[name]) acc[name] = 0;
     acc[name] += Number(log.quantity);
     return acc;
@@ -719,9 +720,11 @@ function WorkerProfile({ worker, onClose }) {
     acc[monthKey].income += Number(log.total_income);
     acc[monthKey].packets += Number(log.quantity);
     
-    const name = log.product_id === null ? "Labor Cost" : (log.products?.name || `Product: ${log.product_id}`);
-    if (!acc[monthKey].products[name]) acc[monthKey].products[name] = 0;
-    acc[monthKey].products[name] += Number(log.quantity);
+    if (log.product_id !== null) {
+      const name = log.products?.name || `Product: ${log.product_id}`;
+      if (!acc[monthKey].products[name]) acc[monthKey].products[name] = 0;
+      acc[monthKey].products[name] += Number(log.quantity);
+    }
     
     return acc;
   }, {});
