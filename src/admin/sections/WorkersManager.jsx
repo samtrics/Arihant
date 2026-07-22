@@ -410,13 +410,8 @@ export default function WorkersManager({ products = [], setProducts }) {
                   ))}
                 </select>
               </div>
-              <div className="sm:col-span-2 pt-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="flex items-center gap-2 text-sm font-semibold text-primary cursor-pointer w-max bg-surface-container-low p-3 rounded-lg border border-outline-variant hover:border-primary/50 transition-colors">
-                  <input type="checkbox" checked={logMeta.is_per_day} onChange={e => setLogMeta({...logMeta, is_per_day: e.target.checked})} className="w-5 h-5 rounded text-primary focus:ring-primary accent-primary" />
-                  Tick to pay per-day fixed wage
-                </label>
-
-                <div className="flex gap-2 w-full p-1 bg-surface-container-low rounded-lg border border-outline-variant">
+              <div className="sm:col-span-2 pt-2">
+                <div className="flex gap-2 w-full max-w-sm p-1 bg-surface-container-low rounded-lg border border-outline-variant">
                   <button type="button" onClick={() => setLogMeta({...logMeta, payment_status: 'paid'})} className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${logMeta.payment_status === 'paid' ? 'bg-primary text-white shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>Pay Now</button>
                   <button type="button" onClick={() => setLogMeta({...logMeta, payment_status: 'unpaid'})} className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${logMeta.payment_status === 'unpaid' ? 'bg-error text-white shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-high'}`}>Pay Later (Unpaid)</button>
                 </div>
