@@ -356,7 +356,7 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
               </div>
               <div style={{ padding: "20px 22px", display: "flex", flexDirection: "column", gap: "18px" }}>
                 {/* Customer info */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "16px" }}>
                   <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
                     <span className="material-symbols-outlined" style={{ fontSize: "18px", color: "#9ca3af", marginTop: "1px" }}>{activeTab === "b2b" ? "storefront" : "person"}</span>
                     <div>
@@ -392,8 +392,8 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                 <div>
                   <div style={{ fontSize: "11px", fontWeight: "700", color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "8px" }}>Products & Bill Summary</div>
                   
-                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "12px", overflow: "hidden", overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "400px" }}>
                       <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                         <tr>
                           <th style={{ padding: "8px 12px", textAlign: "left", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Product</th>
@@ -571,8 +571,8 @@ export default function OrdersManager({ products = [], retailOrders = [], setRet
                 {/* Product List */}
                 <div>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#374151", marginBottom: "8px" }}>Add Products (Wholesale Quantities)</label>
-                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "10px", overflow: "hidden" }}>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                  <div style={{ border: "1px solid #e5e7eb", borderRadius: "10px", overflow: "hidden", overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "400px" }}>
                       <thead style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
                         <tr>
                           <th style={{ padding: "10px 12px", textAlign: "left", color: "#6b7280", fontWeight: "600", fontSize: "11px" }}>Product</th>

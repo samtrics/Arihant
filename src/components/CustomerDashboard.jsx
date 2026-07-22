@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { Geolocation } from '@capacitor/geolocation';
 
 const statusColors = { delivered: "#10b981", shipped: "#3b82f6", processing: "#f59e0b", pending: "#8b5cf6", cancelled: "#ef4444" };
 const statusBg = { delivered: "#ecfdf5", shipped: "#eff6ff", processing: "#fffbeb", pending: "#f5f3ff", cancelled: "#fef2f2" };
@@ -116,80 +117,78 @@ export default function CustomerDashboard({ user, onNavigate, onLogout }) {
     }
   };
 
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
+  const handleGetLocation = async () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
-          const data = await res.json();
-          if (data && data.address) {
-            setProfileData(prev => ({
-              ...prev,
-              address: {
-                ...prev.address,
-                area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
-                city: data.address.city || data.address.town || data.address.state_district || "",
-                state: data.address.state || "",
-                pincode: data.address.postcode || "",
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              }
-            }));
-          }
-        } catch (err) {
-          alert("Could not fetch address details.");
-        } finally {
+    try {
+      const permissions = await Geolocation.checkPermissions();
+      if (permissions.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          alert("Location access denied.");
           setIsLocating(false);
+          return;
         }
-      },
-      (error) => {
-        setIsLocating(false);
-        alert("Failed to get location. Please ensure location permissions are granted.");
       }
-    );
+
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+      const data = await res.json();
+      if (data && data.address) {
+        setProfileData(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
+            city: data.address.city || data.address.town || data.address.state_district || "",
+            state: data.address.state || "",
+            pincode: data.address.postcode || "",
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        }));
+      }
+    } catch (err) {
+      alert("Failed to get location. Please ensure location permissions are granted.");
+    } finally {
+      setIsLocating(false);
+    }
   };
 
-  const handleGetShopLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
+  const handleGetShopLocation = async () => {
     setIsLocatingShop(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
-          const data = await res.json();
-          if (data && data.address) {
-            setProfileData(prev => ({
-              ...prev,
-              shop_address: {
-                ...prev.shop_address,
-                area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
-                city: data.address.city || data.address.town || data.address.state_district || "",
-                state: data.address.state || "",
-                pincode: data.address.postcode || "",
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-              }
-            }));
-          }
-        } catch (err) {
-          alert("Could not fetch address details.");
-        } finally {
+    try {
+      const permissions = await Geolocation.checkPermissions();
+      if (permissions.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          alert("Location access denied.");
           setIsLocatingShop(false);
+          return;
         }
-      },
-      (error) => {
-        setIsLocatingShop(false);
-        alert("Failed to get location.");
       }
-    );
+
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`);
+      const data = await res.json();
+      if (data && data.address) {
+        setProfileData(prev => ({
+          ...prev,
+          shop_address: {
+            ...prev.shop_address,
+            area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
+            city: data.address.city || data.address.town || data.address.state_district || "",
+            state: data.address.state || "",
+            pincode: data.address.postcode || "",
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          }
+        }));
+      }
+    } catch (err) {
+      alert("Failed to get location.");
+    } finally {
+      setIsLocatingShop(false);
+    }
   };
 
   return (

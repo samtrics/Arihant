@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "../../supabaseClient";
+import { verifyLocationEligibility } from "../../utils/locationValidator";
 
 export default function BulkOrderPortal({ distributorUser, products, onOrderSuccess }) {
   const [cart, setCart] = useState({});
@@ -33,6 +34,15 @@ export default function BulkOrderPortal({ distributorUser, products, onOrderSucc
   const handleSubmitOrder = async () => {
     if (Object.keys(cart).length === 0) return;
     setIsProcessing(true);
+    
+    // Check Global Presence Location Eligibility for Distributors
+    const locationStatus = await verifyLocationEligibility();
+    if (!locationStatus.isEligible) {
+      setIsProcessing(false);
+      alert(locationStatus.error);
+      return;
+    }
+
     try {
       const orderNumber = `B2B-${Date.now().toString().slice(-6)}`;
       const cartItems = Object.keys(cart).map(id => {

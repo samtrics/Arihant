@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../supabaseClient';
+import { verifyLocationEligibility } from '../utils/locationValidator';
 
 export default function CartDrawer({ customerUser, onNavigate }) {
   const { cartItems, isCartOpen, setIsCartOpen, removeFromCart, updateQuantity, clearCart, cartTotal } = useCart();
@@ -30,40 +31,38 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
   }, [customerUser]);
 
-  const handleGetLocation = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
+  const handleGetLocation = async () => {
     setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          
-          if (data && data.address) {
-            setAddress(prev => ({
-              ...prev,
-              area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
-              city: data.address.city || data.address.town || data.address.state_district || "",
-              pincode: data.address.postcode || ""
-            }));
-          }
-        } catch (err) {
-          console.error("Error fetching address:", err);
-          alert("Could not fetch address automatically. Please enter it manually.");
-        } finally {
+    try {
+      const permissions = await Geolocation.checkPermissions();
+      if (permissions.location !== 'granted') {
+        const request = await Geolocation.requestPermissions();
+        if (request.location !== 'granted') {
+          alert("Unable to retrieve your location. Please ensure location permissions are granted.");
           setIsLocating(false);
+          return;
         }
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        alert("Unable to retrieve your location. Please ensure location permissions are granted.");
-        setIsLocating(false);
       }
-    );
+
+      const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true });
+      const { latitude, longitude } = position.coords;
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+      const data = await res.json();
+      
+      if (data && data.address) {
+        setAddress(prev => ({
+          ...prev,
+          area: data.address.suburb || data.address.neighbourhood || data.address.road || "",
+          city: data.address.city || data.address.town || data.address.state_district || "",
+          pincode: data.address.postcode || ""
+        }));
+      }
+    } catch (error) {
+      console.error("Geolocation error:", error);
+      alert("Unable to retrieve your location. Please ensure location permissions are granted.");
+    } finally {
+      setIsLocating(false);
+    }
   };
 
   if (!isCartOpen) return null;
@@ -77,6 +76,12 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
     if (cartItems.length === 0) return;
     
+    const outOfStockItems = cartItems.filter(item => item.stock !== undefined && item.stock < item.quantity);
+    if (outOfStockItems.length > 0) {
+      alert(`Sorry, we do not have enough stock for: ${outOfStockItems.map(i => i.name).join(', ')}. Please reduce the quantity or remove them from your cart.`);
+      return;
+    }
+
     if (!finalAddr.flat?.trim() || !finalAddr.area?.trim() || !finalAddr.city?.trim() || !finalAddr.pincode?.trim() || !phone?.trim()) {
       alert("Please fill in all required delivery details (Flat, Area, City, Pincode, and Phone).");
       return;
@@ -87,6 +92,15 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
 
     setIsProcessing(true);
+    
+    // Check Global Presence Location Eligibility
+    const locationStatus = await verifyLocationEligibility();
+    if (!locationStatus.isEligible) {
+      setIsProcessing(false);
+      alert(locationStatus.error);
+      return;
+    }
+
     try {
       const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
       const fullAddress = `${finalAddr.flat?.trim()}, ${finalAddr.area?.trim()}, ${finalAddr.landmark ? `Near ${finalAddr.landmark.trim()}, ` : ''}${finalAddr.city?.trim()} - ${finalAddr.pincode?.trim()}`;
@@ -240,7 +254,8 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                           />
                           <button 
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="px-2 py-1 text-primary hover:bg-surface-container transition-colors"
+                            disabled={item.stock !== undefined && item.quantity >= item.stock}
+                            className={`px-2 py-1 transition-colors ${item.stock !== undefined && item.quantity >= item.stock ? 'text-outline cursor-not-allowed' : 'text-primary hover:bg-surface-container'}`}
                           >+</button>
                         </div>
                         <span className="font-bold text-primary">₹{((item.offerPrice || item.price) * item.quantity).toFixed(2)}</span>

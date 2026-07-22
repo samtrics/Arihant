@@ -275,7 +275,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                 {/* ── OVERVIEW TAB ── */}
                 {detailTab === "overview" && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "24px" }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "14px", marginBottom: "24px" }}>
                       {[["person", "Owner", detail.owner], ["phone", "Phone", detail.phone], ["mail", "Email", detail.email], ["location_on", "Location", `${detail.city}, ${detail.state || ''}`], ["home_pin", "Shop Address", detail.address || "N/A"], ["receipt", "GST Number", detail.gst || "Not Provided"], ["storefront", "Business Type", detail.biz_type || detail.bizType], ["schedule", "Experience", detail.years_experience || detail.years]].map(([icon, label, val]) => (
                         <div key={label} style={{ display: "flex", gap: "10px", alignItems: "center", padding: "12px", borderRadius: "10px", border: "1px solid #f0ede8" }}>
                           <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#f5f1ea", display: "flex", alignItems: "center", justifyContent: "center", color: "#6b7280" }}>
@@ -290,7 +290,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                     </div>
 
                     {detail.status === "approved" && (
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "24px" }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: "12px", marginBottom: "24px" }}>
                         <div style={{ padding: "16px", background: "#faf8f5", borderRadius: "12px", textAlign: "center", border: "1px solid #f0ede8" }}>
                           <div style={{ fontSize: "28px", fontWeight: "700", color: GOLD, fontFamily: "'Poppins',sans-serif" }}>{detail.orders}</div>
                           <div style={{ fontSize: "12px", color: "#6b7280", fontWeight: "600", textTransform: "uppercase" }}>Total Wholesale Orders</div>
@@ -340,7 +340,7 @@ export default function DistributorManager({ distributors: propDistributors = []
                     ) : (
                       <>
                         {detailTab === "financials" && (
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+                          <div className="grid grid-cols-1 sm:grid-cols-3" style={{ gap: "16px", marginBottom: "24px" }}>
                             <div style={{ padding: "20px", background: "#f8fafc", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: "20px", color: "#64748b" }}>receipt</span>

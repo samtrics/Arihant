@@ -18,6 +18,7 @@ import ReviewsManager from "./sections/ReviewsManager";
 import NewsletterManager from "./sections/NewsletterManager";
 import CategoriesManager from "./sections/CategoriesManager";
 import WorkersManager from "./sections/WorkersManager";
+import DemandIntelligence from "./sections/DemandIntelligence";
 import { supabase } from "../supabaseClient";
 
 const GREEN = "#1F5132";
@@ -34,6 +35,7 @@ const NAV = [
   { id: "inventory", label: "Inventory", icon: "warehouse" },
   { type: "divider" },
   { id: "analytics", label: "Analytics", icon: "bar_chart" },
+  { id: "ais", label: "Demand Intelligence", icon: "psychology" },
   { id: "revenue", label: "Revenue", icon: "payments" },
   { id: "coupons", label: "Coupons", icon: "loyalty" },
   { id: "reviews", label: "Reviews", icon: "star_rate" },
@@ -444,6 +446,7 @@ export default function AdminDashboard({ adminUser, onLogout, products, setProdu
       case "distributors": return <DistributorManager distributors={distributors} setDistributors={handleSetDistributors} b2bOrders={b2bOrders} />;
       case "workers": return <WorkersManager products={products} setProducts={setProducts} />;
       case "inventory": return <InventoryManager products={products} setProducts={setProducts} />;
+      case "ais": return <DemandIntelligence products={products} orders={orders} b2bOrders={b2bOrders} customers={customers} />;
       case "analytics":
       case "revenue": return <AnalyticsView orders={orders} b2bOrders={b2bOrders} />;
       case "coupons": return <CouponsManager />;

@@ -294,7 +294,7 @@ export default function InventoryManager({ products = [], setProducts }) {
         {activeTab === "overview" && (
           <motion.div key="overview" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
             {/* Stat Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "14px" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: "14px" }}>
               <StatCard icon="category" label="Total SKUs" value={inventory.length} color={GREEN} bg="rgba(31,81,50,0.08)" />
               <StatCard icon="payments" label="Total Stock Value" value={`₹${totalValue.toLocaleString("en-IN")}`} color="#8b5cf6" bg="rgba(139,92,246,0.08)" />
               <StatCard icon="warning" label="Low Stock Items" value={lowStockItems.length} color="#f59e0b" bg="#fffbeb" />
@@ -368,7 +368,7 @@ export default function InventoryManager({ products = [], setProducts }) {
               <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", margin: "0 0 14px" }}>
                 Stock Value by Category
               </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "10px" }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" style={{ gap: "10px" }}>
                 {Array.from(new Set(inventory.map((i) => i.category))).map((cat) => {
                   const items = inventory.filter((i) => i.category === cat);
                   const val = items.reduce((s, i) => s + i.value, 0);

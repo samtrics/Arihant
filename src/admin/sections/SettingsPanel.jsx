@@ -59,7 +59,20 @@ export default function SettingsPanel({ siteSettings }) {
   const loadSettings = () => {
     try {
       const stored = localStorage.getItem("arihant_admin_settings");
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const merged = { ...SETTINGS };
+        for (const key of Object.keys(SETTINGS)) {
+          if (parsed[key] && Array.isArray(parsed[key])) {
+            // merge stored values with default settings structure
+            merged[key] = SETTINGS[key].map(defaultItem => {
+              const storedItem = parsed[key].find(p => p.key === defaultItem.key);
+              return storedItem ? { ...defaultItem, value: storedItem.value } : defaultItem;
+            });
+          }
+        }
+        return merged;
+      }
     } catch (e) {}
     return SETTINGS;
   };
@@ -79,6 +92,13 @@ export default function SettingsPanel({ siteSettings }) {
   const updateSetting = (tab, key, value) => {
     setSettings((s) => ({ ...s, [tab]: s[tab].map((item) => item.key === key ? { ...item, value } : item) }));
   };
+
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSave = async () => {
     if (activeTab === "Corporate") {
@@ -111,35 +131,38 @@ export default function SettingsPanel({ siteSettings }) {
         </motion.button>
       </div>
 
-      <div className="flex flex-col md:flex-row items-start gap-4">
-        {/* Mobile Dropdown Tab Selector */}
-        <div className="w-full md:hidden bg-white rounded-2xl border border-[#f0ede8] shadow-sm p-3">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Settings Category</label>
-          <div className="relative">
-            <select value={activeTab} onChange={e => setActiveTab(e.target.value)}
-              className="w-full p-3 rounded-xl border-2 border-green-800/20 bg-green-800/5 text-green-900 font-bold appearance-none outline-none">
-              {TABS.map((tab) => <option key={tab} value={tab}>{tab}</option>)}
-            </select>
-            <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-green-800">expand_more</span>
+      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: "flex-start", gap: "16px" }}>
+        
+        {isMobile ? (
+          <div style={{ width: "100%", background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", padding: "12px" }}>
+            {/* Mobile Dropdown Tab Selector */}
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "8px" }}>Settings Category</label>
+            <div style={{ position: "relative" }}>
+              <select value={activeTab} onChange={e => setActiveTab(e.target.value)}
+                style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "2px solid rgba(31,81,50,0.2)", background: "rgba(31,81,50,0.05)", color: "#14532d", fontWeight: "700", outline: "none", appearance: "none" }}>
+                {TABS.map((tab) => <option key={tab} value={tab}>{tab}</option>)}
+              </select>
+              <span className="material-symbols-outlined" style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#166534" }}>expand_more</span>
+            </div>
           </div>
-        </div>
-
-        {/* Desktop Tab sidebar */}
-        <div className="hidden md:flex w-full md:w-[180px] shrink-0 bg-white rounded-2xl border border-[#f0ede8] shadow-sm p-3 flex-col">
-          {TABS.map((tab) => (
-            <motion.button key={tab} onClick={() => setActiveTab(tab)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "10px", border: "none", cursor: "pointer", background: activeTab === tab ? "rgba(31,81,50,0.08)" : "transparent", color: activeTab === tab ? GREEN : "#374151", fontWeight: activeTab === tab ? "700" : "500", fontSize: "13px", marginBottom: "2px", textAlign: "left", flexShrink: 0 }}
-              whileHover={{ background: "rgba(31,81,50,0.05)" }}>
-              <span className="material-symbols-outlined" style={{ fontSize: "17px", color: activeTab === tab ? GREEN : "#9ca3af" }}>
-                {{ Corporate: "corporate_fare", General: "settings", Payment: "payments", Shipping: "local_shipping", SEO: "language", Permissions: "security" }[tab]}
-              </span>
-              {tab}
-            </motion.button>
-          ))}
-        </div>
+        ) : (
+          <div style={{ width: "180px", flexShrink: 0, background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", padding: "12px", display: "flex", flexDirection: "column" }}>
+            {/* Desktop Tab sidebar */}
+            {TABS.map((tab) => (
+              <motion.button key={tab} onClick={() => setActiveTab(tab)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: "8px", padding: "10px 12px", borderRadius: "10px", border: "none", cursor: "pointer", background: activeTab === tab ? "rgba(31,81,50,0.08)" : "transparent", color: activeTab === tab ? GREEN : "#374151", fontWeight: activeTab === tab ? "700" : "500", fontSize: "13px", marginBottom: "2px", textAlign: "left", flexShrink: 0 }}
+                whileHover={{ background: "rgba(31,81,50,0.05)" }}>
+                <span className="material-symbols-outlined" style={{ fontSize: "17px", color: activeTab === tab ? GREEN : "#9ca3af" }}>
+                  {{ Corporate: "corporate_fare", General: "settings", Payment: "payments", Shipping: "local_shipping", SEO: "language", Permissions: "security" }[tab]}
+                </span>
+                {tab}
+              </motion.button>
+            ))}
+          </div>
+        )}
 
         {/* Settings form */}
-        <div className="flex-1 w-full bg-white rounded-2xl border border-[#f0ede8] shadow-sm p-4 md:p-6 min-w-0">
+        <div style={{ flex: 1, width: "100%", background: "white", borderRadius: "16px", border: "1px solid #f0ede8", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", padding: isMobile ? "16px" : "24px", minWidth: 0 }}>
           <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "16px", color: "#1C1C1C", marginBottom: "20px" }}>{activeTab} Settings</h3>
           
           {activeTab === "Corporate" ? (
@@ -195,7 +218,7 @@ export default function SettingsPanel({ siteSettings }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-              {currentSettings.map((item) => (
+              {(currentSettings || SETTINGS[activeTab] || []).map((item) => (
                 <div key={item.key}>
                   <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "7px" }}>{item.label}</label>
                   {item.type === "toggle" ? (

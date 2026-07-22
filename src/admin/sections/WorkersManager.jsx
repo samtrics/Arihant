@@ -263,7 +263,7 @@ export default function WorkersManager({ products = [], setProducts }) {
               </div>
             </div>
             
-            <div className="overflow-x-auto flex-1">
+            <div className="overflow-x-auto flex-1 w-full max-w-full">
               <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-outline-variant text-sm text-on-surface-variant bg-surface-container-low">
@@ -496,7 +496,7 @@ export default function WorkersManager({ products = [], setProducts }) {
             </div>
           </div>
           
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto flex-1 w-full max-w-full">
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="border-b border-outline-variant text-sm text-on-surface-variant bg-surface-container-low">
@@ -774,7 +774,7 @@ function WorkerProfile({ worker, onClose }) {
             </div>
           </div>
           
-          <div className="overflow-x-auto flex-1">
+          <div className="overflow-x-auto flex-1 w-full max-w-full">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr className="border-b border-outline-variant text-sm text-on-surface-variant bg-surface-container-low">
@@ -815,7 +815,7 @@ function WorkerProfile({ worker, onClose }) {
         {/* Monthly Summary */}
         <div className="lg:col-span-1 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-sm h-fit">
           <h3 className="font-bold text-lg mb-4">Monthly History</h3>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto w-full max-w-full">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-outline-variant text-sm text-on-surface-variant">

@@ -345,8 +345,8 @@ export default function DashboardHome({ products = [], orders = [], b2bOrders = 
             <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", margin: 0 }}>Recent Orders</h3>
             <span onClick={() => navigate && navigate("orders")} style={{ fontSize: "12px", color: GREEN, fontWeight: "600", cursor: "pointer" }}>View all →</span>
           </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px" }}>
+          <div className="overflow-x-auto w-full max-w-full">
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12.5px", minWidth: "500px" }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid #f0ede8" }}>
                   {["Order ID", "Customer", "Amount", "Status"].map((h) => (

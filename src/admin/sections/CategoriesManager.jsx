@@ -89,37 +89,39 @@ export default function CategoriesManager({ categories, setCategories }) {
       </div>
 
       <div style={{ ...card, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-          <thead>
-            <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
-              <th style={{ textAlign: "left", padding: "12px 14px", color: "#6b7280", fontWeight: "700", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Category Name</th>
-              <th style={{ textAlign: "right", padding: "12px 14px", color: "#6b7280", fontWeight: "700", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {categories.map((cat, idx) => (
-              <tr key={idx} style={{ borderBottom: "1px solid #faf8f5", transition: "background 0.15s" }}
-                onMouseEnter={e => e.currentTarget.style.background = "#faf8f5"} onMouseLeave={e => e.currentTarget.style.background = ""}>
-                <td style={{ padding: "14px", fontWeight: "600", color: "#1C1C1C" }}>{cat}</td>
-                <td style={{ padding: "14px", textAlign: "right" }}>
-                  <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
-                    <motion.button onClick={() => openEdit(cat)} style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
-                      whileHover={{ background: "#eff6ff", color: "#3b82f6", borderColor: "#3b82f6" }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
-                    </motion.button>
-                    <motion.button onClick={() => openDelete(cat)} style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
-                      whileHover={{ background: "#fef2f2", color: "#ef4444", borderColor: "#ef4444" }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
-                    </motion.button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto w-full max-w-full">
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px", minWidth: "400px" }}>
+            <thead>
+              <tr style={{ background: "#faf8f5", borderBottom: "2px solid #f0ede8" }}>
+                <th style={{ textAlign: "left", padding: "12px 14px", color: "#6b7280", fontWeight: "700", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Category Name</th>
+                <th style={{ textAlign: "right", padding: "12px 14px", color: "#6b7280", fontWeight: "700", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.04em" }}>Actions</th>
               </tr>
-            ))}
-            {categories.length === 0 && (
-              <tr><td colSpan={2} style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>No categories found</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {categories.map((cat, idx) => (
+                <tr key={idx} style={{ borderBottom: "1px solid #faf8f5", transition: "background 0.15s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#faf8f5"} onMouseLeave={e => e.currentTarget.style.background = ""}>
+                  <td style={{ padding: "14px", fontWeight: "600", color: "#1C1C1C" }}>{cat}</td>
+                  <td style={{ padding: "14px", textAlign: "right" }}>
+                    <div style={{ display: "flex", gap: "4px", justifyContent: "flex-end" }}>
+                      <motion.button onClick={() => openEdit(cat)} style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
+                        whileHover={{ background: "#eff6ff", color: "#3b82f6", borderColor: "#3b82f6" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>edit</span>
+                      </motion.button>
+                      <motion.button onClick={() => openDelete(cat)} style={{ padding: "6px", borderRadius: "8px", border: "1px solid #f0ede8", background: "white", cursor: "pointer", color: "#6b7280", lineHeight: 1 }}
+                        whileHover={{ background: "#fef2f2", color: "#ef4444", borderColor: "#ef4444" }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>delete</span>
+                      </motion.button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {categories.length === 0 && (
+                <tr><td colSpan={2} style={{ padding: "40px", textAlign: "center", color: "#9ca3af" }}>No categories found</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <AnimatePresence>

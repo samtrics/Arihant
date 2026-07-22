@@ -173,7 +173,7 @@ export default function AnalyticsView({ orders = [], b2bOrders = [] }) {
       </div>
 
       {/* Product + Order Status charts */}
-      <div className="analytics-grid-2col">
+      <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "20px" }}>
         {/* Product Performance Bar */}
         <div style={{ ...card, padding: "20px" }}>
           <h3 style={{ fontFamily: "'Poppins',sans-serif", fontWeight: "700", fontSize: "15px", color: "#1C1C1C", marginBottom: "4px" }}>Product Performance</h3>

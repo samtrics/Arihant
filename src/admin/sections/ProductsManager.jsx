@@ -316,7 +316,7 @@ export default function ProductsManager({ products, setProducts, categories = []
                 </button>
               </div>
               <div style={{ overflowY: "auto", padding: "20px 24px" }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "14px" }}>
                   {[["name", "Product Name", "text"], ["sku", "SKU Code", "text"], ["price", "Price (₹)", "number"], ["offerPrice", "Offer Price (₹)", "number"], ["wholesalePrice", "Wholesale Price (₹)", "number"], ["stock", "Stock Quantity", "number"]].map(([field, label, type]) => (
                     <div key={field}>
                       <label style={{ display: "block", fontSize: "11px", fontWeight: "700", color: "#374151", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "6px" }}>{label}</label>

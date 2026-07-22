@@ -373,14 +373,19 @@ export default function Products({ products, categories = [], onNavigate, onProd
                       {product.weight && <span className="text-label-sm text-outline font-normal">/ {product.weight}</span>}
                     </span>
                     <button 
-                      className="bg-primary text-white p-3 rounded-full hover:bg-primary-container transition-colors flex items-center justify-center"
+                      className={`p-3 rounded-full flex items-center justify-center transition-colors ${
+                        product.stock <= 0 
+                          ? 'bg-surface-container-high text-outline cursor-not-allowed'
+                          : 'bg-primary text-white hover:bg-primary-container'
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(product, 1);
+                        if (product.stock > 0) addToCart(product, 1);
                       }}
+                      disabled={product.stock <= 0}
                     >
                       <span className="material-symbols-outlined" data-icon="add_shopping_cart">
-                        add_shopping_cart
+                        {product.stock <= 0 ? "remove_shopping_cart" : "add_shopping_cart"}
                       </span>
                     </button>
                   </div>
@@ -391,11 +396,16 @@ export default function Products({ products, categories = [], onNavigate, onProd
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(product, 1);
+                        if (product.stock > 0) addToCart(product, 1);
                       }}
-                      className="w-full py-3 bg-secondary-container text-on-secondary-container rounded-lg font-bold hover:scale-105 transition-transform"
+                      className={`w-full py-3 rounded-lg font-bold transition-transform ${
+                        product.stock <= 0 
+                          ? 'bg-surface-container-high text-outline cursor-not-allowed' 
+                          : 'bg-secondary-container text-on-secondary-container hover:scale-105'
+                      }`}
+                      disabled={product.stock <= 0}
                     >
-                      Add to Cart
+                      {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                     </button>
                     {product.hasDetails && (
                       <button className="mt-4 text-white text-label-md hover:underline">Product Details</button>

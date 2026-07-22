@@ -1011,7 +1011,7 @@ export default function Distributor({ onNavigate, siteSettings }) {
             
             <motion.div 
               animate={{ x: ["0%", "-12.5%"] }}
-              transition={{ ease: "linear", duration: testimonials.length > 0 ? testimonials.length * 5 : 20, repeat: Infinity }}
+              transition={{ ease: "linear", duration: testimonials.length > 0 ? testimonials.length * 12 : 40, repeat: Infinity }}
               className="flex gap-6 w-max pl-6"
             >
               {Array(8).fill(testimonials).flat().map((t, index) => (

@@ -85,7 +85,7 @@ export default function AdminUsersPanel() {
       </div>
 
       {/* Roles info */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "12px" }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4" style={{ gap: "12px" }}>
         {ROLES.map((role) => {
           const { bg, color } = ROLE_COLORS[role];
           return (

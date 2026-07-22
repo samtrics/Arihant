@@ -6,10 +6,10 @@ const DEMO_EMAIL = "";
 const DEMO_PASSWORD = "";
 
 export default function AdminLogin({ onLogin, onBack }) {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("arihant_admin_remember_email") || "");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("arihant_admin_remember_email"));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -66,6 +66,12 @@ export default function AdminLogin({ onLogin, onBack }) {
       };
       const existingLogs = JSON.parse(localStorage.getItem("arihant_admin_logs") || "[]");
       localStorage.setItem("arihant_admin_logs", JSON.stringify([logEntry, ...existingLogs]));
+
+      if (rememberMe) {
+        localStorage.setItem("arihant_admin_remember_email", email.trim());
+      } else {
+        localStorage.removeItem("arihant_admin_remember_email");
+      }
 
       setSuccess(true);
       setTimeout(() => onLogin({ name: data.user.user_metadata?.full_name || adminData.name || "Admin", email: data.user.email, role: adminData.role || "super_admin", avatar: data.user.email.charAt(0).toUpperCase() }), 900);

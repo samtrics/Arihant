@@ -110,7 +110,7 @@ export default function ReviewsManager() {
       )}
 
       {/* Tabs */}
-      <div className="flex border-b border-outline-variant mb-6">
+      <div className="flex border-b border-outline-variant mb-6 overflow-x-auto whitespace-nowrap">
         <button className={getTabClass("pending")} onClick={() => setActiveTab("pending")}>
           Pending ({reviews.filter(r => r.status === 'pending').length})
         </button>
