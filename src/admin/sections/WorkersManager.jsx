@@ -241,8 +241,14 @@ export default function WorkersManager({ products = [], setProducts }) {
     return group.products.some(p => p.name.toLowerCase().includes(q));
   });
 
-  const globalTotalPackets = logs.reduce((sum, log) => sum + Number(log.quantity), 0);
+  const globalTotalPackets = logs.reduce((sum, log) => sum + (log.product_id !== null ? Number(log.quantity) : 0), 0);
   const globalTotalLaborCost = logs.reduce((sum, log) => sum + Number(log.total_income), 0);
+  const globalRoleCosts = logs.reduce((acc, log) => {
+    const role = log.workers?.role || 'Unknown';
+    if (!acc[role]) acc[role] = 0;
+    acc[role] += Number(log.total_income);
+    return acc;
+  }, {});
   const globalProductBreakdown = logs.reduce((acc, log) => {
     const name = log.product_id === null ? "Labor Cost" : (log.products?.name || `Product: ${log.product_id}`);
     if (!acc[name]) acc[name] = 0;
@@ -528,7 +534,17 @@ export default function WorkersManager({ products = [], setProducts }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-primary/5 p-5 rounded-lg border border-primary/20 flex flex-col justify-center">
                 <div className="text-sm font-semibold text-primary/80 mb-1">Total Labor Cost</div>
-                <div className="text-3xl font-black text-primary">₹{globalTotalLaborCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                <div className="text-3xl font-black text-primary mb-2">₹{globalTotalLaborCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                {Object.keys(globalRoleCosts).length > 0 && (
+                  <div className="space-y-1 mt-auto pt-2 border-t border-primary/10">
+                    {Object.entries(globalRoleCosts).map(([role, cost]) => (
+                      <div key={role} className="flex justify-between items-center text-xs text-primary/80">
+                        <span>{role}</span>
+                        <span className="font-bold">₹{cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div className="bg-surface-container p-5 rounded-lg border border-outline-variant flex flex-col justify-center">
@@ -545,7 +561,9 @@ export default function WorkersManager({ products = [], setProducts }) {
                     Object.entries(globalProductBreakdown).map(([name, qty]) => (
                       <div key={name} className="flex justify-between items-center text-xs">
                         <span className="text-on-surface-variant truncate mr-2 font-medium" title={name}>{name}</span>
-                        <span className="font-bold text-on-surface whitespace-nowrap">{qty.toLocaleString()}</span>
+                        <span className="font-bold text-on-surface whitespace-nowrap">
+                          {name === 'Labor Cost' ? (qty === 1 ? '1 day' : `${qty.toLocaleString()} days`) : `${qty.toLocaleString()} pkts`}
+                        </span>
                       </div>
                     ))
                   )}
