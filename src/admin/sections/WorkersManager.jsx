@@ -112,8 +112,8 @@ export default function WorkersManager({ products = [], setProducts }) {
         // Laborer with no products produced today, just logging their daily wage
         const { error } = await supabase.from('production_logs').insert([{
            worker_id: logMeta.worker_id,
-           product_id: products.length > 0 ? products[0].id : null, // Use dummy product ID to satisfy foreign key just in case
-           quantity: 0,
+           product_id: null, // Null indicates this is a wage-only entry
+           quantity: 1, // Must be > 0 to pass the production_logs_quantity_check constraint
            rate_per_packet: 0,
            total_income: dailyWage,
            production_date: logMeta.production_date
@@ -680,7 +680,7 @@ function WorkerProfile({ worker, onClose }) {
   const filteredPackets = filteredLogs.reduce((sum, log) => sum + Number(log.quantity), 0);
   
   const filteredProductsBreakdown = filteredLogs.reduce((acc, log) => {
-    const name = log.products?.name || `Product: ${log.product_id}`;
+    const name = log.product_id === null ? "Daily Wage Logging" : (log.products?.name || `Product: ${log.product_id}`);
     if (!acc[name]) acc[name] = 0;
     acc[name] += Number(log.quantity);
     return acc;
@@ -695,7 +695,7 @@ function WorkerProfile({ worker, onClose }) {
     acc[monthKey].income += Number(log.total_income);
     acc[monthKey].packets += Number(log.quantity);
     
-    const name = log.products?.name || `Product: ${log.product_id}`;
+    const name = log.product_id === null ? "Daily Wage Logging" : (log.products?.name || `Product: ${log.product_id}`);
     if (!acc[monthKey].products[name]) acc[monthKey].products[name] = 0;
     acc[monthKey].products[name] += Number(log.quantity);
     
@@ -714,8 +714,11 @@ function WorkerProfile({ worker, onClose }) {
       acc[key] = { date: log.production_date, total_income: 0, total_quantity: 0, products: [] };
     }
     acc[key].products.push({
-      id: log.id, name: log.products?.name || `Product ID: ${log.product_id}`,
-      quantity: log.quantity, rate: log.rate_per_packet, income: log.total_income
+      id: log.id, 
+      name: log.product_id === null ? "Daily Wage Logging" : (log.products?.name || `Product ID: ${log.product_id}`),
+      quantity: log.quantity, 
+      rate: log.rate_per_packet, 
+      income: log.total_income
     });
     acc[key].total_income += Number(log.total_income);
     acc[key].total_quantity += Number(log.quantity);
