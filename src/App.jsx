@@ -24,6 +24,7 @@ import About from "./components/About";
 import { supabase } from "./supabaseClient";
 import SEO from "./components/SEO";
 import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Geolocation } from '@capacitor/geolocation';
 
 // KICK OFF CRITICAL FETCH IMMEDIATELY TO BREAK NETWORK CHAIN
@@ -167,6 +168,17 @@ export default function App() {
           Geolocation.requestPermissions().catch(console.error);
         }
       }).catch(console.error);
+
+      // Handle Android Hardware Back Button
+      CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+        const url = new URL(window.location);
+        const page = url.searchParams.get('page');
+        if (!page || page === 'home') {
+          CapacitorApp.exitApp();
+        } else {
+          window.history.back();
+        }
+      });
     }
 
     // Get initial session
