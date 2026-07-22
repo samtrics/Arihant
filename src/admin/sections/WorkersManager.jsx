@@ -690,6 +690,7 @@ function WorkerProfile({ worker, onClose }) {
 
   const totalAllTimeEarned = logs.reduce((sum, log) => sum + Number(log.total_income), 0);
   const totalAllTimeUnpaid = logs.filter(l => l.payment_status === 'unpaid').reduce((sum, log) => sum + Number(log.total_income), 0);
+  const totalAllTimeUnpaidItems = logs.filter(l => l.payment_status === 'unpaid').reduce((sum, log) => sum + Number(log.quantity), 0);
   const totalAllTimePackets = logs.reduce((sum, log) => sum + Number(log.quantity), 0);
 
   const filteredLogs = logs.filter(log => {
@@ -832,7 +833,14 @@ function WorkerProfile({ worker, onClose }) {
           <h3 className="font-bold text-lg mb-4">All-Time Totals</h3>
           <div className="space-y-4">
             <div>
-              <div className="text-sm font-semibold text-error">Outstanding Unpaid</div>
+              <div className="text-sm font-semibold text-error flex items-center gap-1">
+                Outstanding Unpaid 
+                {totalAllTimeUnpaidItems > 0 && (
+                  <span className="font-normal opacity-80">
+                    ({totalAllTimeUnpaidItems} {worker.role === 'Labor' ? (totalAllTimeUnpaidItems === 1 ? 'day' : 'days') : 'pkts'})
+                  </span>
+                )}
+              </div>
               <div className="text-xl font-black text-error">₹{totalAllTimeUnpaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
             </div>
             <div>
