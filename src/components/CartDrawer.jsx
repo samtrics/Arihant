@@ -63,7 +63,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       const { latitude, longitude } = position.coords;
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
       const data = await res.json();
-      
+
       if (data && data.address) {
         setAddress(prev => ({
           ...prev,
@@ -90,7 +90,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
 
     if (cartItems.length === 0) return;
-    
+
     const outOfStockItems = cartItems.filter(item => item.stock !== undefined && item.stock < item.quantity);
     if (outOfStockItems.length > 0) {
       alert(`Sorry, we do not have enough stock for: ${outOfStockItems.map(i => i.name).join(', ')}. Please reduce the quantity or remove them from your cart.`);
@@ -107,7 +107,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     }
 
     setIsProcessing(true);
-    
+
     // Check Global Presence Location Eligibility
     const locationStatus = await verifyLocationEligibility();
     if (!locationStatus.isEligible) {
@@ -119,7 +119,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
     try {
       const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
       const fullAddress = `${finalAddr.flat?.trim()}, ${finalAddr.area?.trim()}, ${finalAddr.landmark ? `Near ${finalAddr.landmark.trim()}, ` : ''}${finalAddr.city?.trim()} - ${finalAddr.pincode?.trim()}`;
-      
+
       const { error } = await supabase.from('orders').insert([{
         order_number: orderNumber,
         customer_name: `${customerUser.user_metadata?.full_name || customerUser.email.split('@')[0]} | ${customerUser.email}`,
@@ -162,7 +162,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
       clearCart();
       setOrderSuccess(true);
-      
+
       setTimeout(() => {
         setOrderSuccess(false);
         setIsCartOpen(false);
@@ -184,7 +184,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
         onClick={() => setIsCartOpen(false)}
       ></div>
@@ -192,14 +192,14 @@ export default function CartDrawer({ customerUser, onNavigate }) {
       {/* Drawer */}
       <div className="absolute inset-y-0 right-0 max-w-full flex">
         <div className="w-screen max-w-md w-full bg-surface-container-lowest shadow-2xl flex flex-col h-full animate-slide-in-right">
-          
+
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-outline-variant bg-surface-container-low">
             <h2 className="text-xl font-bold text-primary flex items-center gap-2">
               <span className="material-symbols-outlined">shopping_cart</span>
               Your Cart
             </h2>
-            <button 
+            <button
               onClick={() => setIsCartOpen(false)}
               className="p-2 text-on-surface-variant hover:text-on-surface rounded-full hover:bg-surface-container transition-colors"
             >
@@ -222,7 +222,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
               <div className="h-full flex flex-col items-center justify-center text-center text-on-surface-variant">
                 <span className="material-symbols-outlined text-[64px] mb-4 opacity-50">shopping_bag</span>
                 <p className="text-lg font-medium">Your cart is currently empty.</p>
-                <button 
+                <button
                   onClick={() => { setIsCartOpen(false); onNavigate('products'); }}
                   className="mt-6 px-6 py-2 bg-primary text-white rounded-full font-bold hover:shadow-lg transition-all"
                 >
@@ -240,7 +240,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                       <div>
                         <div className="flex justify-between items-start">
                           <h4 className="font-bold text-on-surface leading-tight">{item.name}</h4>
-                          <button 
+                          <button
                             onClick={() => removeFromCart(item.id)}
                             className="text-on-surface-variant hover:text-error transition-colors"
                           >
@@ -251,12 +251,12 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center border border-outline-variant rounded-md">
-                          <button 
+                          <button
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="px-2 py-1 text-primary hover:bg-surface-container transition-colors"
                           >-</button>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             min="1"
                             value={item.quantity}
                             onChange={(e) => {
@@ -267,7 +267,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                             }}
                             className="font-medium text-sm w-12 text-center bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-primary rounded hide-number-arrows"
                           />
-                          <button 
+                          <button
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             disabled={item.stock !== undefined && item.quantity >= item.stock}
                             className={`px-2 py-1 transition-colors ${item.stock !== undefined && item.quantity >= item.stock ? 'text-outline cursor-not-allowed' : 'text-primary hover:bg-surface-container'}`}
@@ -280,11 +280,11 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 ))}
               </div>
             )}
-            
+
             {/* Address and Payment Options inside scrollable area */}
             {cartItems.length > 0 && !orderSuccess && (
               <div className="mt-8 flex flex-col gap-6">
-                
+
                 {/* Address Form */}
                 <div className="flex flex-col gap-3">
                   <div className="flex justify-between items-center mb-1">
@@ -318,13 +318,13 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                       </div>
                     </label>
                   </div>
-                  
+
                   {addressSelection === 'new' && (
                     <div className="flex flex-col gap-3 p-4 bg-surface-container-low rounded-xl border border-outline-variant/50 animate-fade-in">
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-xs font-bold text-on-surface-variant uppercase">New Address Details</span>
-                        <button 
-                          onClick={handleGetLocation} 
+                        <button
+                          onClick={handleGetLocation}
                           disabled={isLocating}
                           className="text-xs text-[#D4A64A] font-bold flex items-center gap-1 hover:underline transition-colors disabled:opacity-50"
                         >
@@ -332,30 +332,30 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                           {isLocating ? 'Locating...' : 'Use Current Location'}
                         </button>
                       </div>
-                      <input 
-                        type="text" placeholder="Flat, House no., Building, Apartment *" 
-                        value={address.flat} onChange={(e) => setAddress({...address, flat: e.target.value})}
+                      <input
+                        type="text" placeholder="Flat, House no., Building, Apartment *"
+                        value={address.flat} onChange={(e) => setAddress({ ...address, flat: e.target.value })}
                         className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
                       />
-                      <input 
-                        type="text" placeholder="Area, Street, Sector, Village *" 
-                        value={address.area} onChange={(e) => setAddress({...address, area: e.target.value})}
+                      <input
+                        type="text" placeholder="Area, Street, Sector, Village *"
+                        value={address.area} onChange={(e) => setAddress({ ...address, area: e.target.value })}
                         className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
                       />
-                      <input 
-                        type="text" placeholder="Landmark (Optional)" 
-                        value={address.landmark} onChange={(e) => setAddress({...address, landmark: e.target.value})}
+                      <input
+                        type="text" placeholder="Landmark (Optional)"
+                        value={address.landmark} onChange={(e) => setAddress({ ...address, landmark: e.target.value })}
                         className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
                       />
                       <div className="flex gap-3">
-                        <input 
-                          type="text" placeholder="Town/City *" 
-                          value={address.city} onChange={(e) => setAddress({...address, city: e.target.value})}
+                        <input
+                          type="text" placeholder="Town/City *"
+                          value={address.city} onChange={(e) => setAddress({ ...address, city: e.target.value })}
                           className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
                         />
-                        <input 
-                          type="text" placeholder="Pincode *" 
-                          value={address.pincode} onChange={(e) => setAddress({...address, pincode: e.target.value})}
+                        <input
+                          type="text" placeholder="Pincode *"
+                          value={address.pincode} onChange={(e) => setAddress({ ...address, pincode: e.target.value })}
                           className="w-full p-2.5 rounded-lg border border-outline-variant bg-white outline-none focus:border-primary text-sm"
                         />
                       </div>
@@ -365,10 +365,10 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                       </label>
                     </div>
                   )}
-                  
-                  <input 
-                    type="tel" 
-                    placeholder="Phone Number *" 
+
+                  <input
+                    type="tel"
+                    placeholder="Phone Number *"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full p-3 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm font-medium mt-2"
@@ -379,13 +379,13 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 <div className="flex flex-col gap-3 pt-4 border-t border-outline-variant">
                   <label className="text-sm font-bold text-on-surface">Payment Method</label>
                   <div className="grid grid-cols-2 gap-3">
-                    <button 
+                    <button
                       onClick={() => setPaymentMethod("COD")}
                       className={`p-3 rounded-lg border font-bold text-sm transition-all ${paymentMethod === "COD" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
                     >
                       Cash on Delivery
                     </button>
-                    <button 
+                    <button
                       onClick={() => setPaymentMethod("UPI")}
                       className={`p-3 rounded-lg border font-bold text-sm flex items-center justify-center gap-2 transition-all ${paymentMethod === "UPI" ? 'border-[#1F5132] bg-[#1F5132]/5 text-[#1F5132]' : 'border-outline-variant text-gray-500 hover:bg-surface-container'}`}
                     >
@@ -401,9 +401,9 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                         <img loading="lazy" src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=merchant@upi&pn=Arihant&am=${cartTotal}&cu=INR`)}`} alt="UPI QR Code" className="w-32 h-32" />
                       </div>
                       <p className="text-xs text-gray-500 mb-3">Pay using any UPI app (GPay, PhonePe, Paytm)</p>
-                      <input 
-                        type="text" 
-                        placeholder="Enter UPI Transaction ID (Required) *" 
+                      <input
+                        type="text"
+                        placeholder="Enter UPI Transaction ID (Required) *"
                         value={upiTxnId}
                         onChange={(e) => setUpiTxnId(e.target.value)}
                         className="w-full p-2.5 rounded-lg border border-outline-variant bg-surface outline-none focus:border-primary text-sm text-center font-medium"
@@ -423,7 +423,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
                 <span className="text-on-surface-variant font-medium text-lg">Subtotal</span>
                 <span className="text-2xl font-bold text-primary">₹{cartTotal.toFixed(2)}</span>
               </div>
-              <button 
+              <button
                 onClick={handleCheckout}
                 disabled={isProcessing || !finalAddr?.flat?.trim() || !finalAddr?.area?.trim() || !finalAddr?.city?.trim() || !finalAddr?.pincode?.trim() || !phone?.trim() || (paymentMethod === "UPI" && !upiTxnId.trim())}
                 className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
@@ -450,7 +450,7 @@ export default function CartDrawer({ customerUser, onNavigate }) {
 
         </div>
       </div>
-      
+
       <style>{`
         @keyframes slide-in-right {
           from { transform: translateX(100%); }

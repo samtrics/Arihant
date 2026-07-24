@@ -271,7 +271,7 @@ export default function WorkersManager({ products = [], setProducts }) {
 
       {activeTab === "directory" && (
         selectedWorker ? (
-          <WorkerProfile worker={selectedWorker} onClose={() => setSelectedWorker(null)} />
+          <WorkerProfile worker={selectedWorker} onClose={() => setSelectedWorker(null)} onLogUpdated={fetchData} />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1 bg-surface-container-lowest p-6 rounded-xl border border-outline-variant h-fit">
@@ -642,7 +642,7 @@ export default function WorkersManager({ products = [], setProducts }) {
   );
 }
 
-function WorkerProfile({ worker, onClose }) {
+function WorkerProfile({ worker, onClose, onLogUpdated }) {
   const [logs, setLogs] = useState([]);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -700,6 +700,17 @@ function WorkerProfile({ worker, onClose }) {
         
       if (error) throw error;
       setPayments([...payments, data[0]]);
+    } catch (err) {
+      alert("Error marking as paid: " + err.message);
+    }
+  };
+
+  const handleMarkAsPaid = async (logId) => {
+    try {
+      const { error } = await supabase.from('production_logs').update({ payment_status: 'paid' }).eq('id', logId);
+      if (error) throw error;
+      fetchLogs();
+      if (onLogUpdated) onLogUpdated();
     } catch (err) {
       alert("Error marking as paid: " + err.message);
     }
